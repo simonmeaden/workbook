@@ -1,0 +1,33 @@
+<RCC>
+    <qresource prefix="/">
+        <file alias="down">icons/downarrow.png</file>
+        <file alias="cell-merge">icons/edit-table-cell-merge.png</file>
+        <file alias="undent">icons/format-indent-less.png</file>
+        <file alias="indent">icons/format-indent-more.png</file>
+        <file alias="justify-bottom">icons/format-justify-bottom.png</file>
+        <file alias="justify-centre">icons/format-justify-center.png</file>
+        <file alias="justify-fill">icons/format-justify-fill.png</file>
+        <file alias="justify-left">icons/format-justify-left.png</file>
+        <file alias="justify-middle">icons/format-justify-middle.png</file>
+        <file alias="justify-right">icons/format-justify-right.png</file>
+        <file alias="justify-top">icons/format-justify-top.png</file>
+        <file alias="double-spacing">icons/format-line-spacing-double.png</file>
+        <file alias="single-spacing">icons/format-line-spacing-normal.png</file>
+        <file alias="triple-spacing">icons/format-line-spacing-triple.png</file>
+        <file alias="list-ordered">icons/format-list-ordered.png</file>
+        <file alias="list-unordered">icons/format-list-unordered.png</file>
+        <file alias="bold">icons/format-text-bold.png</file>
+        <file alias="color">icons/format-text-color.png</file>
+        <file alias="italic">icons/format-text-italic.png</file>
+        <file alias="strikethrough">icons/format-text-strikethrough.png</file>
+        <file alias="subscript">icons/format-text-subscript.png</file>
+        <file alias="superscript">icons/format-text-superscript.png</file>
+        <file alias="underline">icons/format-text-underline.png</file>
+        <file alias="function">icons/function.png</file>
+        <file alias="fxwizard">icons/fxwizard.png</file>
+        <file alias="raytheon">icons/raytheon.png</file>
+        <file alias="sum">icons/sum.png</file>
+        <file alias="background">icons/format-back-color.png</file>
+        <file alias="font-color">icons/format-font-color.png</file>
+    </qresource>
+</RCC>
