@@ -6,12 +6,12 @@
 #include "workbook_global.h"
 #include "basetoolbar.h"
 
-class WORKBOOKSHARED_EXPORT WorkbookIndentToolbar : public BaseToolbar {
+class WORKBOOKSHARED_EXPORT QWorkbookIndentToolbar : public BaseToolbar {
     Q_OBJECT
 public:
-    WorkbookIndentToolbar(QWidget *parent);
-    WorkbookIndentToolbar(QString title, QWidget *parent);
-    ~WorkbookIndentToolbar();
+    QWorkbookIndentToolbar(QWidget *parent);
+    QWorkbookIndentToolbar(QString title, QWidget *parent);
+    ~QWorkbookIndentToolbar();
 
 signals:
 

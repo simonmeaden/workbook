@@ -6,24 +6,24 @@
 
 #include "basetoolbar.h"
 
-class WORKBOOKSHARED_EXPORT WorkbookAlignToolbar : public BaseToolbar {
+class WORKBOOKSHARED_EXPORT QWorkbookAlignToolbar : public BaseToolbar {
     Q_OBJECT
 public:
-    WorkbookAlignToolbar(QWidget *parent);
-    WorkbookAlignToolbar(QString title, QWidget *parent);
-    ~WorkbookAlignToolbar();
+    QWorkbookAlignToolbar(QWidget *);
+    QWorkbookAlignToolbar(QString, QWidget *);
+    ~QWorkbookAlignToolbar();
 
 signals:
+    void alignmentChanged(Qt::Alignment);
 
 public slots:
-    void setAlign(Qt::Alignment);
+    void setAlign(bool, Qt::Alignment);
 
 protected slots:
     void align();
-    void merge();
 
 protected:
-    QPushButton *pLeftBtn, *pHCentreBtn, *pRightBtn, *pFillBtn, *pMergeBtn;
+    QPushButton *pLeftBtn, *pHCentreBtn, *pRightBtn;
     QButtonGroup *pButtonGroup;
 
     void init();

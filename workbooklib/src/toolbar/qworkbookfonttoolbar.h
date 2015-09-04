@@ -3,31 +3,36 @@
 
 #include <QFontComboBox>
 #include <QComboBox>
+#include <QIntValidator>
 
 #include "workbook_global.h"
 #include "basetoolbar.h"
 
-class WORKBOOKSHARED_EXPORT WorkbookFontToolbar : public BaseToolbar {
+class WORKBOOKSHARED_EXPORT QWorkbookFontToolbar : public BaseToolbar {
     Q_OBJECT
 public:
-    WorkbookFontToolbar(QWidget *parent);
-    WorkbookFontToolbar(QString title, QWidget *parent);
-    ~WorkbookFontToolbar();
+    QWorkbookFontToolbar(QWidget *parent);
+    QWorkbookFontToolbar(QString title, QWidget *parent);
+    ~QWorkbookFontToolbar();
 
 signals:
     void bold(bool);
     void italic(bool);
+    void fontChanged(QFont);
+    void fontSizeChanged(int);
 
 public slots:
-    void setFont(QFont font);
+    void setFont(QFont);
+    void setFont(bool, QFont, int);
 
 protected slots:
-    void fontHasChanged(QFont font);
+    void fontHasChanged(QFont);
+    void sizeHasChanged(QString);
 
 protected:
     QFontComboBox *pFonts;
     QComboBox *pSizes;
-    QFontDatabase db;
+    QFontDatabase mFontDatabase;
 
     void initBuild();
     void setFontSizes(QFont font);

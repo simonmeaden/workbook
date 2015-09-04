@@ -2,18 +2,22 @@
 #define WORKBOOKFONTEFFECTSTOOLBAR_H
 
 #include <QPushButton>
+#include <QShortcut>
 
 #include "workbook_global.h"
 #include "basetoolbar.h"
 
-class WORKBOOKSHARED_EXPORT WorkbookFontEffectsToolbar : public BaseToolbar {
+class WORKBOOKSHARED_EXPORT QWorkbookFontEffectsToolbar : public BaseToolbar {
     Q_OBJECT
 public:
-    WorkbookFontEffectsToolbar(QWidget *parent);
-    WorkbookFontEffectsToolbar(QString title, QWidget *parent);
-    ~WorkbookFontEffectsToolbar();
+    QWorkbookFontEffectsToolbar(QWidget *parent);
+    QWorkbookFontEffectsToolbar(QString title, QWidget *parent);
+    ~QWorkbookFontEffectsToolbar();
 
 signals:
+    void boldChanged(bool);
+    void italicChanged(bool);
+    void underlineChanged(bool);
 
 public slots:
     void setBold(bool);

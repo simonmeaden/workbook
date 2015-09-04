@@ -1,1 +1,2 @@
 #include "toolbar/qworkbooktoolbar.h"
+#include "toolbar/qworkbookfunctiontoolbar.h"

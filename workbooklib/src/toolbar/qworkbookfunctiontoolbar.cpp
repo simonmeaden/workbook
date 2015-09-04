@@ -1,14 +1,14 @@
-#include "workbookfunctiontoolbar.h"
+#include "qworkbookfunctiontoolbar.h"
 
-WorkbookFunctionToolbar::WorkbookFunctionToolbar(QWidget *parent) : BaseToolbar(parent) {
+QWorkbookFunctionToolbar::QWorkbookFunctionToolbar(QWidget *parent) : BaseToolbar(parent) {
     initBuild();
 }
 
-WorkbookFunctionToolbar::WorkbookFunctionToolbar(QString title, QWidget *parent) : BaseToolbar(title, parent) {
+QWorkbookFunctionToolbar::QWorkbookFunctionToolbar(QString title, QWidget *parent) : BaseToolbar(title, parent) {
     initBuild();
 }
 
-void WorkbookFunctionToolbar::initBuild() {
+void QWorkbookFunctionToolbar::initBuild() {
     rangeEdit = new QLineEdit(this);
     rangeEdit->setReadOnly(true);
     addWidget(rangeEdit);
@@ -47,7 +47,7 @@ void WorkbookFunctionToolbar::initBuild() {
 
  }
 
-void WorkbookFunctionToolbar::drop() {
+void QWorkbookFunctionToolbar::drop() {
     if (editor == functionEdit) {
         dropDownEdit->setVisible(true);
         functionEdit->setVisible(false);
@@ -59,23 +59,23 @@ void WorkbookFunctionToolbar::drop() {
     }
 }
 
-void WorkbookFunctionToolbar::manageNames() {
+void QWorkbookFunctionToolbar::manageNames() {
     // TODO
 }
 
-void WorkbookFunctionToolbar::functionWizard() {
+void QWorkbookFunctionToolbar::functionWizard() {
     // TODO
 }
 
-void WorkbookFunctionToolbar::sum() {
+void QWorkbookFunctionToolbar::sum() {
     // TODO
 }
 
-void WorkbookFunctionToolbar::function() {
+void QWorkbookFunctionToolbar::function() {
     // TODO
 }
 
-void WorkbookFunctionToolbar::setRange(QString value){
+void QWorkbookFunctionToolbar::setRange(QString value){
     rangeEdit->setText(value);
 }
 

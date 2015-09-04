@@ -1,20 +1,21 @@
-#include "workbookfonteffectstoolbar.h"
+#include "qworkbookfonteffectstoolbar.h"
 #include "qworkbooktoolbar.h"
 
-WorkbookFontEffectsToolbar::WorkbookFontEffectsToolbar(QWidget *parent) : BaseToolbar(parent) {
+QWorkbookFontEffectsToolbar::QWorkbookFontEffectsToolbar(QWidget *parent) : BaseToolbar(parent) {
     init();
 }
 
-WorkbookFontEffectsToolbar::WorkbookFontEffectsToolbar(QString title, QWidget *parent) : BaseToolbar(title, parent) {
+QWorkbookFontEffectsToolbar::QWorkbookFontEffectsToolbar(QString title, QWidget *parent) : BaseToolbar(title, parent) {
     init();
 }
 
-WorkbookFontEffectsToolbar::~WorkbookFontEffectsToolbar() {
+QWorkbookFontEffectsToolbar::~QWorkbookFontEffectsToolbar() {
 }
 
-void WorkbookFontEffectsToolbar::init()  {
+void QWorkbookFontEffectsToolbar::init()  {
     pBoldBtn = new QPushButton(QIcon("://bold"), "", this);
-    pBoldBtn->setToolTip(tr("Bold"));
+    pBoldBtn->setShortcut(QKeySequence(QKeySequence::Bold));
+    pBoldBtn->setToolTip(tr("Bold (Ctrl+B)"));
     pBoldBtn->setStyleSheet(buttonStyle);
     pBoldBtn->setContentsMargins(0, 0, 0, 0);
     pBoldBtn->setCheckable(true);
@@ -22,7 +23,8 @@ void WorkbookFontEffectsToolbar::init()  {
     connect(pBoldBtn, SIGNAL(clicked()), this, SLOT(bold()));
 
     pItalicBtn = new QPushButton(QIcon("://italic"), "", this);
-    pItalicBtn->setToolTip(tr("Italic"));
+    pItalicBtn->setShortcut(QKeySequence(QKeySequence::Italic));
+    pItalicBtn->setToolTip(tr("Italic (Ctrl+I)"));
     pItalicBtn->setStyleSheet(buttonStyle);
     pItalicBtn->setContentsMargins(0, 0, 0, 0);
     pItalicBtn->setCheckable(true);
@@ -30,7 +32,8 @@ void WorkbookFontEffectsToolbar::init()  {
     connect(pItalicBtn, SIGNAL(clicked()), this, SLOT(italic()));
 
     pUnderlineBtn = new QPushButton(QIcon("://underline"), "", this);
-    pUnderlineBtn->setToolTip(tr("Underline"));
+    pUnderlineBtn->setShortcut(QKeySequence(QKeySequence::Underline));
+    pUnderlineBtn->setToolTip(tr("Underline (Ctrl+U)"));
     pUnderlineBtn->setStyleSheet(buttonStyle);
     pUnderlineBtn->setContentsMargins(0, 0, 0, 0);
     pUnderlineBtn->setCheckable(true);
@@ -39,27 +42,27 @@ void WorkbookFontEffectsToolbar::init()  {
 
 }
 
-void WorkbookFontEffectsToolbar::bold() {
-    emit master->boldChanged(pBoldBtn->isChecked());
+void QWorkbookFontEffectsToolbar::bold() {
+    emit boldChanged(pBoldBtn->isChecked());
 }
 
-void WorkbookFontEffectsToolbar::italic() {
-    emit master->italicChanged(pItalicBtn->isChecked());
+void QWorkbookFontEffectsToolbar::italic() {
+    emit italicChanged(pItalicBtn->isChecked());
 }
 
-void WorkbookFontEffectsToolbar::underline() {
-    emit master->underlineChanged(pUnderlineBtn->isChecked());
+void QWorkbookFontEffectsToolbar::underline() {
+    emit underlineChanged(pUnderlineBtn->isChecked());
 }
 
-void WorkbookFontEffectsToolbar::setBold(bool value) {
+void QWorkbookFontEffectsToolbar::setBold(bool value) {
     pBoldBtn->setChecked(value);
 }
 
-void WorkbookFontEffectsToolbar::setItalic(bool value) {
+void QWorkbookFontEffectsToolbar::setItalic(bool value) {
     pItalicBtn->setChecked(value);
 }
 
-void WorkbookFontEffectsToolbar::setUnderline(bool value) {
+void QWorkbookFontEffectsToolbar::setUnderline(bool value) {
     pUnderlineBtn->setChecked(value);
 }
 

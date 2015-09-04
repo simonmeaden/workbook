@@ -54,14 +54,14 @@
 #include "qworkbookview.h"
 
 #include <workbook_global.h>
-#include "workbookaligntoolbar.h"
-#include "workbookfonteffectstoolbar.h"
-#include "workbookfonttoolbar.h"
-#include "workbookindenttoolbar.h"
-#include "workbookfunctiontoolbar.h"
 
 #include "range.h"
 
+class QWorkbookFontToolbar;
+class QWorkbookFontEffectsToolbar;
+class QWorkbookIndentToolbar;
+class QWorkbookAlignToolbar;
+class QWorkbookMergeToolbar;
 
 class WORKBOOKSHARED_EXPORT QWorkbookToolBar : public QToolBar {
     Q_OBJECT
@@ -71,42 +71,52 @@ public:
     ~QWorkbookToolBar();
 
 signals:
+    void boldSelection(bool);
+    void italicSelection(bool);
+    void underlineSelection(bool);
+    void fontSelection(bool, QFont, int);
+    void alignSelection(bool, Qt::Alignment);
+    void mergeSelection(bool);
+
     void boldChanged(bool);
     void italicChanged(bool);
     void underlineChanged(bool);
-    void fontChanged(QFont font);
-    void alignmentChanged(Qt::Alignment alignment);
+    void fontChanged(QFont);
+    void fontSizeChanged(int);
+    void alignmentChanged(Qt::Alignment);
     void indentCells();
     void undentCells();
-    void mergeCells();    
 
 public slots:
+    void selectionChanged(FormatStatus*);
+    void setWorkbookView(QWorkbookView *);
+
     void showFontBar(bool);
     void showFontEffectsBar(bool);
     void showIndentBar(bool);
     void showAlignBar(bool);
-    void showFunctionBar(bool);
 
     void setBold(bool);
     void setItalic(bool);
     void setUnderline(bool);
-    void setFont(QFont font);
+    void setFont(QFont);
     void setAlign(Qt::Alignment);
 
 protected slots:
     void showContextMenu(const QPoint&);
 
 protected:
-    WorkbookFontToolbar *pFontBar;
-    WorkbookFontEffectsToolbar *pFontEffectsBar;
-    WorkbookIndentToolbar *pIndentBar;
-    WorkbookAlignToolbar *pAlignBar;
-    WorkbookFunctionToolbar *pFunctionBar;
+    QWorkbookFontToolbar *pFontBar;
+    QWorkbookFontEffectsToolbar *pFontEffectsBar;
+    QWorkbookIndentToolbar *pIndentBar;
+    QWorkbookAlignToolbar *pAlignBar;
+    QWorkbookMergeToolbar *pMergeBar;
+    QWorkbookView *pView;
 
     QMenu *pPopupMenu;
 
     QAction *pFontVisibleAction, *pFontEffectsVisibleAction, *pIndentVisibleAction, *pAlignVisibleAction;
-    QAction *ppFunctionVisibleAction;
+    QAction *pMergeVisibleAction;
 
     void initBuild();
 

@@ -1,18 +1,18 @@
-#include "workbookindenttoolbar.h"
+#include "qworkbookindenttoolbar.h"
 #include "qworkbooktoolbar.h"
 
-WorkbookIndentToolbar::WorkbookIndentToolbar(QWidget *parent) : BaseToolbar(parent) {
+QWorkbookIndentToolbar::QWorkbookIndentToolbar(QWidget *parent) : BaseToolbar(parent) {
     init();
 }
 
-WorkbookIndentToolbar::WorkbookIndentToolbar(QString title, QWidget *parent) : BaseToolbar(title, parent) {
+QWorkbookIndentToolbar::QWorkbookIndentToolbar(QString title, QWidget *parent) : BaseToolbar(title, parent) {
     init();
 }
 
-WorkbookIndentToolbar::~WorkbookIndentToolbar() {
+QWorkbookIndentToolbar::~QWorkbookIndentToolbar() {
 }
 
-void WorkbookIndentToolbar::init()  {
+void QWorkbookIndentToolbar::init()  {
     pUndentBtn = new QPushButton(this);
     pUndentBtn->setToolTip("Decrease Indent");
     pUndentBtn->setStyleSheet(buttonStyle);
@@ -30,10 +30,10 @@ void WorkbookIndentToolbar::init()  {
 
 }
 
-void WorkbookIndentToolbar::indent() {
+void QWorkbookIndentToolbar::indent() {
     emit master->indentCells();
 }
 
-void WorkbookIndentToolbar::undent() {
+void QWorkbookIndentToolbar::undent() {
     emit master->undentCells();
 }

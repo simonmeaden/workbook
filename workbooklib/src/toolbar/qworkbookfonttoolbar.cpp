@@ -1,19 +1,19 @@
-#include "workbookfonttoolbar.h"
+#include "qworkbookfonttoolbar.h"
 #include "qworkbooktoolbar.h"
 
-WorkbookFontToolbar::WorkbookFontToolbar(QWidget *parent) : BaseToolbar(parent) {
+QWorkbookFontToolbar::QWorkbookFontToolbar(QWidget *parent) : BaseToolbar(parent) {
     initBuild();
 }
 
-WorkbookFontToolbar::WorkbookFontToolbar(QString title, QWidget *parent) : BaseToolbar(title, parent) {
+QWorkbookFontToolbar::QWorkbookFontToolbar(QString title, QWidget *parent) : BaseToolbar(title, parent) {
     initBuild();
 }
 
-WorkbookFontToolbar::~WorkbookFontToolbar() {
+QWorkbookFontToolbar::~QWorkbookFontToolbar() {
 
 }
 
-void WorkbookFontToolbar::initBuild() {
+void QWorkbookFontToolbar::initBuild() {
     QFont font = QFont("Times", 10, QFont::Normal);
 
     pFonts = new QFontComboBox(this);
@@ -23,31 +23,49 @@ void WorkbookFontToolbar::initBuild() {
     connect(pFonts, SIGNAL(currentFontChanged(QFont)), this, SLOT(fontHasChanged(QFont)));
 
     pSizes = new QComboBox(this);
+    pSizes->setValidator(new QIntValidator(1, 1000, this));
     pSizes->setToolTip(tr("Font Size"));
     addWidget(pSizes);
+    connect(pSizes, SIGNAL(currentTextChanged(QString)), this, SLOT(sizeHasChanged(QString)));
 
     font = pFonts->currentFont();
     setFontSizes(font);
 }
 
-void WorkbookFontToolbar::fontHasChanged(QFont font) {
+void QWorkbookFontToolbar::fontHasChanged(QFont font) {
+    int size = pSizes->currentText().toInt();
+
     setFontSizes(font);
 
-    bool isItalic = db.italic(font.family(), font.styleName());
+    bool isItalic = mFontDatabase.italic(font.family(), font.styleName());
     emit italic(isItalic);
 
-    bool isBold = db.bold(font.family(), font.styleName()) ;
+    bool isBold = mFontDatabase.bold(font.family(), font.styleName()) ;
     emit bold(isBold);
 
-    emit master->fontChanged(font);
+    pSizes->setCurrentText(QString::number(size));
+
+    emit fontChanged(font);
+    emit fontSizeChanged(size);
 }
 
-void WorkbookFontToolbar::setFont(QFont font) {
+void QWorkbookFontToolbar::sizeHasChanged(QString size) {
+    emit fontSizeChanged(size.toInt());
+}
+
+void QWorkbookFontToolbar::setFont(QFont font) {
     pFonts->setCurrentFont(font);
 }
 
-void WorkbookFontToolbar::setFontSizes(QFont font) {
-    QList<int> sizes = db.pointSizes(font.family(), font.styleName());
+void QWorkbookFontToolbar::setFont(bool selected, QFont font, int size) {
+    if (selected) {
+        pFonts->setCurrentFont(font);
+        pSizes->setCurrentText(QString::number(size));
+    }
+}
+
+void QWorkbookFontToolbar::setFontSizes(QFont font) {
+    QList<int> sizes = mFontDatabase.pointSizes(font.family(), font.styleName());
     pSizes->clear();
     QListIterator<int> it(sizes);
     while (it.hasNext())

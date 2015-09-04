@@ -41,41 +41,90 @@
  * It is also available on request from Simon Meaden info@smelecomp.co.uk.
  */
 #include "qworkbooktoolbar.h"
-#include "qstd.h"
+#include "qworkbookaligntoolbar.h"
+#include "qworkbookfonteffectstoolbar.h"
+#include "qworkbookfonttoolbar.h"
+#include "qworkbookindenttoolbar.h"
+#include "qworkbookmergetoolbar.h"
+#include <qstd.h>
 
+/*!
+ * \class QWorkbookToolBar
+ * \brief A OpenOffice style toolbar for the QWorkbook class.
+ * \ingroup QWorkbookView
+ *
+ * The QWorkbookToolBar class provides a movable panel that contains a set of controls,
+ * similar in form to OpenOffice Calc.
+ *\
+
+/*!
+ * \brief Constructor for the QWorkbookToolBar class.
+ *
+ * Constructs a QWorkbookToolBar with the given parent.
+ */
 QWorkbookToolBar::QWorkbookToolBar(QWidget *parent) : QToolBar(parent) {
     initBuild();
 }
 
+/*!
+ * \brief Constructor for the QWorkbookToolBar class.
+ *
+ * Constructs a QWorkbookToolBar with the given parent.
+ *
+ * The given window title identifies the toolbar and is shown in the context menu provided by QMainWindow.
+ */
 QWorkbookToolBar::QWorkbookToolBar(QString title, QWidget *parent) :
     QToolBar(title, parent) {
     initBuild();
 }
 
+/*!
+ * \brief QWorkbookToolBar::~QWorkbookToolBar
+ *
+ * Destroys the toolbar.
+ */
 QWorkbookToolBar::~QWorkbookToolBar() {
 
 }
 
 void QWorkbookToolBar::initBuild() {
-    pFontBar = new WorkbookFontToolbar("font", this);
+    pFontBar = new QWorkbookFontToolbar("font", this);
     pFontVisibleAction = pFontBar->toggleViewAction();
     addWidget(pFontBar);
+    connect(pFontBar, SIGNAL(fontChanged(QFont)), this, SIGNAL(fontChanged(QFont)));
+    connect(pFontBar, SIGNAL(fontSizeChanged(int)), this, SIGNAL(fontSizeChanged(int)));
 
-    pFontEffectsBar = new WorkbookFontEffectsToolbar("font2", this);
+    pFontEffectsBar = new QWorkbookFontEffectsToolbar("fonteffects", this);
     pFontEffectsVisibleAction = pFontEffectsBar->toggleViewAction();
     addWidget(pFontEffectsBar);
+    connect(pFontEffectsBar, SIGNAL(boldChanged(bool)), this, SIGNAL(boldChanged(bool)));
+    connect(pFontEffectsBar, SIGNAL(italicChanged(bool)), this, SIGNAL(italicChanged(bool)));
+    connect(pFontEffectsBar, SIGNAL(underlineChanged(bool)), this, SIGNAL(underlineChanged(bool)));
 
-    pAlignBar = new WorkbookAlignToolbar("align", this);
+    // TODO font colour & background colour
+
+    pAlignBar = new QWorkbookAlignToolbar("align", this);
     pAlignVisibleAction = pAlignBar->toggleViewAction();
     addWidget(pAlignBar);
+    connect(pAlignBar, SIGNAL(alignmentChanged(Qt::Alignment)), this, SIGNAL(alignmentChanged(Qt::Alignment)));
 
-    pIndentBar = new WorkbookIndentToolbar("indent", this);
+    pMergeBar = new QWorkbookMergeToolbar("merge", this);
+    pMergeVisibleAction = pMergeBar->toggleViewAction();
+    addWidget(pMergeBar);
+    connect(pMergeBar, SIGNAL(mergeSelection(bool)), this, SIGNAL(mergeSelection(bool)));
+
+    // TODO vertical align
+
+    // TODO Number format
+
+    pIndentBar = new QWorkbookIndentToolbar("indent", this);
     pIndentVisibleAction = pAlignBar->toggleViewAction();
     addWidget(pIndentBar);
 
-    pFunctionBar = new WorkbookFunctionToolbar("function", this);
-    ppFunctionVisibleAction = pFunctionBar->toggleViewAction();
-    addWidget(pFunctionBar);
+    // TODO Borders
+    // TODO Linestyle
+    // TODO Conditional Formatting
+    // TODO insert/remove columns/rows
 
     pPopupMenu = new QMenu(this);
 
@@ -86,20 +135,57 @@ void QWorkbookToolBar::initBuild() {
     toolbarMenu->addAction(pFontEffectsVisibleAction);
     toolbarMenu->addAction(pAlignVisibleAction);
     toolbarMenu->addAction(pIndentVisibleAction);
-    toolbarMenu->addAction(ppFunctionVisibleAction);
 
 
     setContextMenuPolicy(Qt::CustomContextMenu);
     connect(this, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showContextMenu(const QPoint&)));
 
-    connect(pFontBar, SIGNAL(italic(bool)), pFontEffectsBar, SLOT(setItalic(bool)));
-    connect(pFontBar, SIGNAL(bold(bool)), pFontEffectsBar, SLOT(setBold(bool)));
+}
 
-    connect(this, SIGNAL(boldChanged(bool)), pFontEffectsBar, SLOT(setBold(bool)));
-    connect(this, SIGNAL(italicChanged(bool)), pFontEffectsBar, SLOT(setItalic(bool)));
-    connect(this, SIGNAL(underlineChanged(bool)), pFontEffectsBar, SLOT(setUnderline(bool)));
-    connect(this, SIGNAL(fontChanged(QFont)), pFontBar, SLOT(setFont(QFont)));
-    connect(this, SIGNAL(alignmentChanged(Qt::Alignment)), pAlignBar, SLOT(setAlign(Qt::Alignment)));
+/*!
+ * \brief QWorkbookToolBar::setWorkbookView(QWorkbookView *view)
+ *
+ * \param view
+ */
+void QWorkbookToolBar::setWorkbookView(QWorkbookView *view) {
+
+    pView = view;
+
+    connect(pView, SIGNAL(selectionChanged(FormatStatus*)), this, SLOT(selectionChanged(FormatStatus*)));
+
+    // bar to view
+    connect(this, SIGNAL(boldChanged(bool)), pView, SLOT(setSelectionBold(bool)));
+    connect(this, SIGNAL(italicChanged(bool)), pView, SLOT(setSelectionItalic(bool)));
+    connect(this, SIGNAL(underlineChanged(bool)), pView, SLOT(setSelectionUnderline(bool)));
+    connect(this, SIGNAL(fontChanged(QFont)), pView, SLOT(setSelectionFont(QFont)));
+    connect(this, SIGNAL(fontSizeChanged(int)), pView, SLOT(setSelectionFontSize(int)));
+    connect(this, SIGNAL(alignmentChanged(Qt::Alignment)), pView, SLOT(setSelectionAlignment(Qt::Alignment)));
+
+
+    // view to bar
+    connect(this, SIGNAL(boldSelection(bool)), pFontEffectsBar, SLOT(setBold(bool)));
+    connect(this, SIGNAL(italicSelection(bool)), pFontEffectsBar, SLOT(setItalic(bool)));
+    connect(this, SIGNAL(underlineSelection(bool)), pFontEffectsBar, SLOT(setUnderline(bool)));
+    connect(this, SIGNAL(fontSelection(bool,QFont,int)), pFontBar, SLOT(setFont(bool,QFont,int)));
+    connect(this, SIGNAL(alignSelection(bool,Qt::Alignment)), pAlignBar, SLOT(setAlign(bool, Qt::Alignment)));
+    connect(this, SIGNAL(mergeSelection(bool)), pMergeBar, SLOT(setMerge(bool)));
+
+    pView->triggerInitialSelection();
+}
+
+void QWorkbookToolBar::selectionChanged(FormatStatus* status) {
+    if (!status) return;
+
+    emit boldSelection(!(status->bAllBold));
+    emit italicSelection(!(status->bAllItalic));
+    emit underlineSelection(!(status->bAllUnderline));
+
+    emit fontSelection(status->bAllSameFont, status->mFont, status->mFontSize);
+
+    emit alignSelection(status->bAllSameAlignment, status->mAlignment);
+
+    emit mergeSelection(status->bContiguous);
+
 }
 
 void QWorkbookToolBar::showContextMenu(const QPoint &pos) {
@@ -124,10 +210,6 @@ void QWorkbookToolBar::showIndentBar(bool show) {
 
 void QWorkbookToolBar::showAlignBar(bool show) {
     pAlignBar->setVisible(show);
-}
-
-void QWorkbookToolBar::showFunctionBar(bool show) {
-    pFunctionBar->setVisible(show);
 }
 
 void QWorkbookToolBar::setBold(bool value) {

@@ -9,11 +9,11 @@
 #include "workbook_global.h"
 #include "basetoolbar.h"
 
-class WORKBOOKSHARED_EXPORT WorkbookFunctionToolbar : public BaseToolbar {
+class WORKBOOKSHARED_EXPORT QWorkbookFunctionToolbar : public BaseToolbar {
     Q_OBJECT
 public:
-    WorkbookFunctionToolbar(QWidget *parent);
-    WorkbookFunctionToolbar(QString title, QWidget *parent);
+    QWorkbookFunctionToolbar(QWidget *parent);
+    QWorkbookFunctionToolbar(QString title, QWidget *parent);
 
 signals:
 
