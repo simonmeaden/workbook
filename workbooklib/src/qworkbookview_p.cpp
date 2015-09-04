@@ -4,6 +4,7 @@
 #include <QImageReader>
 
 #include "qworkbookview_p.h"
+#include "toolbar/qworkbooktoolbar.h"
 #include "qworkbookview.h"
 #include "workbook.h"
 #include "worksheet.h"
@@ -12,67 +13,72 @@
 #include "pluginstore.h"
 #include "workbookparser.h"
 
-//WorkbookInsertSheetDialogPrivate::WorkbookInsertSheetDialogPrivate(WorkbookInsertSheetDialog *parent) :
-//    q_ptr(parent) {
-
-//    Q_Q(WorkbookInsertSheetDialog);
-//    QGridLayout *layout = new QGridLayout;
-//    q->setLayout(layout);
-
-//    QFrame *f1 = new QFrame(this);
-//    QVBoxLayout *l1 = new QVBoxLayout;
-//    f1->setLayout(l1);
-
-//    l1->addWidget(new QLabel(q->tr("Position :"), this));
-//    beforeBox = new QCheckBox(this);
-//    l1->addWidget(beforeBox);
-//    afterBox = new QCheckBox(this);
-//    li->addWidget(afterBox, 2, 0);
-//    tabPositionGroup = new QButtonGroup(this);
-//    tabPositionGroup->addButton(beforeBox);
-//    tabPositionGroup->addButton(afterBox);
-//    beforeBox->setChecked(true);
-//    layout->addWidget(f1, 0, 0);
-
-//    QFrame *f2 = new QFrame(this);
-//    QGridLayout *l2 = new QGridLayout;
-//    f2->setLayout(l2);
-
-//    l2->addWidget(new QLabel(q->tr("Sheet :"), this), 0, 0);
-//    newSheetBox = new QCheckBox(this);
-//    l2->addWidget(newSheetBox, 1, 0, 1, 2);
-//    l2->addWidget(new QLabel(q->tr("No. of sheets :")), 2, 0);
-//    tabCountBox = QSpinBox(this);
-//    tabCountBox->setMinimum(1);
-//    tabCountBox->setMaximum(100);
-//    tabCountBox->setValue(1);
-//    l2->addWidget(tabCountBox, 2, 1);
-//    l2->addWidget(new QLabel(q->tr("Name :")), 2, 0);
-//    tabFilenameEdit = new QLineEdit(this);
-//    l2->addWidget(tabFilenameEdit, 2, 1);
-
-//    QFrame *f3 = new QFrame(this);
-//    QGridLayout *l3 = new QGridLayout;
-//    f3->setLayout(l3);
-
-//    okBtn = new QPushButton
-
-//    fromFileBox = new QCheckBox(this);
-//    l2->addWidget(fromFileBox, 3, 0);
-//}
-
+quint8 QWorkbookViewPrivate::sheetNumber = 1;
 
 QWorkbookViewPrivate::QWorkbookViewPrivate(QWorkbookView *parent) : q_ptr(parent) {
+    Q_Q(QWorkbookView);
+
+    pTabBar = q_ptr->tabBar();
+    pTabBar->setContextMenuPolicy(Qt::CustomContextMenu);
+    q_ptr->connect(pTabBar, SIGNAL(customContextMenuRequested(const QPoint &)),
+                   SLOT(showContextMenu(const QPoint &)));
+
+    q_ptr->setContentsMargins(0, 0, 0, 0);
+    q_ptr->setTabShape(QTabWidget::Triangular);
+    q_ptr->setTabPosition(QTabWidget::South);
+
+    createActions();
+
     pBook = new Workbook(q_ptr);
 
-    pCurrentView = addWorksheet();
     pPluginStore = new PluginStore(q_ptr);
     pParser = new WorkbookParser(pPluginStore, q_ptr);
 
+    pCurrentView = addWorksheet();
 }
 
 QWorkbookViewPrivate::~QWorkbookViewPrivate() {
 
+}
+
+QWorkbookToolBar* QWorkbookViewPrivate::toolBar() {
+    Q_Q(QWorkbookView);
+
+    QWorkbookToolBar* toolBar = NULL;
+
+    toolBar = new QWorkbookToolBar("workbook", q_ptr);
+
+    // bar to view
+    q_ptr->connect(toolBar, SIGNAL(boldChanged(bool)), q_ptr, SLOT(setSelectionBold(bool)));
+    q_ptr->connect(toolBar, SIGNAL(italicChanged(bool)), q_ptr, SLOT(setSelectionItalic(bool)));
+    q_ptr->connect(toolBar, SIGNAL(underlineChanged(bool)), q_ptr, SLOT(setSelectionUnderline(bool)));
+    q_ptr->connect(toolBar, SIGNAL(fontChanged(QFont)), q_ptr, SLOT(setSelectionFont(QFont)));
+    q_ptr->connect(toolBar, SIGNAL(fontSizeChanged(int)), q_ptr, SLOT(setSelectionFontSize(int)));
+    q_ptr->connect(toolBar, SIGNAL(alignmentChanged(Qt::Alignment)), q_ptr, SLOT(setSelectionAlignment(Qt::Alignment)));
+
+    // view to bar
+    q_ptr->connect(q_ptr, SIGNAL(boldSelection(bool)), toolBar, SLOT(setSelectionBold(bool)));
+    q_ptr->connect(q_ptr, SIGNAL(italicSelection(bool)), toolBar, SLOT(setSelectionUnderline(bool)));
+    q_ptr->connect(q_ptr, SIGNAL(underlineSelection(bool)), toolBar, SLOT(setSelectionUnderline(bool)));
+    // TODO connect the rest
+//    q_ptr->connect(toolBar, SIGNAL(alignmentChanged(Qt::Alignment)),
+//            q_ptr, SLOT(alignmentHasChanged(Qt::Alignment)));
+//    q_ptr->connect(toolBar, SIGNAL(indentCells()), q_ptr, SLOT(indentCells()));
+//    q_ptr->connect(toolBar, SIGNAL(undentCells()), q_ptr, SLOT(undentCells()));
+//    q_ptr->connect(toolBar, SIGNAL(fontChanged(QFont)), q_ptr, SLOT(setFont(QFont)));
+
+    q_ptr->connect(q_ptr, SIGNAL(selectionChanged(FormatStatus*)),
+            toolBar, SLOT(selectionChanged(FormatStatus*)));
+
+    triggerInitialSelection();
+
+    return toolBar;
+}
+
+void QWorkbookViewPrivate::triggerInitialSelection() {
+    QModelIndex index = pCurrentView->model()->index(0, 0);
+    QItemSelection selection(index, index);
+    pCurrentView->selectionHasChanged(selection, selection);
 }
 
 bool QWorkbookViewPrivate::showGrid(int index) {
@@ -341,6 +347,30 @@ void QWorkbookViewPrivate::write(QString name, int row, int column, QVariant ite
     }
 }
 
+void QWorkbookViewPrivate::write(Range &range, QVariant item) {
+    for (int row = range.top(); row <= range.bottom(); row++) {
+        for (int col = range.left(); col <= range.right(); col++) {
+            write(row, col, item);
+        }
+    }
+}
+
+void QWorkbookViewPrivate::write(int index, Range &range, QVariant item) {
+    for (int row = range.top(); row <= range.bottom(); row++) {
+        for (int col = range.left(); col <= range.right(); col++) {
+            write(index, row, col, item);
+        }
+    }
+}
+
+void QWorkbookViewPrivate::write(QString name, Range &range, QVariant item) {
+    for (int row = range.top(); row <= range.bottom(); row++) {
+        for (int col = range.left(); col <= range.right(); col++) {
+            write(name, row, col, item);
+        }
+    }
+}
+
 void QWorkbookViewPrivate::writeImage(int row, int column, QString path) {
     QImage image = imageFromFilename(path);
     if (image.isNull()) return;
@@ -429,6 +459,30 @@ void QWorkbookViewPrivate::setFormat(QString name, int row, int column, Format* 
     QWorksheetView* sheet = worksheetview(name);
     if (sheet)
         sheet->setFormat(row, column, format);
+}
+
+void QWorkbookViewPrivate::setFormat(Range &range, Format* format) {
+    for (int row = range.top(); row <= range.bottom(); row++) {
+        for (int col = range.left(); col <= range.right(); col++) {
+            setFormat(row, col, format);
+        }
+    }
+}
+
+void QWorkbookViewPrivate::setFormat(int index, Range &range, Format* format) {
+    for (int row = range.top(); row <= range.bottom(); row++) {
+        for (int col = range.left(); col <= range.right(); col++) {
+            setFormat(index, row, col, format);
+        }
+    }
+}
+
+void QWorkbookViewPrivate::setFormat(QString name, Range &range, Format* format) {
+    for (int row = range.top(); row <= range.bottom(); row++) {
+        for (int col = range.left(); col <= range.right(); col++) {
+            setFormat(name, row, col, format);
+        }
+    }
 }
 
 void QWorkbookViewPrivate::setSelectedFormat(Format *format) {
@@ -534,36 +588,35 @@ void QWorkbookViewPrivate::alignmentHasChanged(Qt::Alignment alignment) {
         }
     }
 }
-
-void QWorkbookViewPrivate::setBold(bool value) {
-    QMap<QModelIndex, Format*> formats = selectedFormats();
-
-    Format *format;
-    QListIterator<QModelIndex> it(formats.keys());
-    while (it.hasNext()) {
-        QModelIndex index = it.next();
-        if (index.isValid()) {
-            format = formats.value(index);
-            format->setBold(value);
-        }
-    }
+void QWorkbookViewPrivate::setSelectionBold(bool value) {
+    pCurrentView->setSelectionBold(value);
 }
 
-void QWorkbookViewPrivate::setItalic(bool value) {
-    QMap<QModelIndex, Format*> formats = selectedFormats();
-
-    Format *format;
-    QListIterator<QModelIndex> it(formats.keys());
-    while (it.hasNext()) {
-        QModelIndex index = it.next();
-        if (index.isValid()) {
-            format = formats.value(index);
-            format->setItalic(value);
-        }
-    }
+void QWorkbookViewPrivate::setSelectionItalic(bool value) {
+    pCurrentView->setSelectionItalic(value);
 }
 
-void QWorkbookViewPrivate::setUnderline(bool value) {
+void QWorkbookViewPrivate::setSelectionUnderline(bool value) {
+    pCurrentView->setSelectionUnderline(value);
+}
+
+void QWorkbookViewPrivate::setSelectionFont(QFont font) {
+    pCurrentView->setSelectionFont(font);
+}
+
+void QWorkbookViewPrivate::setSelectionFontSize(int size) {
+    pCurrentView->setSelectionFontSize(size);
+}
+
+void QWorkbookViewPrivate::setSelectionAlignment(Qt::Alignment alignment) {
+    pCurrentView->setSelectionAlignment(alignment);
+}
+
+void QWorkbookViewPrivate::setSelectionMerge(bool merge) {
+    pCurrentView->setSelectionMerge(merge);
+}
+
+void QWorkbookViewPrivate::setFont(QFont font) {
     QMap<QModelIndex, Format*> formats = selectedFormats();
 
     Format *format;
@@ -572,7 +625,7 @@ void QWorkbookViewPrivate::setUnderline(bool value) {
         QModelIndex index = it.next();
         if (index.isValid()) {
             format = formats.value(index);
-            format->setUnderline(value);
+            format->setFont(font);
         }
     }
 }
@@ -637,24 +690,23 @@ void QWorkbookViewPrivate::createActions() {
 }
 
 void QWorkbookViewPrivate::insertSheet() {
-//    Q_Q(QWorkbookView);
-
+    // TODO insertSheet()
 }
 
 void QWorkbookViewPrivate::renameSheet() {
-
+    // TODO renameSheet()
 }
 
 void QWorkbookViewPrivate::moveCopySheet() {
-
+    // TODO moveCopySheet()
 }
 
 void QWorkbookViewPrivate::protectSheet() {
-
+    // TODO protectSheet()
 }
 
 void QWorkbookViewPrivate::tabColor() {
-
+    // TODO tabColor()
 }
 
 void QWorkbookViewPrivate::showContextMenu(const QPoint &/*point*/) {
@@ -734,7 +786,7 @@ void QWorkbookViewPrivate::setWorkbook(Workbook *book) {
     // set up the new stuff.
     for (int i = 0; i < count; i++) {
         sheet = pBook->worksheet(i);
-        model = new WorksheetModel(sheet, pPluginStore, q_ptr);
+//        model = new WorksheetModel(sheet, pPluginStore, q_ptr);
         view = new QWorksheetView(pParser, pPluginStore, q_ptr);
         view->setModel(model);
         views.append(view);
@@ -758,100 +810,146 @@ QWorksheetView* QWorkbookViewPrivate::worksheetview(QString name) {
 }
 
 QWorksheetView* QWorkbookViewPrivate::addWorksheet() {
-    Worksheet *sheet = pBook->addWorksheet();
-    WorksheetModel *model = new WorksheetModel(sheet, pPluginStore, q_ptr);
 
-    QWorksheetView *view =  initWorksheet(model);
-    q_ptr->addTab(view, sheet->sheetName());
+    // creat3 new view
+    QWorksheetView *view =  initWorksheet();
+    // add it to the tabsheet
+    // default next sheet name equals "Sheet" plus a number()
+    QString sheetName = "Sheet" + QString::number(QWorkbookViewPrivate::sheetNumber++);
+
+    view->setSheetName(sheetName);
+    q_ptr->addTab(view, sheetName);
+
     return view;
 }
 
 QWorksheetView* QWorkbookViewPrivate::addWorksheet(QString name) {
-    Worksheet *sheet = pBook->addWorksheet();
-    WorksheetModel *model = new WorksheetModel(sheet, pPluginStore, q_ptr);
-    sheet->setSheetName(name);
 
-    QWorksheetView *view =  initWorksheet(model);
+    QWorksheetView *view = initWorksheet();
+
+    view->setSheetName(name);
     q_ptr->addTab(view, name);
+
     return view;
 }
 
-QWorksheetView* QWorkbookViewPrivate::initWorksheet(WorksheetModel *model) {
+QWorksheetView* QWorkbookViewPrivate::initWorksheet() {
+    // create new view
     QWorksheetView *view = new QWorksheetView(pParser, pPluginStore, q_ptr);
-    q_ptr->connect(view, SIGNAL(cellSelected(Cell*)), q_ptr, SIGNAL(cellSelected(Cell*)));
-    q_ptr->connect(view, SIGNAL(rangeSelected(Range&)), q_ptr, SIGNAL(rangeSelected(Range&)));
-    q_ptr->connect(view, SIGNAL(nonContiguousRangeSelected()), q_ptr, SIGNAL(nonContiguousRangeSelected()));
-    q_ptr->connect(view, SIGNAL(cellsChanged(QString)), q_ptr, SIGNAL(cellsChanged(QString)));
 
+    // link selectionChanged to internal modifier slot.
     q_ptr->connect(view->selectionModel(),
                    SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
                    view,
                    SLOT(selectionHasChanged(QItemSelection, QItemSelection)));
+    // link the result to the outside world.
+    q_ptr->connect(view, SIGNAL(selectionChanged(FormatStatus*)),
+                  q_ptr, SIGNAL(selectionChanged(FormatStatus*)));
 
-    q_ptr->connect(view->selectionModel(),
-                   SIGNAL(currentChanged(QModelIndex,QModelIndex)),
-                   view,
-                   SLOT(currentCellChanged(QModelIndex,QModelIndex)));
-
-    view->setModel(model);
     return view;
-
 }
 
 QWorksheetView* QWorkbookViewPrivate::insertWorksheet(int index) {
-    Worksheet *sheet = pBook->insertWorksheet(index);
-    WorksheetModel *model = new WorksheetModel(sheet, pPluginStore, q_ptr);
 
-    QWorksheetView *view = initWorksheet(model);
+    QWorksheetView *view = initWorksheet();
+    // add it to the tabsheet
+    // default next sheet name equals "Sheet" plus a number()
+    QString sheetName = "Sheet" + QString::number(QWorkbookViewPrivate::sheetNumber++);
 
-    q_ptr->insertTab(index, view, sheet->sheetName());
+    view->setSheetName(sheetName);
+    q_ptr->insertTab(index, view, sheetName);
+
     return view;
 }
 
 QWorksheetView* QWorkbookViewPrivate::insertWorksheet(int index, QString name) {
-    Worksheet *sheet = pBook->insertWorksheet(index);
-    sheet->setSheetName(name);
-    WorksheetModel *model = new WorksheetModel(sheet, pPluginStore, q_ptr);
 
-    QWorksheetView *view = initWorksheet(model);
+    QWorksheetView *view = initWorksheet();
 
+    view->setSheetName(name);
     q_ptr->insertTab(index, view, name);
+
     return view;
 }
 
 void QWorkbookViewPrivate::renameSheet(QString oldname, QString newname) {
-    int index = pBook->renameSheet(oldname, newname);
-    q_ptr->tabBar()->setTabText(index, newname);
+    QString text;
+    int index;
+    bool found = false;
+    for (index = 0; index < pTabBar->count(); index++) {
+        text = pTabBar->tabText(index);
+        if (text == oldname) {
+            found = true;
+            break;
+        }
+    }
+
+    if (!found) return;
+
+    pTabBar->setTabText(index, newname);
+    pBook->renameSheet(oldname, newname);
+
 }
 
 void QWorkbookViewPrivate::setTabText(int index, QString text) {
-    Worksheet *sheet = pBook->insertWorksheet(index);
+
+    QString oldName = pTabBar->tabText(index);
+    pTabBar->setTabText(index, text);
+
+    Worksheet *sheet = pBook->worksheet(oldName);
     sheet->setSheetName(text);
-    q_ptr->tabBar()->setTabText(index, text);
+
 }
 
 void QWorkbookViewPrivate::removeWorksheet(int index) {
     int i = pBook->removeWorksheet(index);
     if (i >= 0) {
         QWorksheetView *view = qobject_cast<QWorksheetView*>(q_ptr->widget(index));
+
+        view->disconnect(view, SIGNAL(cellsSelected(QModelIndexList)),
+                         q_ptr, SIGNAL(cellsSelected(QModelIndexList)));
+
         q_ptr->removeTab(index);
         view->deleteLater();
     }
 }
 
 void QWorkbookViewPrivate::removeWorksheet(QString name) {
-    int index = pBook->removeWorksheet(name);
-    if (index >= 0) {
-        QWorksheetView *view = qobject_cast<QWorksheetView*>(q_ptr->widget(index));
-        q_ptr->removeTab(index);
-        view->deleteLater();
+    QString text;
+    int index;
+    bool found = false;
+    for (index = 0; index < pTabBar->count(); index++) {
+        text = pTabBar->tabText(index);
+        if (text == name) {
+            found = true;
+            break;
+        }
     }
+
+    if (!found) return;
+
+    pBook->removeWorksheet(name);
+
+    QWorksheetView *view = qobject_cast<QWorksheetView*>(q_ptr->widget(index));
+
+    view->disconnect(view, SIGNAL(cellsSelected(QModelIndexList)),
+                     q_ptr, SIGNAL(cellsSelected(QModelIndexList)));
+
+    view->deleteLater();
+
+    q_ptr->removeTab(index);
+
 }
 
 void QWorkbookViewPrivate::removeWorksheet(Worksheet *sheet) {
+
     int index = pBook->removeWorksheet(sheet);
     if (index >= 0) {
         QWorksheetView *view = qobject_cast<QWorksheetView*>(q_ptr->widget(index));
+
+        view->disconnect(view, SIGNAL(cellsSelected(QModelIndexList)),
+                         q_ptr, SIGNAL(cellsSelected(QModelIndexList)));
+
         q_ptr->removeTab(index);
         view->deleteLater();
     }

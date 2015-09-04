@@ -30,23 +30,10 @@ class WorksheetModel;
 class Format;
 class PluginStore;
 class WorkbookParser;
-
-class WorkbookInsertSheetDialogPrivate {
-public:
-    WorkbookInsertSheetDialogPrivate(WorkbookInsertSheetDialog *parent);
-
-    QCheckBox *beforeBox, *afterBox, *newSheetBox, *fromFileBox;
-    QButtonGroup *tabPositionGroup, *tabTypeGroup;
-    QLineEdit *tabFilenameEdit;
-    QSpinBox *tabCountBox;
-    QPushButton *okBtn, *cancelBtn, *helpBtn;
-
-
-    WorkbookInsertSheetDialog *q_ptr;
-    Q_DECLARE_PUBLIC(WorkbookInsertSheetDialog)
-};
+class QWorkbookToolBar;
 
 class QWorkbookViewPrivate {
+
 public:
     QWorkbookViewPrivate(QWorkbookView *parent);
     ~QWorkbookViewPrivate();
@@ -73,8 +60,8 @@ public:
     QDateTime created() { return mCreated; }
     void setCreated(QDateTime created) { mCreated = created; }
 
-
     void createActions();
+    QWorkbookToolBar* toolBar();
 
     bool showGrid();
     bool showGrid(int index);
@@ -90,6 +77,9 @@ public:
     void write(int row, int column, QVariant item);
     void write(int index, int row, int column, QVariant item);
     void write(QString name, int row, int column, QVariant item);
+    void write(Range& range, QVariant item);
+    void write(int index, Range &range, QVariant item);
+    void write(QString name, Range &range, QVariant item);
 
     void writeImage(int row, int column, QString path);
     void writeImage(int index, int row, int column, QString path);
@@ -107,6 +97,9 @@ public:
     void setFormat(int row, int column, Format *item);
     void setFormat(int index, int row, int column, Format *item);
     void setFormat(QString name, int row, int column, Format *item);
+    void setFormat(Range &range, Format *item);
+    void setFormat(int index, Range& range, Format *item);
+    void setFormat(QString name, Range& range, Format *item);
 
     QMap<QModelIndex, Format*> selectedFormats();
     QMap<QModelIndex, Format*> selectedFormats(int index);
@@ -150,12 +143,12 @@ public:
     void unlockRange(QString name, Range &range);
     void unlockSheet(QString name);
 
-    int indexOf(Worksheet*sheet);
+    int indexOf(Worksheet*);
     QWorksheetView *addWorksheet();
     QWorksheetView *addWorksheet(QString name);
     QWorksheetView *insertWorksheet(int position);
     QWorksheetView* insertWorksheet(int position, QString name);
-    QWorksheetView *initWorksheet(WorksheetModel *model);
+    QWorksheetView *initWorksheet();
     void removeWorksheet(int position);
     void removeWorksheet(Worksheet *sheet);
     void removeWorksheet(QString name);
@@ -174,11 +167,8 @@ public:
     void renameSheet(QString oldname, QString newname);
     void setTabText(int index, QString text);
 
-    inline Workbook* book() {return pBook; }
+    Workbook* book() {return pBook; }
     void setWorkbook(Workbook *book);
-
-    WorkbookParser *pParser;
-    PluginStore *pPluginStore;
 
 //    void closeEditor(QWidget* editor, QAbstractItemDelegate::EndEditHint hint);
 //    void keyPressEvent(QKeyEvent* event);
@@ -201,12 +191,24 @@ public:
     void enableTabMenu(bool);
 
     // toolbar methods
+    void triggerInitialSelection();
     void alignmentHasChanged(Qt::Alignment);
-    void setBold(bool);
-    void setItalic(bool);
-    void setUnderline(bool);
+    void setSelectionBold(bool);
+    void setSelectionItalic(bool);
+    void setSelectionUnderline(bool);
+    void setSelectionFont(QFont);
+    void setSelectionFontSize(int);
+    void setSelectionAlignment(Qt::Alignment);
+    void setSelectionMerge(bool);
+    void setFont(QFont);
     void indentCells();
     void undentCells();
+
+protected:
+    QTabBar *pTabBar;
+    WorkbookParser *pParser;
+    PluginStore *pPluginStore;
+    static quint8 sheetNumber;
 
 private:
     Workbook *pBook;

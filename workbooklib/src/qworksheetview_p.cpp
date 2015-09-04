@@ -47,6 +47,7 @@
 
 #include "pluginstore.h"
 #include "workbookparser.h"
+#include <qstd.h>
 
 QWorksheetViewPrivate::QWorksheetViewPrivate(QWorksheetView *parent) :
     q_ptr(parent) {
@@ -54,10 +55,8 @@ QWorksheetViewPrivate::QWorksheetViewPrivate(QWorksheetView *parent) :
     pPluginStore = new PluginStore(q_ptr);
     pParser = new WorkbookParser(pPluginStore, q_ptr);
 
-    q_ptr->setModel(new WorksheetModel(pPluginStore, q_ptr));
-    q_ptr->setItemDelegate(new FormatDelegate(q_ptr));
+    init();
 
-    contiguous = true;
 }
 
 QWorksheetViewPrivate::QWorksheetViewPrivate(WorkbookParser *parser, PluginStore *store, QWorksheetView *parent) :
@@ -65,64 +64,293 @@ QWorksheetViewPrivate::QWorksheetViewPrivate(WorkbookParser *parser, PluginStore
     pPluginStore(store),
     q_ptr(parent) {
 
-    q_ptr->setModel(new WorksheetModel(pPluginStore, q_ptr));
-    q_ptr->setItemDelegate(new FormatDelegate(q_ptr));
+    init();
 
-    contiguous = true;
 }
 
 QWorksheetViewPrivate::~QWorksheetViewPrivate() {
 
 }
 
-void QWorksheetViewPrivate::selectionHasChanged(QItemSelection selected, QItemSelection /*deselected*/) {
-    QModelIndex index;
+void QWorksheetViewPrivate::init() {
 
-    QModelIndexList items = selected.indexes();
-    int count = 0, minRow = 0, maxRow = 0, minCol = 0, maxCol = 0, row, col;
+    pSheet = new Worksheet(pPluginStore, q_ptr);
+    q_ptr->setModel(new WorksheetModel(pSheet, pPluginStore, q_ptr));
+    q_ptr->setItemDelegate(new FormatDelegate(q_ptr));
 
-    // if the total rows * total columns = total item count then
-    // the range is contigouous.
-    foreach (index, items) {
-        row = index.row();
-        col = index.column();
-        count++;
+    bContiguous = true;
 
-        minRow = (row < minRow ? row : minRow);
-        maxRow = (row > maxRow ? row : maxRow);
-        minCol = (col < minCol ? col : minCol);
-        maxCol = (col > maxCol ? col : maxCol);
-    }
+    q_ptr->setSelectionMode(QTableView::ExtendedSelection);
 
-    Q_Q(QWorksheetView);
-    if (count == 1) { // single cell selected
-        Cell *cell = q->model()->cellAsCell(index.row(), index.column());
-        emit q->cellSelected(cell);
-        emit q->cellsChanged(CellReference::cellToString(index.row(), index.column()));
-    } else {
-
-        int rows = maxRow - minRow + 1;
-        int cols = maxCol - minCol + 1;
-        int cells = rows * cols;
-
-        if (cells > count)
-            contiguous = false;
-        else
-            contiguous = true;
-
-        if (contiguous) {
-            Range range(minRow, minCol, maxRow, maxCol);
-            emit q->rangeSelected(range);
-            emit q->cellsChanged(Range::rangeToString(minRow, minCol, maxRow, maxCol));
-        } else {
-            emit q->nonContiguousRangeSelected();
-            emit q->cellsChanged("");
-        }
-    }
+    QItemSelectionModel *sm = q_ptr->selectionModel();
+    q_ptr->connect(sm,
+                   SIGNAL(selectionChanged(QItemSelection, QItemSelection)),
+                   q_ptr,
+                   SLOT(selectionHasChanged(QItemSelection, QItemSelection)));
 
 }
 
+Worksheet* QWorksheetViewPrivate::worksheet() {
+    return pSheet;
+}
+
+void QWorksheetViewPrivate::setSheetName(QString name) {
+    pSheet->setSheetName(name);
+}
+
+QString QWorksheetViewPrivate::sheetName() {
+    return pSheet->sheetName();
+}
+
+
+void QWorksheetViewPrivate::selectionHasChanged(QItemSelection selected, QItemSelection /*deselected*/) {
+//    QModelIndex index;
+
+    Q_Q(QWorksheetView);
+
+    mFormatStatus.clear();
+
+    mItems = selected.indexes();
+    QList<Format*> formats;
+    Format* format;
+    int row, col;
+
+    foreach (QModelIndex index, mItems) {
+        row = index.row();
+        col = index.column();
+        mFormatStatus.mCount++;
+        mFormatStatus.mMinRow = (row < mFormatStatus.mMinRow ? row : mFormatStatus.mMinRow);
+        mFormatStatus.mMaxRow = (row > mFormatStatus.mMaxRow ? row : mFormatStatus.mMaxRow);
+        mFormatStatus.mMinCol = (col < mFormatStatus.mMinCol ? col : mFormatStatus.mMinCol);
+        mFormatStatus.mMaxCol = (col > mFormatStatus.mMaxCol ? col : mFormatStatus.mMaxCol);
+
+        if (index.isValid()) {
+            format = q_ptr->model()->format(index);
+            formats.append(format);
+        }
+
+    }
+
+    if (((mFormatStatus.mMaxRow - mFormatStatus.mMinRow) * (mFormatStatus.mMaxCol - mFormatStatus.mMinCol)) > mFormatStatus.mCount)
+        mFormatStatus.bContiguous = false;
+    else
+        mFormatStatus.bContiguous = true;
+
+    bContiguous = mFormatStatus.bContiguous;
+
+    cout << (bContiguous ? "contiguous" : "non-contiguous") << endl << flush;
+
+    if (formats.size() == 0) {
+        emit q->selectionChanged(NULL);
+        return;
+    }
+
+
+    format = formats.at(0);
+    QFont font = format->font();
+    int fontSize = font.pointSize();
+    bool bold = format->bold();
+    bool italic = format->italic();
+    bool underline = format->underline();
+    Qt::Alignment alignment = format->alignment();
+    Format::UnderlineStyle uStyle = format->underlineStyle();
+    QColor uColor = format->underlineColor();
+    bool overline = format->overline();
+    bool strikeout = format->strikeout();
+
+    mFormatStatus.bAllBold = !bold;
+    mFormatStatus.bAllItalic = !italic;
+    mFormatStatus.bAllOverline = !overline;
+    mFormatStatus.bAllStrikeout = !strikeout;
+    mFormatStatus.bAllUnderline = !underline;
+//    mFormatStatus.bAllUnderline = (uStyle == format->underlineStyle());
+//    mFormatStatus.bAllUnderline = (uColor == format->underlineColor());
+    mFormatStatus.bAllSameFont = (font == format->font());
+//    mFormatStatus.bAllSameAlignment = true; // already done
+
+    for(int i = 1; i < formats.size(); i++) {
+        format = formats.at(i);
+
+        if (mFormatStatus.bAllBold)
+            if (bold != format->bold())
+                mFormatStatus.bAllBold = false;
+
+        if (mFormatStatus.bAllItalic)
+            if (italic != format->italic())
+                mFormatStatus.bAllItalic = false;
+
+        if (mFormatStatus.bAllOverline)
+            if (overline != format->overline())
+                mFormatStatus.bAllOverline = false;
+
+        if (mFormatStatus.bAllStrikeout)
+            if (strikeout != format->strikeout())
+                mFormatStatus.bAllStrikeout = false;
+
+        if (mFormatStatus.bAllUnderline)
+            if (underline != format->underline())
+                mFormatStatus.bAllUnderline = false;
+
+        if (mFormatStatus.bAllUnderline)
+            if (uStyle != format->underlineStyle())
+                mFormatStatus.bAllUnderline = false;
+
+        if (mFormatStatus.bAllUnderline)
+            if (uColor != format->underlineColor())
+                mFormatStatus.bAllUnderline = false;
+
+        if (mFormatStatus.bAllSameFont)
+            if (font != format->font())
+                mFormatStatus.bAllSameFont = false;
+
+        if (mFormatStatus.bAllSameAlignment)
+            if (alignment != format->alignment())
+                mFormatStatus.bAllSameAlignment = false;
+
+        if (mFormatStatus.allSet()) break;
+    }
+
+    if (mFormatStatus.bAllSameFont) {
+        mFormatStatus.mFont = font;
+        mFormatStatus.mFontSize = fontSize;
+    }
+
+    if (mFormatStatus.bAllSameAlignment) {
+        mFormatStatus.mAlignment = alignment;
+    }
+
+    emit q->selectionChanged(&mFormatStatus);
+
+}
+
+void QWorksheetViewPrivate::setSelectionBold(bool value) {
+
+    Format* format;
+    int row, col;
+
+    foreach (QModelIndex index, mItems) {
+
+        if (index.isValid()) {
+            row = index.row();
+            col = index.column();
+
+            format = q_ptr->model()->format(index);
+            format->setBold(value);
+            q_ptr->setFormat(row, col, format);
+        }
+
+    }
+}
+
+void QWorksheetViewPrivate::setSelectionItalic(bool value) {
+
+    Format* format;
+    int row, col;
+
+    foreach (QModelIndex index, mItems) {
+
+        if (index.isValid()) {
+            row = index.row();
+            col = index.column();
+
+            format = q_ptr->model()->format(index);
+            format->setItalic(value);
+            q_ptr->setFormat(row, col, format);
+        }
+
+    }
+}
+
+void QWorksheetViewPrivate::setSelectionUnderline(bool value) {
+
+    Format* format;
+    int row, col;
+
+    foreach (QModelIndex index, mItems) {
+
+        if (index.isValid()) {
+            row = index.row();
+            col = index.column();
+
+            format = q_ptr->model()->format(index);
+            format->setUnderline(value);
+            q_ptr->setFormat(row, col, format);
+        }
+
+    }
+}
+
+void QWorksheetViewPrivate::setSelectionFont(QFont font) {
+
+    Format* format;
+    int row, col;
+
+    foreach (QModelIndex index, mItems) {
+
+        if (index.isValid()) {
+            row = index.row();
+            col = index.column();
+
+            format = q_ptr->model()->format(index);
+            format->setFont(font);
+            cout << font.family() << " : " << font.pointSize() << endl << flush;
+            q_ptr->setFormat(row, col, format);
+        }
+
+    }
+}
+
+void QWorksheetViewPrivate::setSelectionFontSize(int size) {
+
+    Format* format;
+    int row, col;
+
+    foreach (QModelIndex index, mItems) {
+
+        if (index.isValid()) {
+            row = index.row();
+            col = index.column();
+
+            format = q_ptr->model()->format(index);
+            format->setPointSize(size);
+            q_ptr->setFormat(row, col, format);
+        }
+
+    }
+}
+
+void QWorksheetViewPrivate::setSelectionAlignment(Qt::Alignment alignment) {
+
+    Format* format;
+    int row, col;
+
+    foreach (QModelIndex index, mItems) {
+
+        if (index.isValid()) {
+            row = index.row();
+            col = index.column();
+
+            format = q_ptr->model()->format(index);
+            format->setAlignment(alignment);
+            q_ptr->setFormat(row, col, format);
+        }
+
+    }
+}
+void QWorksheetViewPrivate::setSelectionMerge(bool merge) {
+    if (merge) {
+        if (bContiguous) {
+            int row = mFormatStatus.mMinRow;
+            int col = mFormatStatus.mMinCol;
+            int rowSpan = mFormatStatus.mMaxRow - mFormatStatus.mMinRow;
+            int colSpan = mFormatStatus.mMaxCol - mFormatStatus.mMinCol;
+            q_ptr->setSpan(row, col, rowSpan, colSpan);
+        }
+    }
+}
+
 QVariant QWorksheetViewPrivate::read(int row, int column) {
+
     QModelIndex index = q_ptr->model()->index(row, column);
     if (index.isValid())
         return q_ptr->model()->data(index);

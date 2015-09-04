@@ -50,6 +50,7 @@
 #include "worksheetmodel.h"
 #include "formatdelegate.h"
 #include "pluginstore.h"
+#include "workbookparser.h"
 #include "cell.h"
 
 
@@ -57,15 +58,12 @@ QWorksheetView::QWorksheetView(QWidget *parent) :
     QTableView(parent),
     d_ptr(new QWorksheetViewPrivate(this)) {
 
-    init();
-
 }
 
 QWorksheetView::QWorksheetView(WorkbookParser *parser, PluginStore *store, QWidget *parent) :
     QTableView(parent),
+    pPluginStore(store),
     d_ptr(new QWorksheetViewPrivate(parser, store, this)) {
-
-    init();
 
 }
 
@@ -73,28 +71,51 @@ QWorksheetView::~QWorksheetView() {
 
 }
 
-void QWorksheetView::init() {
-    setSelectionMode(QTableView::ExtendedSelection);
-
-    QItemSelectionModel *sm = selectionModel();
-    connect(sm,
-            SIGNAL(selectionChanged(QItemSelection, QItemSelection)),
-            this,
-            SLOT(selectionHasChanged(QItemSelection, QItemSelection)));
-    connect(sm,
-            SIGNAL(currentChanged(QModelIndex,QModelIndex)),
-            this,
-            SLOT(currentCellChanged(QModelIndex,QModelIndex)));
+void QWorksheetView::setSheetName(QString name) {
+    d_ptr->setSheetName(name);
 }
+
+QString QWorksheetView::sheetName() {
+    return d_ptr->sheetName();
+}
+
+Worksheet* QWorksheetView::worksheet() {
+    return d_ptr->worksheet();
+}
+
 
 void QWorksheetView::selectionHasChanged(const QItemSelection selected, const QItemSelection deselected) {
     d_ptr->selectionHasChanged(selected, deselected);
 }
 
-void QWorksheetView::currentCellChanged(const QModelIndex current, const QModelIndex /*previous*/) {
-//    d_ptr->selectionHasChanged(selected, deselected);
-    cout << current.row() << " : " << current.column() << endl << flush;
+void QWorksheetView::setSelectionBold(bool value) {
+    d_ptr->setSelectionBold(value);
 }
+
+void QWorksheetView::setSelectionItalic(bool value) {
+    d_ptr->setSelectionItalic(value);
+}
+
+void QWorksheetView::setSelectionUnderline(bool value) {
+    d_ptr->setSelectionUnderline(value);
+}
+
+void QWorksheetView::setSelectionFont(QFont font) {
+    d_ptr->setSelectionFont(font);
+}
+
+void QWorksheetView::setSelectionFontSize(int size) {
+    d_ptr->setSelectionFontSize(size);
+}
+
+void QWorksheetView::setSelectionAlignment(Qt::Alignment alignment) {
+    d_ptr->setSelectionAlignment(alignment);
+}
+
+void QWorksheetView::setSelectionMerge(bool merge) {
+    d_ptr->setSelectionMerge(merge);
+}
+
 
 WorksheetModel* QWorksheetView::model() {
     return qobject_cast<WorksheetModel*>(QTableView::model());

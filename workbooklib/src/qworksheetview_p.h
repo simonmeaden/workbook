@@ -7,11 +7,14 @@
 
 #include "cellreference.h"
 #include "range.h"
+#include "types.h"
 
 class QWorksheetView;
 class PluginStore;
 class WorkbookParser;
 class Format;
+class Worksheet;
+
 
 class QWorksheetViewPrivate {
 
@@ -22,6 +25,7 @@ public:
 
     WorkbookParser *pParser;
     PluginStore *pPluginStore;
+    Worksheet *pSheet;
 
     QVariant read(int row, int column);
     QVariant read(const CellReference& reference);
@@ -38,8 +42,25 @@ public:
     void setFormat(const CellReference& reference, Format *format);
     void setFormat(Range& range, Format *format);
 
-    bool contiguous;
+    // toolbar interaction
+    void setSelectionBold(bool);
+    void setSelectionItalic(bool);
+    void setSelectionUnderline(bool);
+    void setSelectionFont(QFont);
+    void setSelectionFontSize(int);
+    void setSelectionAlignment(Qt::Alignment);
+    void setSelectionMerge(bool);
+
+    bool bContiguous;
+    FormatStatus mFormatStatus;
+    QModelIndexList mItems;
     void selectionHasChanged(QItemSelection, QItemSelection);
+
+    void init();
+    void setSheetName(QString);
+    QString sheetName();
+    Worksheet* worksheet();
+
 
     QWorksheetView*  const q_ptr;
     Q_DECLARE_PUBLIC(QWorksheetView)

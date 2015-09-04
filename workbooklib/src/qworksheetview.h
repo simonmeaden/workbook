@@ -76,15 +76,14 @@ public:
 
     QMap<QModelIndex, Format*> selectedFormats();
 
+    QString sheetName();
+    Worksheet* worksheet();
+
 signals:
-    void cellSelected(Cell *cell);
-    void rangeSelected(Range &range);
-    void cellsChanged(QString selection);
-    void nonContiguousRangeSelected();
+    void selectionChanged(FormatStatus*);
 
 public slots:
-    void setModel(QAbstractItemModel *model);
-    void setModel(WorksheetModel *model);
+    void setSheetName(QString);
 
     void write(int row, int column, QVariant item);
     void write(const CellReference& reference, QVariant item);
@@ -95,18 +94,28 @@ public slots:
     void setFormat(Range &range, Format *format);
     void setSelectedFormat(Format *format);
 
-public slots:
+    void setSelectionBold(bool);
+    void setSelectionItalic(bool);
+    void setSelectionUnderline(bool);
+    void setSelectionFont(QFont);
+    void setSelectionFontSize(int);
+    void setSelectionAlignment(Qt::Alignment);
+    void setSelectionMerge(bool);
 
     void selectionHasChanged(const QItemSelection, const QItemSelection);
-    void currentCellChanged(const QModelIndex current, const QModelIndex previous);
+//    void currentCellChanged(const QModelIndex current, const QModelIndex previous);
+
+private slots:
+    void setModel(QAbstractItemModel *model);
+    void setModel(WorksheetModel *model);
 
 protected:
     QWorksheetView(WorkbookParser *parser, PluginStore *store, QWidget *parent);
 
     QModelIndexList selectedIndexes();
     WorksheetModel* model();
-
-    void init();
+    WorkbookParser *pParser;
+    PluginStore *pPluginStore;
 
 private:
     QWorksheetViewPrivate *d_ptr;

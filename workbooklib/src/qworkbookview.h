@@ -73,17 +73,6 @@ class WorkbookInsertSheetDialogPrivate;
 class QWorkbookToolBar;
 class Cell;
 
-//class WorkbookInsertSheetDialog : public QDialog {
-//    Q_OBJECT
-//public:
-
-//    explicit WorkbookInsertSheetDialog(QWidget *parent);
-//    ~WorkbookInsertSheetDialog();
-
-//protected:
-//    WorkbookInsertSheetDialogPrivate *d_ptr;
-//};
-
 class WORKBOOKSHARED_EXPORT QWorkbookView : public QTabWidget {
     Q_OBJECT
     Q_PROPERTY(QString title READ title WRITE setTitle)
@@ -147,13 +136,10 @@ public:
     QString category();
     void setCategory(QString category);
 
-//    QString getFilename();
+
 
 signals:
-    void cellSelected(Cell *cell);
-    void rangeSelected(Range &range);
-    void cellsChanged(QString selection);
-    void nonContiguousRangeSelected();
+    void selectionChanged(FormatStatus*);
 
 public slots:
     void setWorkbook(Workbook *book);
@@ -166,6 +152,8 @@ public slots:
     void removeWorksheet(QString name);
     void renameSheet(QString oldname, QString newname);
     void setTabText(int index, QString text);
+
+    void triggerInitialSelection();
 
     void write(int row, int column, QVariant item);
     void write(CellReference& reference, QVariant item);
@@ -265,22 +253,20 @@ protected slots:
     void tabColor();
 
     // toolbar methods
-    void alignmentHasChanged(Qt::Alignment);
-    void setBold(bool);
-    void setItalic(bool);
-    void setUnderline(bool);
+    void setSelectionBold(bool);
+    void setSelectionItalic(bool);
+    void setSelectionUnderline(bool);
+    void setSelectionFont(QFont);
+    void setSelectionFontSize(int);
+    void setSelectionAlignment(Qt::Alignment);
+    void setSelectionMerge(bool);
     void indentCells();
     void undentCells();
+    void setFont(QFont);
 
 protected:
-
-    QTabBar *pTabBar;
-    QWorkbookToolBar *pToolBar;
-
     Worksheet* currentWorksheet();
     QWorksheetView* currentWorksheetView();
-
-    void createActions();
 
 private:
     QWorkbookViewPrivate *d_ptr;

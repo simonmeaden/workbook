@@ -82,7 +82,7 @@
  */
 
 /*!
- * \brief A
+ * \brief A wrapper class for the various number formats.
  *
  * A wrapper class for the various number formats. By default only the common types for
  * all Locales are stored in this class although non-standard or Locale defined types can
@@ -435,4 +435,12 @@ Border Format::leftborder() {
 
 Border Format::rightBorder() {
     return d_ptr->rightBorder();
+}
+
+bool Border::isEqual(Border border) {
+    if (border.color() == mColor &&
+        border.thickness() == mThickness &&
+        border.style() == mStyle)
+        return true;
+    return false;
 }

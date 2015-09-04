@@ -105,17 +105,32 @@ class Border {
 public:
     Border();
     
-    inline bool isEnabled() { return bEnabled; }
-    inline void setEnabled(bool enabled) { bEnabled = enabled; }
-    inline QColor color() { return mColor; }
-    inline void setColor(QColor color) { mColor = color; }
-    inline BorderStyle style() { return mStyle; }
-    inline void setStyle(BorderStyle style) { mStyle = style; }
-    inline double thickness() { return mThickness; }
-    inline void setThickness(double thickness) { mThickness = thickness; }
+    bool isEnabled() { return bEnabled; }
+    void setEnabled(bool enabled) { bEnabled = enabled; }
+    QColor color() { return mColor; }
+    void setColor(QColor color) { mColor = color; }
+    BorderStyle style() { return mStyle; }
+    void setStyle(BorderStyle style) { mStyle = style; }
+    double thickness() { return mThickness; }
+    void setThickness(double thickness) { mThickness = thickness; }
+    bool isEqual(Border border);
     
-//    static QVector<qreal> toStyle(Border border);
-    
+    bool operator== (Border b) {
+        if (b.thickness() == mThickness &&
+            b.style() == mStyle &&
+            b.color() == mColor &&
+            b.isEnabled() == bEnabled) return true;
+        return false;
+    }
+
+    bool operator!= (Border b) {
+        if (b.thickness() != mThickness ||
+            b.style() != mStyle ||
+            b.color() != mColor ||
+            b.isEnabled() != bEnabled) return true;
+        return false;
+    }
+
 protected:
     bool bEnabled;
     QColor mColor;
@@ -155,7 +170,7 @@ public:
     QBrush backgroundColor();
     int indentSize();
 
-    QXlsx::Format toXlsx();
+    QXlsx::Format toXlsx();    
 
 signals:
     void formatChanged(Format* format);
@@ -198,6 +213,9 @@ public slots:
     void updateLeftBorder(bool enabled, QColor color=QColor("black"), BorderStyle style=SINGLE, double thickness = 0.75);
     void updateRightBorder(bool enabled, QColor color=QColor("black"), BorderStyle style=SINGLE, double thickness = 0.75);
 
+//    bool operator== (Format f) {
+
+//    }
 
 protected:
 

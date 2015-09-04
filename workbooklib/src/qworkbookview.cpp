@@ -50,33 +50,10 @@
 #include "workbookparser.h"
 #include "cell.h"
 
-//WorkbookInsertSheetDialog::WorkbookInsertSheetDialog(QWidget *parent) :
-//    QWidget(parent),
-//    d_ptr(new WorkbookInsertSheetDialogPrivate(this)) {
-
-//}
-
-//WorkbookInsertSheetDialog::~WorkbookInsertSheetDialog() {
-
-//}
-
 QWorkbookView::QWorkbookView(QWidget *parent) :
     QTabWidget(parent),
     d_ptr(new QWorkbookViewPrivate(this)) {
 
-    pTabBar = tabBar();
-    pTabBar->setContextMenuPolicy(Qt::CustomContextMenu);
-
-    pToolBar = NULL;
-
-    setContentsMargins(0, 0, 0, 0);
-    setTabShape(QTabWidget::Triangular);
-    setTabPosition(QTabWidget::South);
-
-    createActions();
-
-    connect(pTabBar, SIGNAL(customContextMenuRequested(const QPoint &)),
-            SLOT(showContextMenu(const QPoint &)));
 }
 
 QWorkbookView::~QWorkbookView() {
@@ -84,18 +61,10 @@ QWorkbookView::~QWorkbookView() {
 }
 
 QWorkbookToolBar* QWorkbookView::toolBar() {
-    if (!pToolBar) {
-        pToolBar = new QWorkbookToolBar("workbook", this);
-        connect(pToolBar, SIGNAL(alignmentChanged(Qt::Alignment)),
-                this, SLOT(alignmentHasChanged(Qt::Alignment)));
-        connect(pToolBar, SIGNAL(boldChanged(bool)), this, SLOT(setBold(bool)));
-        connect(pToolBar, SIGNAL(italicChanged(bool)), this, SLOT(setItalic(bool)));
-        connect(pToolBar, SIGNAL(underlineChanged(bool)), this, SLOT(setUnderline(bool)));
-        connect(pToolBar, SIGNAL(indentCells()), this, SLOT(indentCells()));
-        connect(pToolBar, SIGNAL(undentCells()), this, SLOT(undentCells()));
-    }
-    return pToolBar;
+    // TODO function toolbar
+    return d_ptr->toolBar();
 }
+
 
 QString QWorkbookView::title() {
     return d_ptr->title();
@@ -193,20 +162,8 @@ void QWorkbookView::setShowGrid(QString name, bool showGrid) {
     d_ptr->setShowGrid(name, showGrid);
 }
 
-void QWorkbookView::alignmentHasChanged(Qt::Alignment alignment) {
-    d_ptr->alignmentHasChanged(alignment);
-}
-
-void QWorkbookView::setBold(bool value) {
-    d_ptr->setBold(value);
-}
-
-void QWorkbookView::setItalic(bool value) {
-    d_ptr->setItalic(value);
-}
-
-void QWorkbookView::setUnderline(bool value) {
-    d_ptr->setUnderline(value);
+void QWorkbookView::setFont(QFont font) {
+    d_ptr->setFont(font);
 }
 
 void QWorkbookView::indentCells() {
@@ -386,11 +343,7 @@ QVariant QWorkbookView::read(QString name, int row, int column) {
 }
 
 void QWorkbookView::write(Range &range, QVariant item) {
-    for (int row = range.top(); row <= range.bottom(); row++) {
-        for (int col = range.left(); col <= range.right(); col++) {
-            d_ptr->write(row, col, item);
-        }
-    }
+    d_ptr->write(range, item);
 }
 
 void QWorkbookView::write(int row, int column, QVariant item) {
@@ -406,11 +359,7 @@ void QWorkbookView::write(int index, CellReference &reference, QVariant item) {
 }
 
 void QWorkbookView::write(int index, Range &range, QVariant item) {
-    for (int row = range.top(); row <= range.bottom(); row++) {
-        for (int col = range.left(); col <= range.right(); col++) {
-            d_ptr->write(index, row, col, item);
-        }
-    }
+    d_ptr->write(index, range, item);
 }
 
 void QWorkbookView::write(int index, int row, int column, QVariant item) {
@@ -422,11 +371,7 @@ void QWorkbookView::write(QString name, CellReference &reference, QVariant item)
 }
 
 void QWorkbookView::write(QString name, Range &range, QVariant item) {
-    for (int row = range.top(); row <= range.bottom(); row++) {
-        for (int col = range.left(); col <= range.right(); col++) {
-            d_ptr->write(name, row, col, item);
-        }
-    }
+    d_ptr->write(name, range, item);
 }
 
 void QWorkbookView::write(QString name, int row, int column, QVariant item) {
@@ -510,11 +455,7 @@ void QWorkbookView::setFormat(const CellReference &reference, Format* format) {
 }
 
 void QWorkbookView::setFormat(Range &range, Format* format) {
-    for (int row = range.top(); row <= range.bottom(); row++) {
-        for (int col = range.left(); col <= range.right(); col++) {
-            d_ptr->setFormat(row, col, format);
-        }
-    }
+    d_ptr->setFormat(range, format);
 }
 
 void QWorkbookView::setFormat(int row, int column, Format* format) {
@@ -526,11 +467,7 @@ void QWorkbookView::setFormat(int index, const CellReference &reference, Format*
 }
 
 void QWorkbookView::setFormat(int index, Range &range, Format* format) {
-    for (int row = range.top(); row <= range.bottom(); row++) {
-        for (int col = range.left(); col <= range.right(); col++) {
-            d_ptr->setFormat(index, row, col, format);
-        }
-    }
+    d_ptr->setFormat(index, range, format);
 }
 
 void QWorkbookView::setFormat(int index, int row, int column, Format* format) {
@@ -542,19 +479,47 @@ void QWorkbookView::setFormat(QString name, const CellReference &reference, Form
 }
 
 void QWorkbookView::setFormat(QString name, Range &range, Format* format) {
-    for (int row = range.top(); row <= range.bottom(); row++) {
-        for (int col = range.left(); col <= range.right(); col++) {
-            d_ptr->setFormat(name, row, col, format);
-        }
-    }
+    d_ptr->setFormat(name, range, format);
 }
 
 void QWorkbookView::setFormat(QString name, int row, int column, Format* format) {
     d_ptr->setFormat(name, row, column, format);
 }
 
+void QWorkbookView::triggerInitialSelection() {
+    d_ptr->triggerInitialSelection();
+}
+
 void QWorkbookView::setSelectedFormat(Format *format) {
     d_ptr->setSelectedFormat(format);
+}
+
+void QWorkbookView::setSelectionBold(bool value) {
+    d_ptr->setSelectionBold(value);
+}
+
+void QWorkbookView::setSelectionItalic(bool value) {
+    d_ptr->setSelectionItalic(value);
+}
+
+void QWorkbookView::setSelectionUnderline(bool value) {
+    d_ptr->setSelectionUnderline(value);
+}
+
+void QWorkbookView::setSelectionFont(QFont font) {
+    d_ptr->setSelectionFont(font);
+}
+
+void QWorkbookView::setSelectionFontSize(int size) {
+    d_ptr->setSelectionFontSize(size);
+}
+
+void QWorkbookView::setSelectionAlignment(Qt::Alignment alignment) {
+    d_ptr->setSelectionAlignment(alignment);
+}
+
+void QWorkbookView::setSelectionMerge(bool merge) {
+    d_ptr->setSelectionMerge(merge);
 }
 
 void QWorkbookView::setSelectedFormat(int index, Format *format) {
@@ -575,10 +540,6 @@ QMap<QModelIndex, Format*> QWorkbookView::selectedFormats(int index) {
 
 QMap<QModelIndex, Format*> QWorkbookView::selectedFormats(QString name) {
     return d_ptr->selectedFormats(name);
-}
-
-void QWorkbookView::createActions() {
-    d_ptr->createActions();
 }
 
 void QWorkbookView::insertSheet() {
