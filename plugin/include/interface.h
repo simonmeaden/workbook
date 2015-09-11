@@ -43,6 +43,7 @@
 #ifndef FUNCTIONINTERFACE_H
 #define FUNCTIONINTERFACE_H
 
+#include <QObject>
 #include <QList>
 
 class QString;
@@ -127,7 +128,7 @@ public:
 };
 
 
-#define IBase_iid "uk.co.smelecomp.Plugin.IBase"
+#define IBase_iid     "uk.co.smelecomp.Plugin.IBase"
 #define IConstant_iid "uk.co.smelecomp.Plugin.IConstant"
 #define IOperator_iid "uk.co.smelecomp.Plugin.IOperator"
 #define IFunction_iid "uk.co.smelecomp.Plugin.IFunction"

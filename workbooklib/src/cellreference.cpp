@@ -42,10 +42,8 @@
  */
 #include <QPair>
 
-#include "cellreference.h"
-#include "cellreference_p.h"
 #include "workbook.h"
-
+#include "cellreference.h"
 
 /*!
  * \brief Creates an invalid CellReference.
@@ -61,15 +59,10 @@ CellReference::CellReference(QObject *parent) :
     d_ptr(new CellReferencePrivate(this)) {
 }
 
-CellReference::CellReference(const CellReference& reference) :
-    QObject(reference.parent()),
-    d_ptr(reference.d_ptr) {
-}
-
 CellReference::CellReference(int row, int column, QObject *parent) : QObject(parent), d_ptr(new CellReferencePrivate(this)) {
     Q_D(CellReference);
-    d->m_row = row;
-    d->m_column = column;
+    d->mRow = row;
+    d->mColumn = column;
 }
 
 CellReference::CellReference(QString reference, QObject *parent) : QObject(parent), d_ptr(new CellReferencePrivate(this)) {
@@ -91,26 +84,26 @@ int CellReference::column() const {
 
 void CellReference::setRow(int &row) {
     Q_D(CellReference);
-    d->m_row = row;
+    d->mRow = row;
  }
 
 void CellReference::setColumn(int &column) {
     Q_D(CellReference);
-    d->m_column = column;
+    d->mColumn = column;
 }
 
 void CellReference::setPosition(int &row, int &column) {
     Q_D(CellReference);
-    d->m_row = row;
-    d->m_column = column;
+    d->mRow = row;
+    d->mColumn = column;
 }
 
 void CellReference::setPosition(QString &reference) {
     Q_D(CellReference);
     QPair<int, int> pair = cellFromString(reference);
 
-    d->m_row = pair.first;
-    d->m_column = pair.second;
+    d->mRow = pair.first;
+    d->mColumn = pair.second;
 }
 
 QString CellReference::toString() {

@@ -46,6 +46,8 @@
 #include <QAbstractTableModel>
 #include <QVariant>
 #include <QModelIndex>
+#include <QObject>
+#include <QScopedPointer>
 
 #include "pluginstore.h"
 
@@ -54,6 +56,8 @@ class Format;
 class Range;
 class CellReference;
 class Cell;
+class WorksheetModelPrivate;
+
 
 class WorksheetModel : public QAbstractTableModel {
     Q_OBJECT
@@ -101,14 +105,20 @@ public slots:
     void unlockColumn(int &column);
     void unlockRange(Range &range);
     void unlockSheet();
-
+//    void span(int, int, int, int , QList<Cell *> = QList<Cell*>());
+//    void despan(int, int, int, int );
 
 protected:
-    Worksheet *pSheet;
-    int mRows, mColumns;
-    PluginStore *pPluginStore;
+    QScopedPointer<WorksheetModelPrivate> d_ptr;
 
-    Cell* cellAsCell(int row, int column);
+    Cell* cellAsCell(int, int);
+
+protected slots:
+    void setCellAsCell(int, int, Cell*);
+
+private:
+    Q_DECLARE_PRIVATE(WorksheetModel)
+
 
     friend class QWorksheetViewPrivate;
 };

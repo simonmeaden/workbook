@@ -45,23 +45,9 @@
 #include <workbook_global.h>
 #include "worksheet.h"
 #include "worksheetmodel.h"
+#include "types.h"
 
 #include <xlsxformat.h>
-
-//QVector<qreal> Border::toStyle(Border border) {
-//    switch (border.style()) {
-//    case SINGLE:
-//    case DOTTED:
-//    case LARGEDASH:
-//    case DASH_DOT:
-//    case DASH_DOT_DOT:
-//        return border.style();
-//    case DOUBLE:
-//        break;
-//    case SMALLDASH:
-//        break;
-//    }
-//}
 
 /*!
  * \enum DefaultNumberFormats::Types
@@ -132,17 +118,9 @@ DefaultNumberFormats::DefaultNumberFormats() {
  *
  * Define a new number format using an integer, id, a Type, type and a format string.
  */
-void DefaultNumberFormats::insertStyle(int id, Type type, QString format) {
+void DefaultNumberFormats::insertStyle(int id, NumberFormatType type, QString format) {
     insertStyle(id, type, format);
     mIds.insert(format, id);
-}
-
-Border::Border() :
-    bEnabled(false),
-    mColor(QColor("black")),
-    mStyle(BorderStyle::NONE),
-    mThickness(0) {
-
 }
 
 
@@ -287,7 +265,7 @@ void Format::setUnderlineStyle(UnderlineStyle style) {
     d_ptr->setUnderlineStyle(style);
 }
 
-Format::UnderlineStyle Format::underlineStyle() {
+UnderlineStyle Format::underlineStyle() {
     return d_ptr->underlineStyle();
 }
 
@@ -437,10 +415,3 @@ Border Format::rightBorder() {
     return d_ptr->rightBorder();
 }
 
-bool Border::isEqual(Border border) {
-    if (border.color() == mColor &&
-        border.thickness() == mThickness &&
-        border.style() == mStyle)
-        return true;
-    return false;
-}

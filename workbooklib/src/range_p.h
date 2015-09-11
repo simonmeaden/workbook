@@ -58,10 +58,10 @@ class RangePrivate : public Reference {
 
 public:
     RangePrivate(Range *parent);
-    RangePrivate(const int &row1, const int &column1, const int &row2, const int &column2, Range *parent);
-    RangePrivate(const CellReference topLeft, const CellReference bottomRight, Range *parent);
+    RangePrivate(int &row1, int &column1, int &row2, int &column2, Range *parent);
+    RangePrivate(CellReference topLeft, CellReference bottomRight, Range *parent);
 
-    static bool isEqual(const Range *a, const Range *b);
+    static bool isEqual(Range *a, Range *b);
 
     // static functions
     static QString rangeToString(int column, int row, int width, int height);
@@ -69,10 +69,10 @@ public:
 
 
     // Publicish methods.
-    void setRange(const int &row1, const int &column1, const int &row2, const int &column2);
+    void setRange(int &row1, int &column1, int &row2, int &column2);
     QQuad<int, int, int, int> range();
-    QList<Range *> intersections(const Range *range);
-    bool intersects(const Range *range);
+    QList<Range *> intersections(Range *range);
+    bool intersects(Range *range);
     bool isNull();
 
     // Privatish methods.

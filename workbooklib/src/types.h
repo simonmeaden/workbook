@@ -44,6 +44,7 @@
 #define TYPES
 
 #include <QFont>
+#include <QColor>
 #include <qnamespace.h>
 
 enum WorksheetType {
@@ -72,6 +73,18 @@ enum CellType {
     ErrorType,
 };
 
+enum UnderlineStyle {
+    UnderlineNone,
+    UnderlineSingle,
+    UnderlineDouble,
+    UnderlineSingleWiggly,
+    UnderlineSpellCheck,
+};
+
+const static QString buttonStyle = "padding: 0px; " \
+                                   "margin: 0px; " \
+                                   ;
+
 struct FormatStatus {
 public:
     bool bAllBold, bAllItalic, bAllUnderline, bAllOverline, bAllStrikeout;
@@ -98,6 +111,10 @@ public:
         bAllSameIndent = true;
         bAllSameAlignment = true;
         mCount = 0;
+        mMinRow = 0;
+        mMaxRow = 0;
+        mMinCol = 0;
+        mMaxCol = 0;
     }
 
     bool allSet() {
@@ -112,6 +129,103 @@ public:
         return false;
     }
 };
+
+class Border {
+public:
+    Border() :
+        bEnabled(false),
+        mColor(QColor("black")),
+        mStyle(BorderStyle::NONE),
+        mThickness(0) {
+
+    }
+
+    bool isEnabled() {
+        return bEnabled;
+    }
+    void setEnabled(bool enabled) {
+        bEnabled = enabled;
+    }
+    QColor color() {
+        return mColor;
+    }
+    void setColor(QColor color) {
+        mColor = color;
+    }
+    BorderStyle style() {
+        return mStyle;
+    }
+    void setStyle(BorderStyle style) {
+        mStyle = style;
+    }
+    double thickness() {
+        return mThickness;
+    }
+    void setThickness(double thickness) {
+        mThickness = thickness;
+    }
+
+    bool isEqual(Border border) {
+        if (border.color() == mColor &&
+                border.thickness() == mThickness &&
+                border.style() == mStyle)
+            return true;
+        return false;
+    }
+
+    bool operator== (Border b) {
+        if (b.thickness() == mThickness &&
+                b.style() == mStyle &&
+                b.color() == mColor &&
+                b.isEnabled() == bEnabled) return true;
+        return false;
+    }
+
+    bool operator!= (Border b) {
+        if (b.thickness() != mThickness ||
+                b.style() != mStyle ||
+                b.color() != mColor ||
+                b.isEnabled() != bEnabled) return true;
+        return false;
+    }
+
+protected:
+    bool bEnabled;
+    QColor mColor;
+    BorderStyle mStyle;
+    double mThickness;
+};
+
+enum NumberFormatType {
+    General,
+    Decimal,
+    Currency,
+    Percent,
+    Scientific,
+    Fraction,
+    Date,
+    Time,
+    DateTime,
+    Account,
+    Text,
+};
+
+enum ParserError {
+    NoError=0x0,
+    UnbalancedParethesis=0x1,
+    UnhandledPartialExpression=0x2,
+    NotAFunction=0x4,
+    FunctionNotFollowedByParenthesis=0x8,
+    EmptyFunction=0x10,
+    WrongNumberOfFunctionParameters = 0x20,
+    WrongParameterType=0x40,
+    BrokenExpression=0x80,
+    NoFunctionAvailable=0x100,
+};
+Q_DECLARE_FLAGS(ParserErrors, ParserError)
+Q_DECLARE_OPERATORS_FOR_FLAGS(ParserErrors)
+Q_DECLARE_METATYPE(ParserError)
+
 
 // Static variables and constants
 const QString REGEXSTRING_ROW = "\\$?(\\d+)";

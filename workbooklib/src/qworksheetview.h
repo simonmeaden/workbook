@@ -40,14 +40,15 @@
 
     It is also available on request from Simon Meaden info@smelecomp.co.uk.
 */
-#ifndef WORKSHEETVIEW_H
-#define WORKSHEETVIEW_H
+#ifndef QWORKSHEETVIEW_H
+#define QWORKSHEETVIEW_H
 
 #include <QObject>
 #include <QWidget>
 #include <QTableView>
 #include <QVariant>
 #include <QVariantList>
+#include <QScopedPointer>
 
 #include <workbook_global.h>
 
@@ -85,14 +86,15 @@ signals:
 public slots:
     void setSheetName(QString);
 
-    void write(int row, int column, QVariant item);
-    void write(const CellReference& reference, QVariant item);
-    void write(Range &range, QVariant item);
 
-    void setFormat(int row, int column, Format *format);
-    void setFormat(const CellReference& reference, Format *format);
-    void setFormat(Range &range, Format *format);
-    void setSelectedFormat(Format *format);
+    void write(int, int, QVariant);
+    void write(const CellReference&, QVariant);
+    void write(Range &, QVariant);
+
+    void setFormat(int, int, Format*);
+    void setFormat(const CellReference&, Format*);
+    void setFormat(Range &, Format*);
+    void setSelectedFormat(Format*);
 
     void setSelectionBold(bool);
     void setSelectionItalic(bool);
@@ -101,6 +103,8 @@ public slots:
     void setSelectionFontSize(int);
     void setSelectionAlignment(Qt::Alignment);
     void setSelectionMerge(bool);
+
+    virtual void setSpan(int, int, int, int);
 
     void selectionHasChanged(const QItemSelection, const QItemSelection);
 //    void currentCellChanged(const QModelIndex current, const QModelIndex previous);
@@ -118,7 +122,7 @@ protected:
     PluginStore *pPluginStore;
 
 private:
-    QWorksheetViewPrivate *d_ptr;
+    QScopedPointer<QWorksheetViewPrivate> d_ptr;
     Q_DECLARE_PRIVATE(QWorksheetView)
 
     friend class QWorkbookViewPrivate;

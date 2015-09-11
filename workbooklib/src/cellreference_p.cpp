@@ -48,15 +48,20 @@
 #include "range.h"
 
 
+CellReferencePrivate::CellReferencePrivate() :
+    mRow(-1),
+    mColumn(-1) {
+}
+
 CellReferencePrivate::CellReferencePrivate(CellReference *parent) :
     q_ptr(parent),
-    m_row(-1),
-    m_column(-1) {
+    mRow(-1),
+    mColumn(-1) {
 }
 
 bool CellReferencePrivate::isValid() {
 
-    if (m_row < 0 || m_column < 0) return false;
+    if (mRow < 0 || mColumn < 0) return false;
 
     return true;
 

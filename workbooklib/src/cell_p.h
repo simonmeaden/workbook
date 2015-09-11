@@ -55,13 +55,14 @@ namespace QXlsx {
     class Worksheet;
 }
 
-class Format;
 class Cell;
+class Format;
 
 class CellPrivate {
+    Q_DECLARE_PUBLIC(Cell)
 public:
-    CellPrivate(Cell *parent);
-
+    CellPrivate();
+    CellPrivate(Cell *q);
 
     int mRow;
     inline int row() const {
@@ -85,7 +86,6 @@ public:
 
     CellType mType;
     CellType type();
-//    void setType(CellType type);
 
     QString toString();
 
@@ -93,7 +93,7 @@ public:
     QString name();
     void setName(QString name);
 
-    Q_DECLARE_PUBLIC(Cell)
+protected:
     Cell *q_ptr;
 
 

@@ -54,7 +54,7 @@ RangePrivate::RangePrivate(Range *parent) :
 
 }
 
-RangePrivate::RangePrivate(const int &row1, const int &column1, const int &row2, const int &column2, Range *parent) :
+RangePrivate::RangePrivate(int &row1, int &column1, int &row2, int &column2, Range *parent) :
     q_ptr(parent),
     mTop(row1),
     mBottom(row2),
@@ -65,7 +65,7 @@ RangePrivate::RangePrivate(const int &row1, const int &column1, const int &row2,
 
 }
 
-RangePrivate::RangePrivate(const CellReference topLeft, const CellReference bottomRight, Range *parent) :
+RangePrivate::RangePrivate(CellReference topLeft, CellReference bottomRight, Range *parent) :
     q_ptr(parent),
     mTop(topLeft.row()),
     mBottom(bottomRight.row()),
@@ -76,7 +76,7 @@ RangePrivate::RangePrivate(const CellReference topLeft, const CellReference bott
 
 }
 
-void RangePrivate::setRange(const int &row1, const int &column1, const int &row2, const int &column2) {
+void RangePrivate::setRange(int &row1, int &column1, int &row2, int &column2) {
     mTop = row1;
     mBottom = row2;
     mLeft = column1;
@@ -111,7 +111,7 @@ void RangePrivate::normalise() {
 }
 
 
-bool RangePrivate::isEqual(const Range *a, const Range *b) {
+bool RangePrivate::isEqual(Range *a, Range *b) {
     return (a->d_ptr->mRight == b->d_ptr->mRight &&
             a->d_ptr->mLeft == b->d_ptr->mLeft &&
             a->d_ptr->mTop == b->d_ptr->mTop &&
@@ -128,7 +128,7 @@ bool RangePrivate::isNull() {
  * \param area The \cArea to check against.
  * \return true if there is an overlap between the two \c Area's.
  */
-bool RangePrivate::intersects(const Range *range) {
+bool RangePrivate::intersects(Range *range) {
     if (range->d_ptr->mBottom < mTop) // area completely  above this
         return false;
 
@@ -159,7 +159,7 @@ bool RangePrivate::intersects(const Range *range) {
  * \param area the new area.
  * \return a list of \c Area objects that will be redone.
  */
-QList<Range*> RangePrivate::intersections(const Range *range) {
+QList<Range*> RangePrivate::intersections(Range *range) {
     int maxLeft   = qMax<int>(mLeft, range->d_ptr->mLeft);
     //    int minLeft   = qMin<int>(mLeft, area.mLeft);
     int minRight  = qMin<int>(mRight, range->d_ptr->mRight);

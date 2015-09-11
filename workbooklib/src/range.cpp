@@ -49,23 +49,23 @@ Range::Range() :
 
 }
 
-Range::Range(const int &row1, const int &column1, const int &row2, const int &column2) :
+Range::Range(int &row1, int &column1, int &row2, int &column2) :
     d_ptr(new RangePrivate(row1, column1, row2, column2, this)) {
 }
 
-Range::Range(const CellReference topLeft, const CellReference bottomRight) :
+Range::Range(CellReference topLeft, CellReference bottomRight) :
     d_ptr(new RangePrivate(topLeft, bottomRight, this)) {
 }
 
-bool Range::operator==(const Range *area) const {
+bool Range::operator==(Range *area) {
     return RangePrivate::isEqual(this, area);
 }
 
-bool Range::intersects(const Range *range) {
+bool Range::intersects(Range *range) {
     return d_ptr->intersects(range);
 }
 
-QList<Range*> Range::intersections(const Range *range) {
+QList<Range*> Range::intersections(Range *range) {
     return d_ptr->intersections(range);
 }
 
@@ -73,7 +73,7 @@ bool Range::isNull() {
     return d_ptr->isNull();
 }
 
-void Range::setRange(const int &row1, const int &column1, const int &row2, const int &column2) {
+void Range::setRange(int &row1, int &column1, int &row2, int &column2) {
     d_ptr->setRange(row1, column1, row2, column2);
 }
 

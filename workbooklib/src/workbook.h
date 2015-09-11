@@ -46,6 +46,7 @@
 #include <QObject>
 #include <QString>
 #include <QFileDialog>
+#include <QScopedPointer>
 
 #include "types.h"
 #include "workbook_global.h"
@@ -87,7 +88,7 @@ public slots:
 protected slots:
 
 protected:
-    WorkbookPrivate *d_ptr;
+    QScopedPointer<WorkbookPrivate> d_ptr;
 
     Worksheet* worksheet(int index);
     Worksheet* worksheet(QString name);

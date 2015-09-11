@@ -54,11 +54,8 @@ namespace QXlsx {
     class Format;
 }
 
-#include "format.h"
-
-//class Format;
 class WorksheetModel;
-
+class Format;
 
 class FormatPrivate {
 public:
@@ -107,20 +104,20 @@ public:
     void setFontColor(QColor color);
 
     bool bUnderline;
-    Format::UnderlineStyle mUnderlineStyle;
+    UnderlineStyle mUnderlineStyle;
     QColor mUnderlineColor;
-    inline bool underline() { return bUnderline; }
-    inline Format::UnderlineStyle underlineStyle() { return mUnderlineStyle; }
+    bool underline() { return bUnderline; }
+    UnderlineStyle underlineStyle() { return mUnderlineStyle; }
     QColor underlineColor() { return mUnderlineColor; }
     void setUnderline(bool underline);
-    void setUnderlineStyle(Format::UnderlineStyle style);
+    void setUnderlineStyle(UnderlineStyle style);
     void setUnderlineColor(QColor color);
 
     Border mTopBorder, mBottomBorder, mLeftBorder, mRightBorder;
-    inline Border topBorder() { return mTopBorder; }
-    inline Border bottomBorder() { return mBottomBorder; }
-    inline Border leftBorder() { return mLeftBorder; }
-    inline Border rightBorder() { return mRightBorder; }
+    Border topBorder() { return mTopBorder; }
+    Border bottomBorder() { return mBottomBorder; }
+    Border leftBorder() { return mLeftBorder; }
+    Border rightBorder() { return mRightBorder; }
     void setBorder(bool enabled, QColor color=QColor("black"), BorderStyle style=SINGLE, double thickness = 0.75);
     void setTopBorder(bool enabled, QColor color=QColor("black"), BorderStyle style=SINGLE, double thickness = 0.75);
     void setBottomBorder(bool enabled, QColor color=QColor("black"), BorderStyle style=SINGLE, double thickness = 0.75);

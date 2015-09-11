@@ -42,19 +42,28 @@
 */
 #include "cell_p.h"
 #include "format.h"
-#include "cell.h"
 #include "types.h"
+#include "cellreference.h"
 
 #include "xlsxcell.h"
 #include "xlsxworksheet.h"
 
-CellPrivate::CellPrivate(Cell *parent) :
+
+CellPrivate::CellPrivate() :
+    mRow(-1),
+    mColumn(-1),
+    mValue(QVariant()),
+    bLocked(false),
+    mType(TextType) {
+}
+
+CellPrivate::CellPrivate(Cell *q) :
     mRow(-1),
     mColumn(-1),
     mValue(QVariant()),
     bLocked(false),
     mType(TextType),
-    q_ptr(parent) {
+    q_ptr(q) {
 }
 
 QVariant CellPrivate::value() const {
@@ -81,11 +90,6 @@ void CellPrivate::setValue(QVariant &value) {
 CellType CellPrivate::type() {
     return mType;
 }
-
-//void CellPrivate::setType(CellType type) {
-//    mType = type;
-//    emit q_ptr->cellChanged(q_ptr);
-//}
 
 QString CellPrivate::name() {
     if (mName.isEmpty()) {

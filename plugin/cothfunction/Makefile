@@ -15,7 +15,7 @@ CXX           = g++
 DEFINES       = -DWORKBOOK_LIBRARY -DQT_PLUGIN -DQT_GUI_LIB -DQT_CORE_LIB
 CFLAGS        = -pipe -g -Wall -W -D_REENTRANT -fPIC $(DEFINES)
 CXXFLAGS      = -pipe -g -Wall -W -D_REENTRANT -fPIC $(DEFINES)
-INCPATH       = -I. -I../include -I/workspace/qt/common/workbook/include -I/opt/Qt/5.40/5.4/gcc_64/include -I/opt/Qt/5.40/5.4/gcc_64/include/QtGui -I/opt/Qt/5.40/5.4/gcc_64/include/QtCore -I/workspace/qt/build/workbook/plugins/.mocd -I/opt/Qt/5.40/5.4/gcc_64/mkspecs/linux-g++
+INCPATH       = -I. -I../include -I../../include -I/opt/Qt/5.40/5.4/gcc_64/include -I/opt/Qt/5.40/5.4/gcc_64/include/QtGui -I/opt/Qt/5.40/5.4/gcc_64/include/QtCore -I../../../../build/workbook/plugins/.mocd -I/opt/Qt/5.40/5.4/gcc_64/mkspecs/linux-g++
 QMAKE         = /opt/Qt/5.40/5.4/gcc_64/bin/qmake
 DEL_FILE      = rm -f
 CHK_DIR_EXISTS= test -d
@@ -44,13 +44,13 @@ STRIP         = strip
 
 ####### Output directory
 
-OBJECTS_DIR   = /workspace/qt/build/workbook/plugins/.objd/
+OBJECTS_DIR   = ../../../../build/workbook/plugins/.objd/
 
 ####### Files
 
-SOURCES       = src/cothfunction.cpp /workspace/qt/build/workbook/plugins/.mocd/moc_cothfunction.cpp
-OBJECTS       = /workspace/qt/build/workbook/plugins/.objd/cothfunction.o \
-		/workspace/qt/build/workbook/plugins/.objd/moc_cothfunction.o
+SOURCES       = src/cothfunction.cpp ../../../../build/workbook/plugins/.mocd/moc_cothfunction.cpp
+OBJECTS       = ../../../../build/workbook/plugins/.objd/cothfunction.o \
+		../../../../build/workbook/plugins/.objd/moc_cothfunction.o
 DIST          = /opt/Qt/5.40/5.4/gcc_64/mkspecs/features/spec_pre.prf \
 		/opt/Qt/5.40/5.4/gcc_64/mkspecs/common/shell-unix.conf \
 		/opt/Qt/5.40/5.4/gcc_64/mkspecs/common/unix.conf \
@@ -172,7 +172,7 @@ DIST          = /opt/Qt/5.40/5.4/gcc_64/mkspecs/features/spec_pre.prf \
 		/opt/Qt/5.40/5.4/gcc_64/mkspecs/features/lex.prf \
 		cothfunction.pro src/cothfunction.h src/cothfunction.cpp
 QMAKE_TARGET  = cothfunction
-DESTDIR       = /workspace/qt/build/workbook/plugins/#avoid trailing-slash linebreak
+DESTDIR       = ../../../../build/workbook/plugins/#avoid trailing-slash linebreak
 TARGET        = libcothfunction.so
 TARGETD       = libcothfunction.so
 
@@ -199,11 +199,11 @@ first: all
 
 ####### Build rules
 
-/workspace/qt/build/workbook/plugins/$(TARGET):  $(OBJECTS) $(SUBLIBS) $(OBJCOMP)  
-	@test -d /workspace/qt/build/workbook/plugins/ || mkdir -p /workspace/qt/build/workbook/plugins/
+../../../../build/workbook/plugins/$(TARGET):  $(OBJECTS) $(SUBLIBS) $(OBJCOMP)  
+	@test -d ../../../../build/workbook/plugins/ || mkdir -p ../../../../build/workbook/plugins/
 	-$(DEL_FILE) $(TARGET)
 	$(LINK) $(LFLAGS) -o $(TARGET) $(OBJECTS) $(LIBS) $(OBJCOMP)
-	-$(MOVE) $(TARGET) /workspace/qt/build/workbook/plugins/ 
+	-$(MOVE) $(TARGET) ../../../../build/workbook/plugins/ 
 
 
 
@@ -458,7 +458,7 @@ qmake: FORCE
 qmake_all: FORCE
 
 
-all: Makefile /workspace/qt/build/workbook/plugins/$(TARGET)
+all: Makefile ../../../../build/workbook/plugins/$(TARGET)
 
 dist: distdir FORCE
 	(cd `dirname $(DISTDIR)` && $(TAR) $(DISTNAME).tar $(DISTNAME) && $(COMPRESS) $(DISTNAME).tar) && $(MOVE) `dirname $(DISTDIR)`/$(DISTNAME).tar.gz . && $(DEL_FILE) -r $(DISTDIR)
@@ -490,10 +490,10 @@ check: first
 
 compiler_rcc_make_all:
 compiler_rcc_clean:
-compiler_moc_header_make_all: /workspace/qt/build/workbook/plugins/.mocd/moc_cothfunction.cpp
+compiler_moc_header_make_all: ../../../../build/workbook/plugins/.mocd/moc_cothfunction.cpp
 compiler_moc_header_clean:
-	-$(DEL_FILE) /workspace/qt/build/workbook/plugins/.mocd/moc_cothfunction.cpp
-/workspace/qt/build/workbook/plugins/.mocd/moc_cothfunction.cpp: /opt/Qt/5.40/5.4/gcc_64/include/QtCore/QObject \
+	-$(DEL_FILE)../../build/workbook/plugins/.mocd/moc_cothfunction.cpp
+../../../../build/workbook/plugins/.mocd/moc_cothfunction.cpp: /opt/Qt/5.40/5.4/gcc_64/include/QtCore/QObject \
 		/opt/Qt/5.40/5.4/gcc_64/include/QtCore/qobject.h \
 		/opt/Qt/5.40/5.4/gcc_64/include/QtCore/qobjectdefs.h \
 		/opt/Qt/5.40/5.4/gcc_64/include/QtCore/qnamespace.h \
@@ -566,9 +566,9 @@ compiler_moc_header_clean:
 		/opt/Qt/5.40/5.4/gcc_64/include/QtCore/qmath.h \
 		../include/interface.h \
 		/opt/Qt/5.40/5.4/gcc_64/include/QtCore/QList \
-		/workspace/qt/common/workbook/include/workbook_global.h \
+		../../include/workbook_global.h \
 		src/cothfunction.h
-	/opt/Qt/5.40/5.4/gcc_64/bin/moc $(DEFINES) -I/opt/Qt/5.40/5.4/gcc_64/mkspecs/linux-g++ -I/workspace/qt/common/workbook/plugin/cothfunction -I/workspace/qt/common/workbook/plugin/include -I/workspace/qt/common/workbook/include -I/opt/Qt/5.40/5.4/gcc_64/include -I/opt/Qt/5.40/5.4/gcc_64/include/QtGui -I/opt/Qt/5.40/5.4/gcc_64/include/QtCore src/cothfunction.h -o /workspace/qt/build/workbook/plugins/.mocd/moc_cothfunction.cpp
+	/opt/Qt/5.40/5.4/gcc_64/bin/moc $(DEFINES) -I/opt/Qt/5.40/5.4/gcc_64/mkspecs/linux-g++ -I/workspace/qt/common/workbook/plugin/cothfunction -I/workspace/qt/common/workbook/plugin/include -I/workspace/qt/common/workbook/include -I/opt/Qt/5.40/5.4/gcc_64/include -I/opt/Qt/5.40/5.4/gcc_64/include/QtGui -I/opt/Qt/5.40/5.4/gcc_64/include/QtCore src/cothfunction.h -o ../../../../build/workbook/plugins/.mocd/moc_cothfunction.cpp
 
 compiler_moc_source_make_all:
 compiler_moc_source_clean:
@@ -582,7 +582,7 @@ compiler_clean: compiler_moc_header_clean
 
 ####### Compile
 
-/workspace/qt/build/workbook/plugins/.objd/cothfunction.o: src/cothfunction.cpp src/cothfunction.h \
+../../../../build/workbook/plugins/.objd/cothfunction.o: src/cothfunction.cpp src/cothfunction.h \
 		/opt/Qt/5.40/5.4/gcc_64/include/QtCore/QObject \
 		/opt/Qt/5.40/5.4/gcc_64/include/QtCore/qobject.h \
 		/opt/Qt/5.40/5.4/gcc_64/include/QtCore/qobjectdefs.h \
@@ -656,11 +656,11 @@ compiler_clean: compiler_moc_header_clean
 		/opt/Qt/5.40/5.4/gcc_64/include/QtCore/qmath.h \
 		../include/interface.h \
 		/opt/Qt/5.40/5.4/gcc_64/include/QtCore/QList \
-		/workspace/qt/common/workbook/include/workbook_global.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o /workspace/qt/build/workbook/plugins/.objd/cothfunction.o src/cothfunction.cpp
+		../../include/workbook_global.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../../../../build/workbook/plugins/.objd/cothfunction.o src/cothfunction.cpp
 
-/workspace/qt/build/workbook/plugins/.objd/moc_cothfunction.o: /workspace/qt/build/workbook/plugins/.mocd/moc_cothfunction.cpp 
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o /workspace/qt/build/workbook/plugins/.objd/moc_cothfunction.o /workspace/qt/build/workbook/plugins/.mocd/moc_cothfunction.cpp
+../../../../build/workbook/plugins/.objd/moc_cothfunction.o: ../../../../build/workbook/plugins/.mocd/moc_cothfunction.cpp 
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ../../../../build/workbook/plugins/.objd/moc_cothfunction.o ../../../../build/workbook/plugins/.mocd/moc_cothfunction.cpp
 
 ####### Install
 

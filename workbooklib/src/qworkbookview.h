@@ -58,6 +58,7 @@
 #include <QDialog>
 #include <QAbstractItemDelegate>
 #include <QDateTime>
+#include <QScopedPointer>
 
 #include <workbook_global.h>
 #include "cellreference.h"
@@ -269,7 +270,7 @@ protected:
     QWorksheetView* currentWorksheetView();
 
 private:
-    QWorkbookViewPrivate *d_ptr;
+    QScopedPointer<QWorkbookViewPrivate> d_ptr;
     Q_DECLARE_PRIVATE(QWorkbookView)
 
     virtual QWidget* currentWidget() const;

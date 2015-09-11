@@ -51,17 +51,18 @@
 #include <QIcon>
 #include <QMenu>
 
-#include "qworkbookview.h"
-
 #include <workbook_global.h>
-
 #include "range.h"
+#include "qworkbookview.h"
+#include "qworkbookfonttoolbar.h"
+#include "qworkbookfonteffectstoolbar.h"
+#include "qworkbookaligntoolbar.h"
+#include "qworkbookmergetoolbar.h"
+#include "qworkbookindenttoolbar.h"
+//#include "qworkbooktoolbar_p.h"
 
-class QWorkbookFontToolbar;
-class QWorkbookFontEffectsToolbar;
-class QWorkbookIndentToolbar;
-class QWorkbookAlignToolbar;
-class QWorkbookMergeToolbar;
+
+class QWorkbookToolBarPrivate;
 
 class WORKBOOKSHARED_EXPORT QWorkbookToolBar : public QToolBar {
     Q_OBJECT
@@ -74,8 +75,8 @@ signals:
     void boldSelection(bool);
     void italicSelection(bool);
     void underlineSelection(bool);
+//    void alignSelection(bool, Qt::Alignment);
     void fontSelection(bool, QFont, int);
-    void alignSelection(bool, Qt::Alignment);
     void mergeSelection(bool);
 
     void boldChanged(bool);
@@ -84,6 +85,7 @@ signals:
     void fontChanged(QFont);
     void fontSizeChanged(int);
     void alignmentChanged(Qt::Alignment);
+    void mergeChanged(bool);
     void indentCells();
     void undentCells();
 
@@ -106,19 +108,10 @@ protected slots:
     void showContextMenu(const QPoint&);
 
 protected:
-    QWorkbookFontToolbar *pFontBar;
-    QWorkbookFontEffectsToolbar *pFontEffectsBar;
-    QWorkbookIndentToolbar *pIndentBar;
-    QWorkbookAlignToolbar *pAlignBar;
-    QWorkbookMergeToolbar *pMergeBar;
-    QWorkbookView *pView;
+    const QScopedPointer<QWorkbookToolBarPrivate> d_ptr;
 
-    QMenu *pPopupMenu;
-
-    QAction *pFontVisibleAction, *pFontEffectsVisibleAction, *pIndentVisibleAction, *pAlignVisibleAction;
-    QAction *pMergeVisibleAction;
-
-    void initBuild();
+private:
+    Q_DECLARE_PRIVATE(QWorkbookToolBar)
 
 };
 

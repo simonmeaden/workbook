@@ -3,11 +3,13 @@ TEMPLATE = subdirs
 
 SUBDIRS += \
     workbooklib \
-    plugin
+    plugin \
+    examples
 
-#plugin.subdir = plugin
+plugin.subdir = plugin
 
 workbooklib.subdir = workbooklib
-#workbooklib.depends += plugin
+workbooklib.depends += plugin
 
-
+examples.subdir = examples
+examples.depends += workbooklib

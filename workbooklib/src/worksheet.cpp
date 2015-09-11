@@ -129,6 +129,10 @@ Cell* Worksheet::cellAsCell(int row, int column) {
     return d_ptr->cellAsCell(row, column);
 }
 
+void Worksheet::setCellAsCell(int row, int column, Cell* cell) {
+    d_ptr->setCellAsCell(row, column, cell);
+}
+
 void Worksheet::setCell(int row, int column, QVariant cell) {
     d_ptr->setCell(row, column, cell);
 }

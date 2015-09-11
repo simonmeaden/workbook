@@ -9,7 +9,7 @@
 #include <QStandardItemModel>
 
 class QWorkbookToolBar;
-class QWorkbookFunctionToolbar;
+class QWorkbookFunctionToolBar;
 class QWorkbookView;
 
 class MainWindow : public QMainWindow {
@@ -24,7 +24,7 @@ protected slots:
 protected:
 
     QWorkbookToolBar *pToolbar;
-    QWorkbookFunctionToolbar *pFunctionBar;
+    QWorkbookFunctionToolBar *pFunctionBar;
 
     void initBuild();
     void initToolbar();

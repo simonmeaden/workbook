@@ -46,41 +46,30 @@
 #include <QObject>
 #include <QFont>
 #include <QBrush>
+#include <QScopedPointer>
 
 #include "xlsxformat.h"
 
 #include <workbook_global.h>
+#include "format_p.h"
 #include "types.h"
 
-class FormatPrivate;
 class WorksheetModel;
+
+class NumberFormat {
+public:
+    NumberFormat() : mType(General), sFormat("General") { }
+    NumberFormat(NumberFormatType t, QString f) : mType(t), sFormat(f) { }
+
+    NumberFormatType type() { return mType; }
+    QString format() { return sFormat; }
+
+    NumberFormatType mType;
+    QString sFormat;
+};
 
 class DefaultNumberFormats {
 public:
-    enum Type {
-        General,
-        Decimal,
-        Currency,
-        Percent,
-        Scientific,
-        Fraction,
-        Date,
-        Time,
-        DateTime,
-        Account,
-        Text,
-    };
-    class NumberFormat {
-    public:
-        NumberFormat() : mType(General), sFormat("General") { }
-        NumberFormat(Type t, QString f) : mType(t), sFormat(f) { }
-
-        Type type() { return mType; }
-        QString format() { return sFormat; }
-
-        Type mType;
-        QString sFormat;
-    };
 
     DefaultNumberFormats();
 
@@ -94,60 +83,17 @@ public:
     NumberFormat format(int id) { return mStyles.value(id); }
     int id(QString format) { return mIds.value(format); }
 
-    void insertStyle(int id, Type type, QString format);
+    void insertStyle(int id, NumberFormatType type, QString format);
 
 protected:
     QMap<int, NumberFormat> mStyles;
     QMap<QString, int> mIds;
 };
 
-class Border {
-public:
-    Border();
-    
-    bool isEnabled() { return bEnabled; }
-    void setEnabled(bool enabled) { bEnabled = enabled; }
-    QColor color() { return mColor; }
-    void setColor(QColor color) { mColor = color; }
-    BorderStyle style() { return mStyle; }
-    void setStyle(BorderStyle style) { mStyle = style; }
-    double thickness() { return mThickness; }
-    void setThickness(double thickness) { mThickness = thickness; }
-    bool isEqual(Border border);
-    
-    bool operator== (Border b) {
-        if (b.thickness() == mThickness &&
-            b.style() == mStyle &&
-            b.color() == mColor &&
-            b.isEnabled() == bEnabled) return true;
-        return false;
-    }
-
-    bool operator!= (Border b) {
-        if (b.thickness() != mThickness ||
-            b.style() != mStyle ||
-            b.color() != mColor ||
-            b.isEnabled() != bEnabled) return true;
-        return false;
-    }
-
-protected:
-    bool bEnabled;
-    QColor mColor;
-    BorderStyle mStyle;
-    double mThickness;
-};
 
 class WORKBOOKSHARED_EXPORT Format : public QObject {
     Q_OBJECT
 public:
-    enum UnderlineStyle {
-        UnderlineNone,
-        UnderlineSingle,
-        UnderlineDouble,
-        UnderlineSingleWiggly,
-        UnderlineSpellCheck,
-    };
 
     explicit Format(int row, int column, QObject *parent);
     explicit Format(Format &format);
@@ -158,7 +104,7 @@ public:
     bool bold() ;
     bool italic();
     bool underline();
-    Format::UnderlineStyle underlineStyle();
+    UnderlineStyle underlineStyle();
     QColor underlineColor();
     bool overline();
     bool strikeout();
@@ -218,9 +164,9 @@ public slots:
 //    }
 
 protected:
-
-    FormatPrivate *d_ptr;
     Q_DECLARE_PRIVATE(Format)
+    const QScopedPointer<FormatPrivate> d_ptr;
+
 };
 
 #endif // FORMAT_H

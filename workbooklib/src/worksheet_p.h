@@ -79,6 +79,7 @@ public:
     QVariant cell(int row, int column);
     void setCell(int row, int column, QVariant data);
     Cell* cellAsCell(int row, int column);
+    void setCellAsCell(int, int, Cell*);
     Cell* cellCreateAsNeeded(int row, int column);
 
     bool isLocked(int row, int column);

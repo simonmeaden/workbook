@@ -21,7 +21,7 @@ void MainWindow::initToolbar() {
     addToolBar(pToolbar);
     pToolbar->setWorkbookView(pView);
 
-    pFunctionBar = new QWorkbookFunctionToolbar("function", this);
+    pFunctionBar = new QWorkbookFunctionToolBar("function", this);
 //    pFunctionVisibleAction = functionBar->toggleViewAction();
     addToolBar(pFunctionBar);
 

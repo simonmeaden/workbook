@@ -46,18 +46,19 @@
 #include <QObject>
 #include <QDebug>
 #include <QMetaType>
+#include <QScopedPointer>
 
 #include <qquad.h>
 
 #include "worksheet.h"
 #include "types.h"
+#include "cell_p.h"
 
 namespace QXlsx {
     class Cell;
     class Worksheet;
 }
 
-class CellPrivate;
 class CellReference;
 
 class Cell : public QObject {
@@ -66,10 +67,10 @@ public:
     explicit Cell();
     explicit Cell(QObject *parent);
     explicit Cell(int row, int column, QObject *parent);
-    explicit Cell(int row, int column, const QVariant &value, QObject *parent=0) ;
-    explicit Cell(CellReference reference, QVariant &value, QObject *parent=0);
-    explicit Cell(CellReference reference, QObject *parent=0);
-    explicit Cell(const Cell &cell);
+    explicit Cell(int row, int column, const QVariant &value, QObject *parent) ;
+    explicit Cell(CellReference reference, QVariant &value, QObject *parent);
+    explicit Cell(CellReference reference, QObject *parent);
+    Cell(const Cell&);
     ~Cell();
 
     QVariant value() const;
@@ -78,7 +79,6 @@ public:
     bool empty();
     bool locked();
     CellType type();
-//    void setType(CellType type);
     bool isEmpty();
 
     QString toString();
@@ -98,18 +98,17 @@ public slots:
     void setName(QString name);
 
 protected:
+    Cell(CellPrivate &d, QObject *parent) :
+        QObject(parent),
+        d_ptr(&d) {}
+    const QScopedPointer<CellPrivate> d_ptr;
 
 private:
-    friend class Worksheet;
-    friend class WorksheetPrivate;
-
-
-    CellPrivate *d_ptr;
     Q_DECLARE_PRIVATE(Cell)
 
+    friend class WorksheetPrivate;
 };
 
-//QDebug operator<<(QDebug dbg, const Cell &cell);
 
 Q_DECLARE_METATYPE(Cell)
 

@@ -1,73 +1,95 @@
+/*
+    This Workbook library is © Simon Meaden 2015. It is licensed under the LGPL V3 license.
+
+    This Workbook library dynamically links to unmodified Nokia Qt5 Library. The Qt5
+    Library is © 2011 Nokia Corporation and/or its subsidiary(-ies), and is licensed
+    under the GNU Lesser General Public License version 2.1 with Nokia Qt LGPL exception
+    version 1.1.
+
+    Qt5 library is free software; you can redistribute it and/or modify it under the
+    terms of the GNU Lesser General Public License, version 2.1, as published by the
+    Free Software Foundation.
+
+    Qt5 library is provided “AS IS”, without WARRANTIES OR CONDITIONS OF ANY KIND, EITHER
+    EXPRESS OR IMPLIED INCLUDING, WITHOUT LIMITATION, ANY WARRANTIES OR CONDITIONS OF
+    TITLE, NON-INFRINGEMENT, MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+
+    As an additional permission to the GNU Lesser General Public License version 3.0, the
+    object code form of a “work that uses the Library” may incorporate material from a
+    header file that is part of the Library. You may distribute such object code under
+    terms of your choice, provided that: (i) the header files of the Library have not
+    been modified; and (ii) the incorporated material is limited to numerical parameters,
+    data structure layouts, accessors, macros, inline functions and templates; and (iii)
+    you comply with the terms of Section 6 of the GNU Lesser General Public License version 3.0.
+
+    Moreover, you may apply this exception to a modified version of the Library, provided
+    that such modification does not involve copying material from the Library into the
+    modified Library’s header files unless such material is limited to (i) numerical
+    parameters; (ii) data structure layouts; (iii) accessors; and (iv) small macros,
+    templates and inline functions of five lines or less in length.
+
+    Furthermore, you are not required to apply this additional permission to a modified
+    version of the Library.
+
+    You should have received a copy of the GNU Lesser General Public License along
+    with this package; if not, write to the Free Software Foundation, Inc., 51 Franklin
+    Street, Fifth Floor, Boston, MA 02110-1301 USA
+
+    The source code for Qt 5.4.X SDK is available from Nokia here:
+    http://get.qt.nokia.com/qt/source/qt-everywhere-opensource-src-4.7.X.zip.
+
+    It is also available on request from Simon Meaden info@smelecomp.co.uk.
+*/
 #include "qworkbookfonttoolbar.h"
+#include "qworkbookfonttoolbar_p.h"
 #include "qworkbooktoolbar.h"
 
-QWorkbookFontToolbar::QWorkbookFontToolbar(QWidget *parent) : BaseToolbar(parent) {
-    initBuild();
-}
-
-QWorkbookFontToolbar::QWorkbookFontToolbar(QString title, QWidget *parent) : BaseToolbar(title, parent) {
-    initBuild();
-}
-
-QWorkbookFontToolbar::~QWorkbookFontToolbar() {
+QWorkbookFontToolBar::QWorkbookFontToolBar(QWidget *parent) :
+    QToolBar(parent),
+    d_ptr(new QWorkbookFontToolBarPrivate(this)) {
 
 }
 
-void QWorkbookFontToolbar::initBuild() {
-    QFont font = QFont("Times", 10, QFont::Normal);
+QWorkbookFontToolBar::QWorkbookFontToolBar(QString title, QWidget *parent) :
+    QToolBar(title, parent),
+    d_ptr(new QWorkbookFontToolBarPrivate(this)) {
 
-    pFonts = new QFontComboBox(this);
-    pFonts->setToolTip(tr("Font Name"));
-    pFonts->setFont(font);
-    addWidget(pFonts);
-    connect(pFonts, SIGNAL(currentFontChanged(QFont)), this, SLOT(fontHasChanged(QFont)));
-
-    pSizes = new QComboBox(this);
-    pSizes->setValidator(new QIntValidator(1, 1000, this));
-    pSizes->setToolTip(tr("Font Size"));
-    addWidget(pSizes);
-    connect(pSizes, SIGNAL(currentTextChanged(QString)), this, SLOT(sizeHasChanged(QString)));
-
-    font = pFonts->currentFont();
-    setFontSizes(font);
 }
 
-void QWorkbookFontToolbar::fontHasChanged(QFont font) {
-    int size = pSizes->currentText().toInt();
+QWorkbookFontToolBar::~QWorkbookFontToolBar() {
 
-    setFontSizes(font);
-
-    bool isItalic = mFontDatabase.italic(font.family(), font.styleName());
-    emit italic(isItalic);
-
-    bool isBold = mFontDatabase.bold(font.family(), font.styleName()) ;
-    emit bold(isBold);
-
-    pSizes->setCurrentText(QString::number(size));
-
-    emit fontChanged(font);
-    emit fontSizeChanged(size);
 }
 
-void QWorkbookFontToolbar::sizeHasChanged(QString size) {
-    emit fontSizeChanged(size.toInt());
+void QWorkbookFontToolBar::setWorkbookView(QWorkbookView *view) {
+
+    Q_D(QWorkbookFontToolBar);
+    d->setWorkbookView(view);
+
 }
 
-void QWorkbookFontToolbar::setFont(QFont font) {
-    pFonts->setCurrentFont(font);
+void QWorkbookFontToolBar::selectionChanged(FormatStatus* status) {
+
+    Q_D(QWorkbookFontToolBar);
+    d->selectionChanged(status);
+
 }
 
-void QWorkbookFontToolbar::setFont(bool selected, QFont font, int size) {
-    if (selected) {
-        pFonts->setCurrentFont(font);
-        pSizes->setCurrentText(QString::number(size));
-    }
+void QWorkbookFontToolBar::fontHasChanged(QFont font) {
+    Q_D(QWorkbookFontToolBar);
+    d->fontHasChanged(font);
 }
 
-void QWorkbookFontToolbar::setFontSizes(QFont font) {
-    QList<int> sizes = mFontDatabase.pointSizes(font.family(), font.styleName());
-    pSizes->clear();
-    QListIterator<int> it(sizes);
-    while (it.hasNext())
-        pSizes->addItem(QString::number(it.next()));
+void QWorkbookFontToolBar::sizeHasChanged(QString size) {
+    Q_D(QWorkbookFontToolBar);
+    d->sizeHasChanged(size);
+}
+
+void QWorkbookFontToolBar::setFont(QFont font) {
+    Q_D(QWorkbookFontToolBar);
+    d->setFont(font);
+}
+
+void QWorkbookFontToolBar::setFont(bool selected, QFont font, int size) {
+    Q_D(QWorkbookFontToolBar);
+    d->setFont(selected, font, size);
 }

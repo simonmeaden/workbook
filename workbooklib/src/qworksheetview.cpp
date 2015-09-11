@@ -116,6 +116,9 @@ void QWorksheetView::setSelectionMerge(bool merge) {
     d_ptr->setSelectionMerge(merge);
 }
 
+void QWorksheetView::setSpan(int row, int column, int rowSpan, int colSpan) {
+    d_ptr->setSpan(row, column, rowSpan, colSpan);
+}
 
 WorksheetModel* QWorksheetView::model() {
     return qobject_cast<WorksheetModel*>(QTableView::model());

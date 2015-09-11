@@ -54,6 +54,7 @@
 #include <QMap>
 #include <QVariant>
 #include <QDir>
+#include <QScopedPointer>
 
 #include <workbook_global.h>
 #include "cellreference.h"
@@ -142,9 +143,10 @@ protected slots:
     void bottomBorderChanged(Format *format);
 
 protected:
-    WorksheetPrivate *d_ptr;
+    QScopedPointer<WorksheetPrivate> d_ptr;
 
     Cell* cellAsCell(int row, int column);
+    void setCellAsCell(int row, int column, Cell* cell);
 
     friend class WorksheetModel;
 

@@ -48,11 +48,13 @@
 #include <QRegularExpression>
 
 #include <qquad.h>
-#include "cellreference.h"
 #include "reference.h"
+
+class CellReference;
 
 class CellReferencePrivate : public Reference {
 public:
+    explicit CellReferencePrivate();
     explicit CellReferencePrivate(CellReference *parent);
 
     static QString columnToString(int column);
@@ -63,19 +65,16 @@ public:
     static int rowFromString(QString&rowRef);
 
     bool isValid();
-    inline int row() const {
-        return m_row;
+    int row() const {
+        return mRow;
     }
-    inline int column() const {
-        return m_column;
+    int column() const {
+        return mColumn;
     }
-//    void setRow(int);
-//    void setColumn(int);
-//    void setReference(QString reference);
 
     Q_DECLARE_PUBLIC(CellReference)
     CellReference *q_ptr;
-    int m_row, m_column;
+    int mRow, mColumn;
 };
 
 

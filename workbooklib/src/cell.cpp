@@ -51,42 +51,51 @@
 
 Cell::Cell() :
     d_ptr(new CellPrivate(this)) {
+
 }
 
-Cell::Cell(QObject *parent) : QObject(parent), d_ptr(new CellPrivate(this)) {
+Cell::Cell(QObject *parent) :
+    QObject(parent),
+    d_ptr(new CellPrivate(this)) {
+
 }
 
-Cell::Cell(int row, int column, QObject *parent) : QObject(parent), d_ptr(new CellPrivate(this)) {
+Cell::Cell(int row, int column, QObject *parent) :
+    QObject(parent),
+    d_ptr(new CellPrivate(this)) {
+
     Q_D(Cell);
     d->mRow = row;
     d->mColumn = column;
 }
 
-Cell::Cell(int row, int column, const QVariant &value, QObject *parent) : QObject(parent), d_ptr(new CellPrivate(this)) {
+Cell::Cell(int row, int column, const QVariant &value, QObject *parent) :
+    QObject(parent),
+    d_ptr(new CellPrivate(this)) {
+
     Q_D(Cell);
     d->mRow = row;
     d->mColumn = column;
     d->mValue = value;
 }
 
-Cell::Cell(CellReference reference, QObject *parent) : QObject(parent), d_ptr(new CellPrivate(this)) {
+Cell::Cell(CellReference reference, QObject *parent) :
+    QObject(parent),
+    d_ptr(new CellPrivate(this)) {
+
     Q_D(Cell);
     d->mRow = reference.row();
     d->mColumn = reference.column();
 }
 
-Cell::Cell(CellReference reference, QVariant &value, QObject *parent) : QObject(parent), d_ptr(new CellPrivate(this)) {
+Cell::Cell(CellReference reference, QVariant &value, QObject *parent) :
+    QObject(parent),
+    d_ptr(new CellPrivate(this)) {
+
     Q_D(Cell);
     d->mRow = reference.row();
     d->mColumn = reference.column();
     d->mValue = value;
-}
-
-Cell::Cell(const Cell &cell) : QObject(cell.parent()) {
-    Q_D(Cell);
-    d->mRow = cell.row();
-    d->mColumn = cell.column();
-    d->mValue = cell.value();
 }
 
 Cell::~Cell() {
@@ -96,10 +105,6 @@ Cell::~Cell() {
 CellType Cell::type() {
     return d_ptr->type();
 }
-
-//void Cell::setType(CellType type) {
-//    d_ptr->setType(type);
-//}
 
 QString Cell::name() {
     return d_ptr->name();
@@ -161,14 +166,3 @@ QVariant Cell::value() const {
         return v;
     return QVariant();
 }
-
-//QDebug operator<<(QDebug dbg, const Cell &cell) {
-//    QVariant v = cell.value();
-//    if (v.isNull())
-//        dbg.nospace() << "Null value";
-//    else if (!v.isValid())
-//        dbg.nospace() << "Invalid value";
-//    else
-//        dbg.nospace() << v.toString();
-//    return dbg.maybeSpace();
-//}

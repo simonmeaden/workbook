@@ -40,7 +40,9 @@
  *
  * It is also available on request from Simon Meaden info@smelecomp.co.uk.
  */
+
 #include "worksheetmodel.h"
+#include "worksheetmodel_p.h"
 #include "worksheet.h"
 #include "cell.h"
 #include "cellreference.h"
@@ -50,243 +52,153 @@
 
 WorksheetModel::WorksheetModel(PluginStore *store, QObject *parent) :
     QAbstractTableModel(parent),
-    mRows(ROWS),
-    mColumns(COLUMNS),
-    pPluginStore(store) {
+    d_ptr(new WorksheetModelPrivate(store, this)) {
 
-    setWorksheet(new Worksheet(pPluginStore, this));
 }
 
 WorksheetModel::WorksheetModel(Worksheet *sheet, PluginStore *store, QObject *parent) :
     QAbstractTableModel(parent),
-    mRows(ROWS),
-    mColumns(COLUMNS),
-    pPluginStore(store) {
-    setWorksheet(sheet);
+    d_ptr(new WorksheetModelPrivate(sheet, store, this)) {
+
 }
 
 WorksheetModel::~WorksheetModel() {
 
 }
 
+//void WorksheetModel::span(int row, int column, int rowSpan, int colSpan, QList<Cell*> cells) {
+//    d_ptr->span(row, column, rowSpan, colSpan, cells);
+//}
+//void WorksheetModel::despan(int row, int column, int rowSpan, int colSpan) {
+//    d_ptr->despan(row, column, rowSpan, colSpan);
+//}
+
 void WorksheetModel::setWorksheet(Worksheet *sheet) {
-    pSheet = sheet;
-    pSheet->setModel(this);
-    connect(sheet, SIGNAL(formatHasChanged(int,int)), this, SLOT(formatChanged(int,int)));
+    d_ptr->setWorksheet(sheet);
 }
 
-bool WorksheetModel::setData(const QModelIndex &index, const QVariant &value, int role) {
-    if (index.isValid() && role == Qt::EditRole) {
-
-        int row = index.row();
-        int column = index.column();
-
-        pSheet->setCell(row, column, value);
-
-        emit dataChanged(index, index);
-        return true;
-
-    }
-    return false;
-}
-
-Cell* WorksheetModel::cellAsCell(int row, int column) {
-    return pSheet->cellAsCell(row, column);
+bool WorksheetModel::setData(const QModelIndex &index, const QVariant &value, int role) {    
+    return d_ptr->setData(index, value, role);
 }
 
 bool WorksheetModel::isLocked(CellReference &ref) {
-    return pSheet->isLocked(ref.row(), ref.column());
+    return d_ptr->isLocked(ref.row(), ref.column());
 }
 
 bool WorksheetModel::isLocked(int row, int column) {
-    return pSheet->isLocked(row, column);
+    return d_ptr->isLocked(row, column);
 }
 
 void WorksheetModel::lockSheet() {
-    pSheet->lockSheet();
-    emit layoutChanged();
+    d_ptr->lockSheet();
 }
 
 void WorksheetModel::unlockSheet() {
-    pSheet->unlockSheet();
-    emit layoutChanged();
+    d_ptr->unlockSheet();
 }
 
 void WorksheetModel::lockCell(int row, int column) {
-    pSheet->lockCell(row, column);
-    QModelIndex i = this->index(row, column);
-    emit dataChanged(i, i);
+    d_ptr->lockCell(row, column);
 }
 
 void WorksheetModel::lockCell(CellReference &ref) {
-    pSheet->lockCell(ref.row(), ref.column());
-    QModelIndex i = this->index(ref.row(), ref.column());
-    emit dataChanged(i, i);
+    d_ptr->lockCell(ref.row(), ref.column());
 }
 
 void WorksheetModel::lockRow(int &row) {
-    pSheet->lockRow(row);
-    int maxColumn = pSheet->maxColumn(row);
-    QModelIndex i1 = this->index(row, 0);
-    QModelIndex i2 = this->index(row, maxColumn);
-    emit dataChanged(i1, i2);
+    d_ptr->lockRow(row);
 }
 
 void WorksheetModel::lockColumn(int &column) {
-    pSheet->lockColumn(column);
-    int maxRow = pSheet->maxRow();
-    QModelIndex i1 = this->index(0, column);
-    QModelIndex i2 = this->index(maxRow, column);
-    emit dataChanged(i1, i2);
+    d_ptr->lockColumn(column);
 }
 
 void WorksheetModel::lockRange(Range &range) {
-    pSheet->lockRange(range);
-    QModelIndex i1 = this->index(range.top(), range.left());
-    QModelIndex i2 = this->index(range.bottom(), range.right());
-    emit dataChanged(i1, i2);
+    d_ptr->lockRange(range);
 }
 
 void WorksheetModel::unlockCell(int row, int column) {
-    pSheet->unlockCell(row, column);
-    QModelIndex i = this->index(row, column);
-    emit dataChanged(i, i);
+    d_ptr->unlockCell(row, column);
 }
 
 void WorksheetModel::unlockCell(CellReference &ref) {
-    pSheet->unlockCell(ref.row(), ref.column());
-    QModelIndex i = this->index(ref.row(), ref.column());
-    emit dataChanged(i, i);
+    d_ptr->unlockCell(ref.row(), ref.column());
 }
 
 void WorksheetModel::unlockRow(int &row) {
-    pSheet->unlockRow(row);
-    int maxColumn = pSheet->maxColumn(row);
-    QModelIndex i1 = this->index(row, 0);
-    QModelIndex i2 = this->index(row, maxColumn);
-    emit dataChanged(i1, i2);
+    d_ptr->unlockRow(row);
 }
 
 void WorksheetModel::unlockColumn(int &column) {
-    pSheet->unlockColumn(column);
-    int maxRow = pSheet->maxRow();
-    QModelIndex i1 = this->index(0, column);
-    QModelIndex i2 = this->index(maxRow, column);
-    emit dataChanged(i1, i2);
+    d_ptr->unlockColumn(column);
 }
 
 void WorksheetModel::unlockRange(Range &range) {
-    pSheet->unlockRange(range);
-    QModelIndex i1 = this->index(range.top(), range.left());
-    QModelIndex i2 = this->index(range.bottom(), range.right());
-    emit dataChanged(i1, i2);
+    d_ptr->unlockRange(range);
 }
 
 Qt::ItemFlags WorksheetModel::flags(const QModelIndex &index) const {
-    Qt::ItemFlags flags = QAbstractItemModel::flags(index);
-    if (pSheet->isLocked(index.row(), index.column()))
-        flags &= ~Qt::ItemIsEditable;
-    else
-        flags |= Qt::ItemIsEditable;
-    return flags;
+     return d_ptr->flags(index);
 }
 
 void WorksheetModel::saveWorksheet(QString path) {
-    pSheet->saveWorksheet(path);
+    d_ptr->saveWorksheet(path);
 }
 
 void WorksheetModel::formatChanged(int row, int column) {
-    QModelIndex i = this->index(row, column);
-    emit dataChanged(i, i);
+    d_ptr->formatChanged(row, column);
 }
 
 int WorksheetModel::rowCount(const QModelIndex& /*parent*/) const {
-    return mRows;
+    return d_ptr->rowCount();
 }
 
 int WorksheetModel::columnCount(const QModelIndex& /*parent*/) const {
-    return mColumns;
+    return d_ptr->columnCount();
 }
 
 QVariant WorksheetModel::data(const QModelIndex &index, int role) const {
-    if (role == Qt::DisplayRole) {
-        int row = index.row();
-        int column = index.column();
-        QVariant cell = pSheet->cell(row, column);
-        return cell;
-    }
-    return QVariant();
+    return d_ptr->data(index, role);
 }
 
 Format* WorksheetModel::format(const QModelIndex &index, int role) const {
-    int row = index.row();
-    int column = index.column();
-    return format(row, column, role);
+    return d_ptr->format(index,role);
 }
 
 Format* WorksheetModel::format(int row, int column, int role) const {
-    if (role == Qt::DisplayRole) {
-        Format *format = pSheet->format(row, column);
-        // you can have formats set for cells that do not have data in them yet. This signal saves formats
-        // when they have been modified.
-        return format;
-    }
-    return NULL;
+    return format(row, column, role);
 }
 
 void WorksheetModel::formatHasChanged(Format* format) {
-    pSheet->setFormat(format);
+    d_ptr->formatHasChanged(format);
 }
 
 void WorksheetModel::setFormat(const QModelIndex &index, Format *format, int role)  {
-    if (index.isValid() && role == Qt::EditRole) {
-
-        pSheet->setFormat(format);
-
-        QModelIndex start, end;
-        int row = index.row();
-        int column = index.column();
-        end = QAbstractTableModel::index(row + 1, column + 1);
-
-        if (row > 0) row--;
-        if (column > 0) column--;
-
-        start = QAbstractTableModel::index(row, column);
-
-        emit dataChanged(start, end);
-    }
+    d_ptr->setFormat(index, format, role);
 }
 
 void WorksheetModel::setFormat(int row, int column, Format *format, int role) {
-    if (role == Qt::EditRole) {
-        QModelIndex index = QAbstractTableModel::index(row, column);
-
-        if (index.isValid()) {
-
-            pSheet->setFormat(format);
-
-            emit dataChanged(index, index);
-        }
-    }
+    d_ptr->setFormat(row, column, format, role);
 }
 
 QVariant WorksheetModel::headerData(int section, Qt::Orientation orientation, int role) const {
-    if (role == Qt::DisplayRole) {
-        if (orientation == Qt::Horizontal)
-            return CellReference::columnToString(section);
-        else if (orientation == Qt::Vertical)
-            return QString::number(section + 1);
-    }
-
-    return QVariant();
+    return d_ptr->headerData(section, orientation, role);
 }
 
 void WorksheetModel::setShowGrid(bool showGrid) {
-    pSheet->setShowGrid(showGrid);
+    d_ptr->setShowGrid(showGrid);
 }
 
 bool WorksheetModel::showGrid() {
-    return pSheet->showGrid();
+    return d_ptr->showGrid();
 }
 
+Cell* WorksheetModel::cellAsCell(int row, int column) {
+    Q_D(WorksheetModel);
+    return d->pSheet->cellAsCell(row, column);
+}
 
+void WorksheetModel::setCellAsCell(int row, int column, Cell *cell) {
+    Q_D(WorksheetModel);
+    d->pSheet->setCellAsCell(row, column, cell);
+}

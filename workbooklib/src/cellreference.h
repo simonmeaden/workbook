@@ -45,36 +45,39 @@
 
 #include <QObject>
 #include <QString>
+#include <QScopedPointer>
 
 #include <workbook_global.h>
-
-class CellReferencePrivate;
+#include "cellreference_p.h"
 
 class WORKBOOKSHARED_EXPORT CellReference : public QObject {
     Q_OBJECT
 public:
     explicit CellReference();
     explicit CellReference(QObject *parent);
-    explicit CellReference(int row, int column, QObject *parent = 0);
-    explicit CellReference(QString reference, QObject *parent = 0);
-    CellReference(const CellReference &reference);
+    explicit CellReference(int row, int column, QObject *parent);
+    explicit CellReference(QString reference, QObject *parent);
+    CellReference(CellReference &d) :
+        QObject(d.parent()),
+        d_ptr(new CellReferencePrivate(&d)) {
+    }
 
-    inline bool operator==(const CellReference& comp) {
+    bool operator==(const CellReference& comp) {
         return ((this->row() == comp.row()) && (this->column() == comp.column()));
     }
-    inline bool operator<(const CellReference& comp) {
+    bool operator<(const CellReference& comp) {
         return ((this->row() < comp.row()) && (this->column() < comp.column()));
     }
-    inline bool operator> (const CellReference& comp) {
+    bool operator> (const CellReference& comp) {
         return ((this->row() > comp.row()) && (this->column() > comp.column()));
     }
-    inline bool operator<=(const CellReference& comp) {
+    bool operator<=(const CellReference& comp) {
         return ((this->row() <= comp.row()) && (this->column() <= comp.column()));
     }
-    inline bool operator>=(const CellReference& comp) {
+    bool operator>=(const CellReference& comp) {
         return ((this->row() >= comp.row()) && (this->column() >=comp.column()));
     }
-    inline bool operator!=(const CellReference& comp) {
+    bool operator!=(const CellReference& comp) {
         return !((this->row() == comp.row()) && (this->column() == comp.column()));
     }
 
@@ -99,8 +102,14 @@ signals:
 public slots:
 
 protected:
+    const QScopedPointer<CellReferencePrivate> d_ptr;
+    CellReference(CellReferencePrivate &d, QObject *parent) :
+        QObject(parent),
+        d_ptr(&d) {
+    }
+
+private:
     Q_DECLARE_PRIVATE(CellReference)
-    CellReferencePrivate *d_ptr;
 
 };
 

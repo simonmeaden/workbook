@@ -46,6 +46,7 @@
 #include <QObject>
 #include <QLabel>
 #include <QStyledItemDelegate>
+#include <QScopedPointer>
 
 class FormatDelegatePrivate;
 
@@ -59,7 +60,7 @@ public:
 public slots:
 
 protected:
-    FormatDelegatePrivate *d_ptr;
+    const QScopedPointer<FormatDelegatePrivate> d_ptr;
 
 };
 

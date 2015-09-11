@@ -64,7 +64,7 @@ FormatPrivate::FormatPrivate(int row, int column, Format *parent) :
 //    xWidth = fm.width("x");
     xWidth = 0;
     mAlignment = Qt::AlignLeft | Qt::AlignVCenter;
-    mUnderlineStyle = Format::UnderlineNone;
+    mUnderlineStyle = UnderlineNone;
     mUnderlineColor = QColor("black");
     mWhite = QColor("white");
     mBackground = mWhite;
@@ -97,10 +97,10 @@ QXlsx::Format FormatPrivate::toXlsx() {
     QXlsx::Format format;
 
     switch (mUnderlineStyle) {
-    case Format::UnderlineSingle:
+    case UnderlineSingle:
         format.setFontUnderline(QXlsx::Format::FontUnderlineSingle);
         break;
-    case Format::UnderlineDouble:
+    case UnderlineDouble:
         format.setFontUnderline(QXlsx::Format::FontUnderlineDouble);
         break;
     default:
@@ -218,14 +218,14 @@ void FormatPrivate::fromXlsx(QXlsx::Format format) {
     switch(format.fontUnderline()) {
     case QXlsx::Format::FontUnderlineSingle:
     case QXlsx::Format::FontUnderlineSingleAccounting:
-        mUnderlineStyle = Format::UnderlineSingle;
+        mUnderlineStyle = UnderlineSingle;
         break;
     case QXlsx::Format::FontUnderlineDouble:
     case QXlsx::Format::FontUnderlineDoubleAccounting:
-        mUnderlineStyle = Format::UnderlineDouble;
+        mUnderlineStyle = UnderlineDouble;
         break;
     default:
-        mUnderlineStyle = Format::UnderlineNone;
+        mUnderlineStyle = UnderlineNone;
         break;
     }
 }
@@ -318,7 +318,7 @@ void FormatPrivate::setUnderlineColor(QColor color) {
 
 }
 
-void FormatPrivate::setUnderlineStyle(Format::UnderlineStyle style) {
+void FormatPrivate::setUnderlineStyle(UnderlineStyle style) {
     mUnderlineStyle = style;
     emit q_ptr->formatChanged(q_ptr);
 

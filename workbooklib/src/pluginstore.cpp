@@ -43,11 +43,17 @@
 #include "qstd.h"
 
 #include "pluginstore.h"
+#include "interface.h"
 
-bool PluginStore::pluginsAreLoaded = false;
+PluginStore::PluginStore() :
+    d_ptr(new PluginStorePrivate(this)) {
 
-PluginStore::PluginStore(QObject *parent) : QObject(parent) {
-    loadPlugins();
+}
+
+PluginStore::PluginStore(QObject *parent) :
+    QObject(parent),
+    d_ptr(new PluginStorePrivate(this)) {
+
 }
 
 PluginStore::~PluginStore() {
@@ -55,75 +61,33 @@ PluginStore::~PluginStore() {
 }
 
 bool PluginStore::isEmpty() {
-    return (mOperators.isEmpty() && mFunctions.isEmpty() && mConstants.isEmpty());
+    return d_ptr->isEmpty();
 }
 
 IOperator *PluginStore::getOperator(QString name) {
-    if (mOperators.contains(name))
-        return mOperators.value(name);
-    return NULL;
+    return d_ptr->getOperator(name);
 }
 
 IFunction* PluginStore::getFunction(QString name) {
-    if (mFunctions.contains(name))
-        return mFunctions.value(name);
-    return NULL;
+    return d_ptr->getFunction(name);
 }
 
 IConstant* PluginStore::getConstant(QString name) {
-    if (mConstants.contains(name))
-        return mConstants.value(name);
-    return NULL;
+    return d_ptr->getConstant(name);
 }
 
 void PluginStore::addOperator(IOperator *interface) {
-    mOperators.insert(interface->name(), interface);
+    d_ptr->addOperator(interface);
 }
 
 void PluginStore::addFunction(IFunction *interface) {
-    mFunctions.insert(interface->name(), interface);
+    d_ptr->addFunction(interface);
 }
+
 void PluginStore::addConstant(IConstant *interface) {
-    mConstants.insert(interface->name(), interface);
+    d_ptr->addConstant(interface);
 }
 
 void PluginStore::loadPlugins() {
-
-    // only need to be loaded once.
-    if (PluginStore::pluginsAreLoaded) return;
-
-    QDir pluginsDir = QDir(qApp->applicationDirPath());
-
-    pluginsDir.cd("plugins");
-
-    foreach (QString fileName, pluginsDir.entryList(QDir::Files)) {
-        QPluginLoader loader(pluginsDir.absoluteFilePath(fileName));
-        QObject *plugin = loader.instance();
-        if (plugin) {
-
-            IOperator *opInterface = qobject_cast<IOperator*>(plugin);
-            if (opInterface) {
-                addOperator(opInterface);
-//                cout << "Plugin file " << opInterface->name() << " is valid." << endl;
-                // now the plugin can be initialized and used
-            }
-
-            IConstant *conInterface = qobject_cast<IConstant*>(plugin);
-            if (conInterface) {
-                // now the plugin can be initialized and used
-                addConstant(conInterface);
-//                cout << "Plugin file " << conInterface->name() << " is valid." << endl;
-            }
-
-            IFunction *func = qobject_cast<IFunction*>(plugin);
-            if (func) {
-                // now the plugin can be initialized and used
-                addFunction(func);
-//                cout << "Plugin file " << func->name() << " is valid." << endl;
-            }
-
-        }
-    }
-
-    PluginStore::pluginsAreLoaded = true;
+    d_ptr->loadPlugins();
 }

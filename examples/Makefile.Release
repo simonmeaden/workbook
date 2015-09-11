@@ -631,6 +631,7 @@ compiler_clean: compiler_moc_header_clean
 		/opt/Qt/5.40/5.4/gcc_64/include/QtWidgets/QWidget \
 		/opt/Qt/5.40/5.4/gcc_64/include/QtCore/QVariant \
 		/opt/Qt/5.40/5.4/gcc_64/include/QtCore/QVariantList \
+		/opt/Qt/5.40/5.4/gcc_64/include/QtCore/QScopedPointer \
 		/workspace/qt/common/workbook/include/workbook_global.h \
 		/workspace/qt/common/workbook/workbooklib/src/qworkbookview.h \
 		/opt/Qt/5.40/5.4/gcc_64/include/QtWidgets/QTabBar \
@@ -652,18 +653,23 @@ compiler_clean: compiler_moc_header_clean
 		/opt/Qt/5.40/5.4/gcc_64/include/QtCore/qdatetime.h \
 		/workspace/qt/common/workbook/workbooklib/src/cellreference.h \
 		/opt/Qt/5.40/5.4/gcc_64/include/QtCore/QString \
-		/workspace/qt/common/workbook/workbooklib/src/range.h \
+		/workspace/qt/common/workbook/workbooklib/src/cellreference_p.h \
+		/opt/Qt/5.40/5.4/gcc_64/include/QtCore/QRegularExpression \
 		/workspace/qt/common/workbook/workbooklib/src/qquad.h \
-		/workspace/qt/common/workbook/workbooklib/src/format.h \
+		/workspace/qt/common/workbook/workbooklib/src/reference.h \
+		/workspace/qt/common/workbook/workbooklib/src/types.h \
 		/opt/Qt/5.40/5.4/gcc_64/include/QtGui/QFont \
+		/opt/Qt/5.40/5.4/gcc_64/include/QtGui/QColor \
+		/workspace/qt/common/workbook/workbooklib/src/range.h \
+		/workspace/qt/common/workbook/workbooklib/src/format.h \
 		/opt/Qt/5.40/5.4/gcc_64/include/QtGui/QBrush \
 		/workspace/qt/common/QtXlsxWriter/src/xlsx/xlsxformat.h \
 		/workspace/qt/common/QtXlsxWriter/src/xlsx/xlsxglobal.h \
 		/opt/Qt/5.40/5.4/gcc_64/include/QtCore/QtGlobal \
-		/opt/Qt/5.40/5.4/gcc_64/include/QtGui/QColor \
 		/opt/Qt/5.40/5.4/gcc_64/include/QtCore/QByteArray \
 		/opt/Qt/5.40/5.4/gcc_64/include/QtCore/QExplicitlySharedDataPointer \
-		/workspace/qt/common/workbook/workbooklib/src/types.h \
+		/workspace/qt/common/workbook/workbooklib/src/format_p.h \
+		/opt/Qt/5.40/5.4/gcc_64/include/QtCore/QMap \
 		/workspace/qt/common/workbook/workbooklib/src/include/QWorkbookView \
 		/workspace/qt/common/workbook/workbooklib/src/include/QWorkbookToolbar \
 		/workspace/qt/common/workbook/workbooklib/src/toolbar/qworkbooktoolbar.h \
@@ -674,21 +680,22 @@ compiler_clean: compiler_moc_header_clean
 		/opt/Qt/5.40/5.4/gcc_64/include/QtWidgets/QShortcut \
 		/opt/Qt/5.40/5.4/gcc_64/include/QtWidgets/qshortcut.h \
 		/opt/Qt/5.40/5.4/gcc_64/include/QtGui/QIcon \
-		/workspace/qt/common/workbook/workbooklib/src/toolbar/workbookaligntoolbar.h \
+		/workspace/qt/common/workbook/workbooklib/src/toolbar/qworkbookfonttoolbar.h \
+		/opt/Qt/5.40/5.4/gcc_64/include/QtWidgets/QFontComboBox \
+		/opt/Qt/5.40/5.4/gcc_64/include/QtWidgets/qfontcombobox.h \
+		/opt/Qt/5.40/5.4/gcc_64/include/QtWidgets/qcombobox.h \
+		/opt/Qt/5.40/5.4/gcc_64/include/QtGui/qfontdatabase.h \
+		/opt/Qt/5.40/5.4/gcc_64/include/QtWidgets/QComboBox \
+		/opt/Qt/5.40/5.4/gcc_64/include/QtGui/QIntValidator \
+		/workspace/qt/common/workbook/workbooklib/src/toolbar/basetoolbar.h \
+		/workspace/qt/common/workbook/workbooklib/src/toolbar/basetoolbar_p.h \
+		/workspace/qt/common/workbook/workbooklib/src/toolbar/qworkbookfonteffectstoolbar.h \
 		/opt/Qt/5.40/5.4/gcc_64/include/QtWidgets/QPushButton \
 		/opt/Qt/5.40/5.4/gcc_64/include/QtWidgets/qpushbutton.h \
 		/opt/Qt/5.40/5.4/gcc_64/include/QtWidgets/qabstractbutton.h \
-		/workspace/qt/common/workbook/workbooklib/src/toolbar/basetoolbar.h \
-		/workspace/qt/common/simonsoft/src/widgets/fontcombobox.h \
-		/opt/Qt/5.40/5.4/gcc_64/include/QtWidgets/QComboBox \
-		/opt/Qt/5.40/5.4/gcc_64/include/QtWidgets/qcombobox.h \
-		/opt/Qt/5.40/5.4/gcc_64/include/QtGui/QFontDatabase \
-		/opt/Qt/5.40/5.4/gcc_64/include/QtGui/qfontdatabase.h \
-		/workspace/qt/common/workbook/workbooklib/src/toolbar/workbookfonteffectstoolbar.h \
-		/workspace/qt/common/workbook/workbooklib/src/toolbar/workbookfonttoolbar.h \
-		/opt/Qt/5.40/5.4/gcc_64/include/QtWidgets/QFontComboBox \
-		/opt/Qt/5.40/5.4/gcc_64/include/QtWidgets/qfontcombobox.h \
-		/workspace/qt/common/workbook/workbooklib/src/toolbar/workbookindenttoolbar.h \
+		/workspace/qt/common/workbook/workbooklib/src/toolbar/qworkbookaligntoolbar.h \
+		/workspace/qt/common/workbook/workbooklib/src/toolbar/qworkbookmergetoolbar.h \
+		/workspace/qt/common/workbook/workbooklib/src/toolbar/qworkbookindenttoolbar.h \
 		/workspace/qt/common/workbook/workbooklib/src/toolbar/qworkbookfunctiontoolbar.h \
 		/opt/Qt/5.40/5.4/gcc_64/include/QtWidgets/QPlainTextEdit \
 		/opt/Qt/5.40/5.4/gcc_64/include/QtWidgets/qplaintextedit.h \

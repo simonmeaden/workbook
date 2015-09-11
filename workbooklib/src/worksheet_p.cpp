@@ -409,6 +409,18 @@ Cell* WorksheetPrivate::cellAsCell(int row, int column) {
 }
 
 /*
+ * This is only called internally, normally when a cell has to be written to by something else other
+ * than it's value . If the value needs to be changed use setCell() or if something else needs to
+ * be changed internally use cellCreateAsNeeded().
+ */
+void WorksheetPrivate::setCellAsCell(int row, int column, Cell *cell) {
+    QMap<int, Cell*> rowData = mCellData.value(row);
+
+    rowData.insert(column, cell);
+    mCellData.insert(row, rowData);
+}
+
+/*
  * This is only called internally, normally when a cell has to be modified in another way
  * than modifying it's value. If the value needs to be changed use setCell().
  *
@@ -434,7 +446,7 @@ void WorksheetPrivate::setCell(int row, int column, QVariant data) {
     if (c)
         c->setValue(data);
     else
-        c = new Cell(row, column, data);
+        c = new Cell(row, column, data, q_ptr);
 
     rowData.insert(column, c);
     mCellData.insert(row, rowData);

@@ -49,12 +49,15 @@
 #include <QtPlugin>
 #include <QPluginLoader>
 #include <QApplication>
+#include <QScopedPointer>
 
 #include "interface.h"
+#include "pluginstore_p.h"
 
 class PluginStore : QObject {
     Q_OBJECT
 public:
+    PluginStore();
     PluginStore(QObject *parent=0);
     ~PluginStore();
 
@@ -70,11 +73,18 @@ public slots:
     void loadPlugins();
 
 protected:
+    PluginStore(PluginStorePrivate &d, QObject *parent) :
+        QObject(parent),
+        d_ptr(&d) {}
+    const QScopedPointer<PluginStorePrivate> d_ptr;
+
     QMap<QString, IOperator*> mOperators;
     QMap<QString, IFunction*> mFunctions;
     QMap<QString, IConstant*> mConstants;
 
-    static bool pluginsAreLoaded;
+private:
+    Q_DECLARE_PRIVATE(PluginStore)
+
 };
 
 

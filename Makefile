@@ -29,32 +29,33 @@ DISTNAME      = workbook1.0.0
 DISTDIR = /workspace/qt/common/workbook/.tmp/workbook1.0.0
 SUBTARGETS    =  \
 		sub-workbooklib \
-		sub-plugin
+		sub-plugin \
+		sub-examples
 
 
-sub-workbooklib-qmake_all:  FORCE
+sub-workbooklib-qmake_all: sub-plugin-qmake_all FORCE
 	@test -d workbooklib/ || mkdir -p workbooklib/
 	cd workbooklib/ && $(QMAKE) /workspace/qt/common/workbook/workbooklib/workbooklib.pro -spec linux-g++ CONFIG+=debug -o Makefile
 	cd workbooklib/ && $(MAKE) -f Makefile qmake_all
-sub-workbooklib: FORCE
+sub-workbooklib: sub-plugin FORCE
 	@test -d workbooklib/ || mkdir -p workbooklib/
 	cd workbooklib/ && ( test -e Makefile || $(QMAKE) /workspace/qt/common/workbook/workbooklib/workbooklib.pro -spec linux-g++ CONFIG+=debug -o Makefile ) && $(MAKE) -f Makefile
-sub-workbooklib-make_first: FORCE
+sub-workbooklib-make_first: sub-plugin-make_first FORCE
 	@test -d workbooklib/ || mkdir -p workbooklib/
 	cd workbooklib/ && ( test -e Makefile || $(QMAKE) /workspace/qt/common/workbook/workbooklib/workbooklib.pro -spec linux-g++ CONFIG+=debug -o Makefile ) && $(MAKE) -f Makefile 
-sub-workbooklib-all: FORCE
+sub-workbooklib-all: sub-plugin-all FORCE
 	@test -d workbooklib/ || mkdir -p workbooklib/
 	cd workbooklib/ && ( test -e Makefile || $(QMAKE) /workspace/qt/common/workbook/workbooklib/workbooklib.pro -spec linux-g++ CONFIG+=debug -o Makefile ) && $(MAKE) -f Makefile all
-sub-workbooklib-clean: FORCE
+sub-workbooklib-clean: sub-plugin-clean FORCE
 	@test -d workbooklib/ || mkdir -p workbooklib/
 	cd workbooklib/ && ( test -e Makefile || $(QMAKE) /workspace/qt/common/workbook/workbooklib/workbooklib.pro -spec linux-g++ CONFIG+=debug -o Makefile ) && $(MAKE) -f Makefile clean
-sub-workbooklib-distclean: FORCE
+sub-workbooklib-distclean: sub-plugin-distclean FORCE
 	@test -d workbooklib/ || mkdir -p workbooklib/
 	cd workbooklib/ && ( test -e Makefile || $(QMAKE) /workspace/qt/common/workbook/workbooklib/workbooklib.pro -spec linux-g++ CONFIG+=debug -o Makefile ) && $(MAKE) -f Makefile distclean
-sub-workbooklib-install_subtargets: FORCE
+sub-workbooklib-install_subtargets: sub-plugin-install_subtargets FORCE
 	@test -d workbooklib/ || mkdir -p workbooklib/
 	cd workbooklib/ && ( test -e Makefile || $(QMAKE) /workspace/qt/common/workbook/workbooklib/workbooklib.pro -spec linux-g++ CONFIG+=debug -o Makefile ) && $(MAKE) -f Makefile install
-sub-workbooklib-uninstall_subtargets: FORCE
+sub-workbooklib-uninstall_subtargets: sub-plugin-uninstall_subtargets FORCE
 	@test -d workbooklib/ || mkdir -p workbooklib/
 	cd workbooklib/ && ( test -e Makefile || $(QMAKE) /workspace/qt/common/workbook/workbooklib/workbooklib.pro -spec linux-g++ CONFIG+=debug -o Makefile ) && $(MAKE) -f Makefile uninstall
 sub-plugin-qmake_all:  FORCE
@@ -82,6 +83,31 @@ sub-plugin-install_subtargets: FORCE
 sub-plugin-uninstall_subtargets: FORCE
 	@test -d plugin/ || mkdir -p plugin/
 	cd plugin/ && ( test -e Makefile || $(QMAKE) /workspace/qt/common/workbook/plugin/plugin.pro -spec linux-g++ CONFIG+=debug -o Makefile ) && $(MAKE) -f Makefile uninstall
+sub-examples-qmake_all: sub-workbooklib-qmake_all FORCE
+	@test -d examples/ || mkdir -p examples/
+	cd examples/ && $(QMAKE) /workspace/qt/common/workbook/examples/examples.pro -spec linux-g++ CONFIG+=debug -o Makefile
+	cd examples/ && $(MAKE) -f Makefile qmake_all
+sub-examples: sub-workbooklib FORCE
+	@test -d examples/ || mkdir -p examples/
+	cd examples/ && ( test -e Makefile || $(QMAKE) /workspace/qt/common/workbook/examples/examples.pro -spec linux-g++ CONFIG+=debug -o Makefile ) && $(MAKE) -f Makefile
+sub-examples-make_first: sub-workbooklib-make_first FORCE
+	@test -d examples/ || mkdir -p examples/
+	cd examples/ && ( test -e Makefile || $(QMAKE) /workspace/qt/common/workbook/examples/examples.pro -spec linux-g++ CONFIG+=debug -o Makefile ) && $(MAKE) -f Makefile 
+sub-examples-all: sub-workbooklib-all FORCE
+	@test -d examples/ || mkdir -p examples/
+	cd examples/ && ( test -e Makefile || $(QMAKE) /workspace/qt/common/workbook/examples/examples.pro -spec linux-g++ CONFIG+=debug -o Makefile ) && $(MAKE) -f Makefile all
+sub-examples-clean: sub-workbooklib-clean FORCE
+	@test -d examples/ || mkdir -p examples/
+	cd examples/ && ( test -e Makefile || $(QMAKE) /workspace/qt/common/workbook/examples/examples.pro -spec linux-g++ CONFIG+=debug -o Makefile ) && $(MAKE) -f Makefile clean
+sub-examples-distclean: sub-workbooklib-distclean FORCE
+	@test -d examples/ || mkdir -p examples/
+	cd examples/ && ( test -e Makefile || $(QMAKE) /workspace/qt/common/workbook/examples/examples.pro -spec linux-g++ CONFIG+=debug -o Makefile ) && $(MAKE) -f Makefile distclean
+sub-examples-install_subtargets: sub-workbooklib-install_subtargets FORCE
+	@test -d examples/ || mkdir -p examples/
+	cd examples/ && ( test -e Makefile || $(QMAKE) /workspace/qt/common/workbook/examples/examples.pro -spec linux-g++ CONFIG+=debug -o Makefile ) && $(MAKE) -f Makefile install
+sub-examples-uninstall_subtargets: sub-workbooklib-uninstall_subtargets FORCE
+	@test -d examples/ || mkdir -p examples/
+	cd examples/ && ( test -e Makefile || $(QMAKE) /workspace/qt/common/workbook/examples/examples.pro -spec linux-g++ CONFIG+=debug -o Makefile ) && $(MAKE) -f Makefile uninstall
 
 Makefile: workbook.pro /opt/Qt/5.40/5.4/gcc_64/mkspecs/linux-g++/qmake.conf /opt/Qt/5.40/5.4/gcc_64/mkspecs/features/spec_pre.prf \
 		/opt/Qt/5.40/5.4/gcc_64/mkspecs/common/shell-unix.conf \
@@ -317,23 +343,26 @@ workbook.pro:
 qmake: FORCE
 	@$(QMAKE) -spec linux-g++ CONFIG+=debug -o Makefile workbook.pro
 
-qmake_all: sub-workbooklib-qmake_all sub-plugin-qmake_all FORCE
+qmake_all: sub-workbooklib-qmake_all sub-plugin-qmake_all sub-examples-qmake_all FORCE
 
-make_first: sub-workbooklib-make_first sub-plugin-make_first FORCE
-all: sub-workbooklib-all sub-plugin-all FORCE
-clean: sub-workbooklib-clean sub-plugin-clean FORCE
-distclean: sub-workbooklib-distclean sub-plugin-distclean FORCE
+make_first: sub-workbooklib-make_first sub-plugin-make_first sub-examples-make_first FORCE
+all: sub-workbooklib-all sub-plugin-all sub-examples-all FORCE
+clean: sub-workbooklib-clean sub-plugin-clean sub-examples-clean FORCE
+distclean: sub-workbooklib-distclean sub-plugin-distclean sub-examples-distclean FORCE
 	-$(DEL_FILE) Makefile
-install_subtargets: sub-workbooklib-install_subtargets sub-plugin-install_subtargets FORCE
-uninstall_subtargets: sub-workbooklib-uninstall_subtargets sub-plugin-uninstall_subtargets FORCE
+install_subtargets: sub-workbooklib-install_subtargets sub-plugin-install_subtargets sub-examples-install_subtargets FORCE
+uninstall_subtargets: sub-workbooklib-uninstall_subtargets sub-plugin-uninstall_subtargets sub-examples-uninstall_subtargets FORCE
 
-sub-workbooklib-check:
+sub-workbooklib-check: sub-plugin-check
 	@test -d workbooklib/ || mkdir -p workbooklib/
 	cd workbooklib/ && ( test -e Makefile || $(QMAKE) /workspace/qt/common/workbook/workbooklib/workbooklib.pro -spec linux-g++ CONFIG+=debug -o Makefile ) && $(MAKE) -f Makefile check
 sub-plugin-check:
 	@test -d plugin/ || mkdir -p plugin/
 	cd plugin/ && ( test -e Makefile || $(QMAKE) /workspace/qt/common/workbook/plugin/plugin.pro -spec linux-g++ CONFIG+=debug -o Makefile ) && $(MAKE) -f Makefile check
-check: sub-workbooklib-check sub-plugin-check
+sub-examples-check: sub-workbooklib-check
+	@test -d examples/ || mkdir -p examples/
+	cd examples/ && ( test -e Makefile || $(QMAKE) /workspace/qt/common/workbook/examples/examples.pro -spec linux-g++ CONFIG+=debug -o Makefile ) && $(MAKE) -f Makefile check
+check: sub-workbooklib-check sub-plugin-check sub-examples-check
 install: install_subtargets  FORCE
 
 uninstall:  uninstall_subtargets FORCE
@@ -343,7 +372,7 @@ FORCE:
 dist: distdir FORCE
 	(cd `dirname $(DISTDIR)` && $(TAR) $(DISTNAME).tar $(DISTNAME) && $(COMPRESS) $(DISTNAME).tar) && $(MOVE) `dirname $(DISTDIR)`/$(DISTNAME).tar.gz . && $(DEL_FILE) -r $(DISTDIR)
 
-distdir: sub-workbooklib-distdir sub-plugin-distdir FORCE
+distdir: sub-workbooklib-distdir sub-plugin-distdir sub-examples-distdir FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents /opt/Qt/5.40/5.4/gcc_64/mkspecs/features/spec_pre.prf /opt/Qt/5.40/5.4/gcc_64/mkspecs/common/shell-unix.conf /opt/Qt/5.40/5.4/gcc_64/mkspecs/common/unix.conf /opt/Qt/5.40/5.4/gcc_64/mkspecs/common/linux.conf /opt/Qt/5.40/5.4/gcc_64/mkspecs/common/gcc-base.conf /opt/Qt/5.40/5.4/gcc_64/mkspecs/common/gcc-base-unix.conf /opt/Qt/5.40/5.4/gcc_64/mkspecs/common/g++-base.conf /opt/Qt/5.40/5.4/gcc_64/mkspecs/common/g++-unix.conf /opt/Qt/5.40/5.4/gcc_64/mkspecs/qconfig.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_bluetooth.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_bluetooth_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_bootstrap_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_clucene_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_compress.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_concurrent.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_concurrent_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_core.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_core_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_dbus.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_dbus_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_declarative.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_declarative_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_designer.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_designer_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_designercomponents_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_enginio.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_enginio_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_gui.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_gui_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_help.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_help_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_location.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_location_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_multimedia.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_multimedia_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_multimediawidgets.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_multimediawidgets_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_network.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_network_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_nfc.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_nfc_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_opengl.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_opengl_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_openglextensions.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_openglextensions_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_platformsupport_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_positioning.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_positioning_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_printsupport.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_printsupport_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_qml.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_qml_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_qmldevtools_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_qmltest.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_qmltest_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_qtmultimediaquicktools_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_quick.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_quick_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_quickparticles_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_quickwidgets.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_quickwidgets_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_script.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_script_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_scripttools.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_scripttools_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_sensors.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_sensors_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_serialport.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_serialport_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_sql.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_sql_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_svg.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_svg_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_testlib.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_testlib_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_uitools.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_uitools_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_webchannel.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_webchannel_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_webengine.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_webengine_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_webenginecore.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_webenginecore_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_webenginewidgets.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_webenginewidgets_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_webkit.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_webkit_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_webkitwidgets.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_webkitwidgets_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_websockets.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_websockets_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_webview.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_webview_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_widgets.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_widgets_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_x11extras.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_x11extras_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_xml.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_xml_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_xmlpatterns.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/modules/qt_lib_xmlpatterns_private.pri /opt/Qt/5.40/5.4/gcc_64/mkspecs/features/qt_functions.prf /opt/Qt/5.40/5.4/gcc_64/mkspecs/features/qt_config.prf /opt/Qt/5.40/5.4/gcc_64/mkspecs/linux-g++/qmake.conf /opt/Qt/5.40/5.4/gcc_64/mkspecs/features/spec_post.prf /opt/Qt/5.40/5.4/gcc_64/mkspecs/features/exclusive_builds.prf /opt/Qt/5.40/5.4/gcc_64/mkspecs/features/default_pre.prf /opt/Qt/5.40/5.4/gcc_64/mkspecs/features/resolve_config.prf /opt/Qt/5.40/5.4/gcc_64/mkspecs/features/default_post.prf /opt/Qt/5.40/5.4/gcc_64/mkspecs/features/warn_on.prf /opt/Qt/5.40/5.4/gcc_64/mkspecs/features/testcase_targets.prf /opt/Qt/5.40/5.4/gcc_64/mkspecs/features/exceptions.prf /opt/Qt/5.40/5.4/gcc_64/mkspecs/features/yacc.prf /opt/Qt/5.40/5.4/gcc_64/mkspecs/features/lex.prf workbook.pro $(DISTDIR)/
 
@@ -354,4 +383,8 @@ sub-workbooklib-distdir: FORCE
 sub-plugin-distdir: FORCE
 	@test -d plugin/ || mkdir -p plugin/
 	cd plugin/ && ( test -e Makefile || $(QMAKE) /workspace/qt/common/workbook/plugin/plugin.pro -spec linux-g++ CONFIG+=debug -o Makefile ) && $(MAKE) -e -f Makefile distdir DISTDIR=$(DISTDIR)/plugin
+
+sub-examples-distdir: FORCE
+	@test -d examples/ || mkdir -p examples/
+	cd examples/ && ( test -e Makefile || $(QMAKE) /workspace/qt/common/workbook/examples/examples.pro -spec linux-g++ CONFIG+=debug -o Makefile ) && $(MAKE) -e -f Makefile distdir DISTDIR=$(DISTDIR)/examples
 
