@@ -1,42 +1,20 @@
 /*
-    This Workbook library is © Simon Meaden 2015. It is licensed under the LGPL V3 license.
+    Copyright © Simon Meaden 2015.
 
-    This Workbook library dynamically links to unmodified Nokia Qt5 Library. The Qt5
-    Library is © 2011 Nokia Corporation and/or its subsidiary(-ies), and is licensed
-    under the GNU Lesser General Public License version 2.1 with Nokia Qt LGPL exception
-    version 1.1.
+    This file is part of the QWorkbook spreadsheet library.
 
-    Qt5 library is free software; you can redistribute it and/or modify it under the
-    terms of the GNU Lesser General Public License, version 2.1, as published by the
-    Free Software Foundation.
+    QWorkbook is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-    Qt5 library is provided “AS IS”, without WARRANTIES OR CONDITIONS OF ANY KIND, EITHER
-    EXPRESS OR IMPLIED INCLUDING, WITHOUT LIMITATION, ANY WARRANTIES OR CONDITIONS OF
-    TITLE, NON-INFRINGEMENT, MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+    QWorkbook is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-    As an additional permission to the GNU Lesser General Public License version 3.0, the
-    object code form of a “work that uses the Library” may incorporate material from a
-    header file that is part of the Library. You may distribute such object code under
-    terms of your choice, provided that: (i) the header files of the Library have not
-    been modified; and (ii) the incorporated material is limited to numerical parameters,
-    data structure layouts, accessors, macros, inline functions and templates; and (iii)
-    you comply with the terms of Section 6 of the GNU Lesser General Public License version 3.0.
-
-    Moreover, you may apply this exception to a modified version of the Library, provided
-    that such modification does not involve copying material from the Library into the
-    modified Library’s header files unless such material is limited to (i) numerical
-    parameters; (ii) data structure layouts; (iii) accessors; and (iv) small macros,
-    templates and inline functions of five lines or less in length.
-
-    Furthermore, you are not required to apply this additional permission to a modified
-    version of the Library.
-
-    You should have received a copy of the GNU Lesser General Public License along
-    with this package; if not, write to the Free Software Foundation, Inc., 51 Franklin
-    Street, Fifth Floor, Boston, MA 02110-1301 USA
-
-    The source code for Qt 5.4.X SDK is available from Nokia here:
-    http://get.qt.nokia.com/qt/source/qt-everywhere-opensource-src-4.7.X.zip.
+    You should have received a copy of the GNU General Public License
+    along with QWorkbook.  If not, see <http://www.gnu.org/licenses/>.
 
     It is also available on request from Simon Meaden info@smelecomp.co.uk.
 */
@@ -49,7 +27,7 @@
 #include "workbookparser.h"
 #include "cell.h"
 #include "mergedcell.h"
-#include <qstd.h>
+#include "qstd.h"
 
 QWorksheetViewPrivate::QWorksheetViewPrivate(QWorksheetView *parent) :
     q_ptr(parent) {
@@ -90,6 +68,96 @@ void QWorksheetViewPrivate::init() {
                    q_ptr,
                    SLOT(selectionHasChanged(QItemSelection, QItemSelection)));
 
+    // catches all events, and passes on whatever it doesn't want
+    q_ptr->installEventFilter(q_ptr);
+
+}
+
+void QWorksheetViewPrivate:: commitAndMove(QModelIndex &currentIndex, int &newRow, int &newColumn) {
+    q_ptr->currentChanged(currentIndex, currentIndex);
+
+    QModelIndex index = q_ptr->model()->index(newRow, newColumn);
+    q_ptr->setCurrentIndex(index);
+}
+
+bool QWorksheetViewPrivate::eventFilter(QObject *obj, QEvent *event) {
+
+    if (event->type() == QEvent::KeyPress) {
+        QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
+        int key = keyEvent->key();
+        Qt::KeyboardModifiers modifiers = keyEvent->modifiers();
+        QModelIndex currentIndex = q_ptr->currentIndex();
+        int row = currentIndex.row();
+        int column = currentIndex.column();
+
+        switch (key) {
+        case Qt::Key_Right:
+            // TODO get this to work when editing. The editor grabs the right/left key first.
+            column++;
+            commitAndMove(currentIndex, row, column);
+            break;
+        case Qt::Key_Left:
+            // TODO get this to work when editing. The editor grabs the right/left key first.
+            if (column > 0)
+                column--;
+            commitAndMove(currentIndex, row, column);
+            break;
+        case Qt::Key_Up:
+            if (row > 0)
+                row--;
+            commitAndMove(currentIndex, row, column);
+            break;
+        case Qt::Key_Down:
+            row++;
+            commitAndMove(currentIndex, row, column);
+            break;
+        case Qt::Key_Enter:
+        case Qt::Key_Return:
+            if (modifiers.testFlag(Qt::ShiftModifier)) {
+                if (row > 0) {
+                    row--;
+                }
+            } else {
+                row++;
+            }
+            commitAndMove(currentIndex, row, column);
+            break;
+        case Qt::Key_Tab:
+            if (modifiers.testFlag(Qt::ShiftModifier)) {
+                if (column > 0) {
+                    column--;
+                }
+            } else {
+                column++;
+            }
+            commitAndMove(currentIndex, row, column);
+            break;
+        case Qt::Key_Home:
+            column = 0;
+            commitAndMove(currentIndex, row, column);
+            break;
+        case Qt::Key_End:
+            column = q_ptr->model()->maxColumn();
+            commitAndMove(currentIndex, row, column);
+            break;
+        case Qt::Key_PageUp:
+            row = 0;
+            commitAndMove(currentIndex, row, column);
+            break;
+        case Qt::Key_PageDown:
+            row = q_ptr->model()->maxRow();
+            commitAndMove(currentIndex, row, column);
+            break;
+        default:
+            // I don't need it so pass it back.
+            return q_ptr->QObject::eventFilter(obj, event);
+        }
+        return true;
+    } else {
+        // standard event processing
+        return q_ptr->QObject::eventFilter(obj, event);
+    }
+    return false;
 }
 
 Worksheet* QWorksheetViewPrivate::worksheet() {
@@ -147,7 +215,7 @@ void QWorksheetViewPrivate::selectionHasChanged(QItemSelection /*selected*/, QIt
 
     bContiguous = mFormatStatus.bContiguous;
 
-//    cout << (bContiguous ? "contiguous" : "non-contiguous") << endl << flush;
+    cout << (bContiguous ? "contiguous" : "non-contiguous") << endl << flush;
 
     if (formats.size() == 0) {
         emit q->selectionChanged(NULL);
@@ -354,8 +422,10 @@ void QWorksheetViewPrivate::setSelectionMerge(bool merge) {
         int colSpan = mFormatStatus.mMaxCol - mFormatStatus.mMinCol + 1;
         if (merge) {
             setSpan(row, col, rowSpan, colSpan);
+            q_ptr->QTableView::setSpan(row, col, rowSpan, colSpan);
         } else {
             checkClearSpan(row, col, rowSpan, colSpan);
+            q_ptr->QTableView::setSpan(row, col, rowSpan, colSpan);
         }
     }
 }
@@ -391,11 +461,45 @@ void QWorksheetViewPrivate::setSpan(int row, int column, int rowSpan, int colSpa
 
         break;
     }
-    case DemergePossible:
+    case DemergePossible: {
+
+        /*
+            Convert the first cell from a merged cell to a normal cell with the same data.
+        */
+        Cell *cell = q_ptr->model()->cellAsCell(row, column);
+        MergedCell *mCell = qobject_cast<MergedCell*>(cell);
+        if (!mCell || mCell->isEmpty()) {
+            QModelIndex index = q_ptr->model()->index(row, column);
+            q_ptr->model()->setData(index, QVariant(), Qt::EditRole);
+        } else {
+            cell = new Cell(mCell->row(), mCell->column(), mCell->value(), q_ptr);
+            q_ptr->model()->setCellAsCell(cell->row(), cell->column(), cell);
+        }
+
+        /*
+            Restores all the other cells to their existing data, if any.
+        */
+        QListIterator<Cell*> it(mCell->overwritten());
+        while (it.hasNext()) {
+            cell = it.next();
+
+            if (cell->isEmpty()) {
+                // null qvariant removes this cell - saves storage space
+                QModelIndex index = q_ptr->model()->index(row, column);
+                q_ptr->model()->setData(index, QVariant(), Qt::EditRole);
+                continue;
+            }
+            q_ptr->model()->setCellAsCell(cell->row(), cell->column(), cell);
+        }
 
         break;
+    }
     case ContainsMerge:
-
+        QMessageBox::warning(q_ptr,
+                             qApp->applicationDisplayName(),
+                             q_ptr->tr("Cell merge not possible if cells already merged"),
+                             QMessageBox::Ok,
+                             QMessageBox::Ok);
         break;
     }
 
@@ -412,18 +516,21 @@ QWorksheetViewPrivate::MergeStatus QWorksheetViewPrivate::checkClearSpan(int row
             If they are reverse the merge, otherwise
             merge the contents.
         */
+        int count = 0;
         for (int r = row; r < row + rowSpan; r++) {
             for (int c = column; c < column + colSpan; c++) {
 
-                if (r == row && c == column) continue;
                 cell = q_ptr->model()->cellAsCell(r, c);
-                if (!(qobject_cast<MergedCell*>(cell) == mCell)) {
+                if ((qobject_cast<MergedCell*>(cell))) {
                     // some of the cells are already merged but not all
                     // or possible more than one merge exists.
-                    return ContainsMerge;
+                    count++;
                 }
             }
         }
+
+        if (count != (rowSpan * colSpan))
+            return ContainsMerge;
 
         return DemergePossible; // All of the cells are merged and the same merge.
 
@@ -448,28 +555,47 @@ QWorksheetViewPrivate::MergeStatus QWorksheetViewPrivate::checkClearSpan(int row
     return MergePossible;
 }
 
+/*
+    In OpenOffice when merge with contents moved to first cell
+    other cells are emptied.
+*/
 void QWorksheetViewPrivate::mergeDataToFirstCell(int row, int column, int rowSpan, int colSpan) {
     MergedCell *topLeft;
     QVariant data;
     QString result;
+    QList<Cell*> list;
 
-    topLeft = new MergedCell(row, column, q_ptr);
+    // merges data as strings separated by a space.
     for (int r = row; r < row + rowSpan; r++) {
         for (int c = column; c < column + colSpan; c++) {
             data = q_ptr->read(r, c);
-            result = data.toString();
+            result += data.toString();
             result += " ";
-
-            // add first mergedcell into all cells.
-            q_ptr->model()->setCellAsCell(r, c, topLeft);
         }
     }
 
-    // set the merged result.
-    topLeft->setValue(result);
-    q_ptr->model()->setCellAsCell(row, column, topLeft);
+    // add first mergedcell into first cell.
+    // others saved empty cells and new empty merged cell stored in table.
+    topLeft = new MergedCell(row, column, q_ptr);
+    for (int r = row; r < row + rowSpan; r++) {
+        for (int c = column; c < column + colSpan; c++) {
+            if (r == row && c == column) {
+                topLeft->setValue(result);
+                q_ptr->model()->setCellAsCell(row, column, topLeft);
+            } else {
+                list.append(new Cell(r, c, q_ptr));
+                q_ptr->model()->setCellAsCell(r, c, new MergedCell(r, c, q_ptr));
+            }
+        }
+    }
+    topLeft->setOverwritten(list);
 }
 
+/*
+    In OpenOffice when merge with contents not moved to first cell
+    other cells are saved as hidden cells. This can be partially undone,
+    whatever happens to the first cell cannot, however the others can be recovered..
+*/
 void QWorksheetViewPrivate::firstCellRetainedRestStored(int row, int column, int rowSpan, int colSpan) {
     MergedCell *topLeft;
     Cell *cell;
@@ -479,19 +605,22 @@ void QWorksheetViewPrivate::firstCellRetainedRestStored(int row, int column, int
     for (int r = row; r < row + rowSpan; r++) {
         for (int c = column; c < column + colSpan; c++) {
             cell = q_ptr->model()->cellAsCell(r, c);
-
             if (r == row && c == column) {
                 // set the mergedcell data to first item.
                 topLeft->setValue(cell->value());
+                q_ptr->model()->setCellAsCell(r, c, topLeft);
                 continue;
+            } else {
+                if (!cell) {
+                    cells.append(cell);
+                    q_ptr->model()->setCellAsCell(r, c, new MergedCell(r, c, cell->value(), q_ptr));
+                } else {
+                    cells.append(new Cell(r, c, q_ptr));
+                    q_ptr->model()->setCellAsCell(r, c, new MergedCell(r, c, q_ptr));
+                }
             }
-            q_ptr->model()->setCellAsCell(r, c, topLeft);
-            cells.append(cell);
         }
     }
-
-    // set the merged result.
-    q_ptr->model()->setCellAsCell(row, column, topLeft);
 }
 
 QVariant QWorksheetViewPrivate::read(int row, int column) {

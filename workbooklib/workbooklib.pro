@@ -78,7 +78,6 @@ SOURCES += \
     src/worksheetmodel.cpp \
     src/workbookparser.cpp \
     src/pluginstore.cpp \
-    src/toolbar/basetoolbar.cpp \
     src/toolbar/qworkbookfunctiontoolbar.cpp \
     src/toolbar/qworkbookaligntoolbar.cpp \
     src/toolbar/qworkbookfonteffectstoolbar.cpp \

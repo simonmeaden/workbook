@@ -1,46 +1,23 @@
 /*
- * This Workbook library is © Simon Meaden 2015. It is licensed under the LGPL V3 license.
- *
- * This Workbook library dynamically links to unmodified Nokia Qt5 Library. The Qt5
- * Library is © 2011 Nokia Corporation and/or its subsidiary(-ies), and is licensed
- * under the GNU Lesser General Public License version 2.1 with Nokia Qt LGPL exception
- * version 1.1.
- *
- * Qt5 library is free software; you can redistribute it and/or modify it under the
- * terms of the GNU Lesser General Public License, version 2.1, as published by the
- * Free Software Foundation.
- *
- * Qt5 library is provided “AS IS”, without WARRANTIES OR CONDITIONS OF ANY KIND, EITHER
- * EXPRESS OR IMPLIED INCLUDING, WITHOUT LIMITATION, ANY WARRANTIES OR CONDITIONS OF
- * TITLE, NON-INFRINGEMENT, MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
- *
- * As an additional permission to the GNU Lesser General Public License version 3.0, the
- * object code form of a “work that uses the Library” may incorporate material from a
- * header file that is part of the Library. You may distribute such object code under
- * terms of your choice, provided that: (i) the header files of the Library have not
- * been modified; and (ii) the incorporated material is limited to numerical parameters,
- * data structure layouts, accessors, macros, inline functions and templates; and (iii)
- * you comply with the terms of Section 6 of the GNU Lesser General Public License version 3.0.
- *
- * Moreover, you may apply this exception to a modified version of the Library, provided
- * that such modification does not involve copying material from the Library into the
- * modified Library’s header files unless such material is limited to (i) numerical
- * parameters; (ii) data structure layouts; (iii) accessors; and (iv) small macros,
- * templates and inline functions of five lines or less in length.
- *
- * Furthermore, you are not required to apply this additional permission to a modified
- * version of the Library.
- *
- * You should have received a copy of the GNU Lesser General Public License along
- * with this package; if not, write to the Free Software Foundation, Inc., 51 Franklin
- * Street, Fifth Floor, Boston, MA 02110-1301 USA
- *
- * The source code for Qt 5.4.X SDK is available from Nokia here:
- * http://get.qt.nokia.com/qt/source/qt-everywhere-opensource-src-4.7.X.zip.
- *
- * It is also available on request from Simon Meaden info@smelecomp.co.uk.
- */
+    Copyright © Simon Meaden 2015.
 
+    This file is part of the QWorkbook spreadsheet library.
+
+    QWorkbook is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    QWorkbook is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with QWorkbook.  If not, see <http://www.gnu.org/licenses/>.
+
+    It is also available on request from Simon Meaden info@smelecomp.co.uk.
+*/
 #include <QApplication>
 
 #include "qstd.h"
@@ -138,10 +115,10 @@ void WorksheetPrivate::writeXls(QString filename) {
 }
 
 /*!
- * \brief Add the worksheet to an existing XSLX document.
- *
- * \param document - the xslx document to add the worksheet to.
- */
+    \brief Add the worksheet to an existing XSLX document.
+
+    \param document - the xslx document to add the worksheet to.
+*/
 void WorksheetPrivate::writeXlsx(QXlsx::Worksheet *sheet) {
 
     QMapIterator<int, QMap<int, Cell*> > cellrowIt(mCellData);
@@ -202,10 +179,10 @@ void WorksheetPrivate::writeXlsx(QXlsx::Worksheet *sheet) {
 }
 
 /*!
- * \brief Save the worksheet as a single page Excel XML document.
- *
- * \param filename - the file name to save to.
- */
+    \brief Save the worksheet as a single page Excel XML document.
+
+    \param filename - the file name to save to.
+*/
 void WorksheetPrivate::saveXlsx(QString filename) {
 
     QXlsx::Document doc(filename);
@@ -394,10 +371,10 @@ QVariant WorksheetPrivate::cell(int row, int column) {
 }
 
 /*
- * This is only called internally, normally when a cell has to be read but something else other
- * than it's value . If the value needs to be changed use setCell() or if something else needs to
- * be changed internally use cellCreateAsNeeded().
- */
+    This is only called internally, normally when a cell has to be read but something else other
+    than it's value . If the value needs to be changed use setCell() or if something else needs to
+    be changed internally use cellCreateAsNeeded().
+*/
 Cell* WorksheetPrivate::cellAsCell(int row, int column) {
     QMap<int, Cell*> rowData = mCellData.value(row);
     if (!rowData.isEmpty()) {
@@ -409,10 +386,10 @@ Cell* WorksheetPrivate::cellAsCell(int row, int column) {
 }
 
 /*
- * This is only called internally, normally when a cell has to be written to by something else other
- * than it's value . If the value needs to be changed use setCell() or if something else needs to
- * be changed internally use cellCreateAsNeeded().
- */
+    This is only called internally, normally when a cell has to be written to by something else other
+    than it's value . If the value needs to be changed use setCell() or if something else needs to
+    be changed internally use cellCreateAsNeeded().
+*/
 void WorksheetPrivate::setCellAsCell(int row, int column, Cell *cell) {
     QMap<int, Cell*> rowData = mCellData.value(row);
 
@@ -421,12 +398,12 @@ void WorksheetPrivate::setCellAsCell(int row, int column, Cell *cell) {
 }
 
 /*
- * This is only called internally, normally when a cell has to be modified in another way
- * than modifying it's value. If the value needs to be changed use setCell().
- *
- * generally this means that the cell needs to be locked, or similar, so a cell needs to be
- * created if it doesn't already exist.
- */
+    This is only called internally, normally when a cell has to be modified in another way
+    than modifying it's value. If the value needs to be changed use setCell().
+
+    generally this means that the cell needs to be locked, or similar, so a cell needs to be
+    created if it doesn't already exist.
+*/
 Cell* WorksheetPrivate::cellCreateAsNeeded(int row, int column) {
     QMap<int, Cell*> rowData = mCellData.value(row);
     Cell* cell = rowData.value(column);
@@ -441,15 +418,22 @@ Cell* WorksheetPrivate::cellCreateAsNeeded(int row, int column) {
 
 
 void WorksheetPrivate::setCell(int row, int column, QVariant data) {
-    QMap<int, Cell*> rowData = mCellData.value(row);
-    Cell *c = rowData.value(column);
-    if (c)
-        c->setValue(data);
-    else
-        c = new Cell(row, column, data, q_ptr);
+    if (data.isNull()) {
+        QMap<int, Cell*> rowData = mCellData.value(row);
+        if (rowData.contains(column)) {
+            rowData.remove(column);
+        }
+    } else {
+        QMap<int, Cell*> rowData = mCellData.value(row);
+        Cell *c = rowData.value(column);
+        if (c)
+            c->setValue(data);
+        else
+            c = new Cell(row, column, data, q_ptr);
 
-    rowData.insert(column, c);
-    mCellData.insert(row, rowData);
+        rowData.insert(column, c);
+        mCellData.insert(row, rowData);
+    }
 }
 
 Format* WorksheetPrivate::rowFormat(int row) {

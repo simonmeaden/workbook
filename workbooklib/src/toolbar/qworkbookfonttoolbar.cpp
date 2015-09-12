@@ -1,42 +1,20 @@
 /*
-    This Workbook library is © Simon Meaden 2015. It is licensed under the LGPL V3 license.
+    Copyright © Simon Meaden 2015.
 
-    This Workbook library dynamically links to unmodified Nokia Qt5 Library. The Qt5
-    Library is © 2011 Nokia Corporation and/or its subsidiary(-ies), and is licensed
-    under the GNU Lesser General Public License version 2.1 with Nokia Qt LGPL exception
-    version 1.1.
+    This file is part of the QWorkbook spreadsheet library.
 
-    Qt5 library is free software; you can redistribute it and/or modify it under the
-    terms of the GNU Lesser General Public License, version 2.1, as published by the
-    Free Software Foundation.
+    QWorkbook is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-    Qt5 library is provided “AS IS”, without WARRANTIES OR CONDITIONS OF ANY KIND, EITHER
-    EXPRESS OR IMPLIED INCLUDING, WITHOUT LIMITATION, ANY WARRANTIES OR CONDITIONS OF
-    TITLE, NON-INFRINGEMENT, MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+    QWorkbook is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-    As an additional permission to the GNU Lesser General Public License version 3.0, the
-    object code form of a “work that uses the Library” may incorporate material from a
-    header file that is part of the Library. You may distribute such object code under
-    terms of your choice, provided that: (i) the header files of the Library have not
-    been modified; and (ii) the incorporated material is limited to numerical parameters,
-    data structure layouts, accessors, macros, inline functions and templates; and (iii)
-    you comply with the terms of Section 6 of the GNU Lesser General Public License version 3.0.
-
-    Moreover, you may apply this exception to a modified version of the Library, provided
-    that such modification does not involve copying material from the Library into the
-    modified Library’s header files unless such material is limited to (i) numerical
-    parameters; (ii) data structure layouts; (iii) accessors; and (iv) small macros,
-    templates and inline functions of five lines or less in length.
-
-    Furthermore, you are not required to apply this additional permission to a modified
-    version of the Library.
-
-    You should have received a copy of the GNU Lesser General Public License along
-    with this package; if not, write to the Free Software Foundation, Inc., 51 Franklin
-    Street, Fifth Floor, Boston, MA 02110-1301 USA
-
-    The source code for Qt 5.4.X SDK is available from Nokia here:
-    http://get.qt.nokia.com/qt/source/qt-everywhere-opensource-src-4.7.X.zip.
+    You should have received a copy of the GNU General Public License
+    along with QWorkbook.  If not, see <http://www.gnu.org/licenses/>.
 
     It is also available on request from Simon Meaden info@smelecomp.co.uk.
 */
@@ -48,11 +26,19 @@ QWorkbookFontToolBar::QWorkbookFontToolBar(QWidget *parent) :
     QToolBar(parent),
     d_ptr(new QWorkbookFontToolBarPrivate(this)) {
 
+    /* Have to do it here because d_ptr is not yet created
+     * when th private class constructor is called */
+    d_ptr->init();
+
 }
 
 QWorkbookFontToolBar::QWorkbookFontToolBar(QString title, QWidget *parent) :
     QToolBar(title, parent),
     d_ptr(new QWorkbookFontToolBarPrivate(this)) {
+
+    /* Have to do it here because d_ptr is not yet created
+     * when th private class constructor is called */
+    d_ptr->init();
 
 }
 
@@ -62,34 +48,28 @@ QWorkbookFontToolBar::~QWorkbookFontToolBar() {
 
 void QWorkbookFontToolBar::setWorkbookView(QWorkbookView *view) {
 
-    Q_D(QWorkbookFontToolBar);
-    d->setWorkbookView(view);
+    d_ptr->setWorkbookView(view);
 
 }
 
 void QWorkbookFontToolBar::selectionChanged(FormatStatus* status) {
 
-    Q_D(QWorkbookFontToolBar);
-    d->selectionChanged(status);
+    d_ptr->selectionChanged(status);
 
 }
 
 void QWorkbookFontToolBar::fontHasChanged(QFont font) {
-    Q_D(QWorkbookFontToolBar);
-    d->fontHasChanged(font);
+    d_ptr->fontHasChanged(font);
 }
 
 void QWorkbookFontToolBar::sizeHasChanged(QString size) {
-    Q_D(QWorkbookFontToolBar);
-    d->sizeHasChanged(size);
+    d_ptr->sizeHasChanged(size);
 }
 
 void QWorkbookFontToolBar::setFont(QFont font) {
-    Q_D(QWorkbookFontToolBar);
-    d->setFont(font);
+    d_ptr->setFont(font);
 }
 
 void QWorkbookFontToolBar::setFont(bool selected, QFont font, int size) {
-    Q_D(QWorkbookFontToolBar);
-    d->setFont(selected, font, size);
+    d_ptr->setFont(selected, font, size);
 }

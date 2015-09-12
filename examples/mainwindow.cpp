@@ -36,8 +36,8 @@ void MainWindow::initBuild() {
     frame->setLayout(layout);
     setCentralWidget(frame);
 
-    layout->addWidget(initWorksheet());
     layout->addWidget(initWorkbook());
+    layout->addWidget(initWorksheet());
 
 }
 
