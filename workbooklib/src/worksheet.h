@@ -34,7 +34,6 @@
 #include <QDir>
 #include <QScopedPointer>
 
-#include <workbook_global.h>
 #include "cellreference.h"
 #include "types.h"
 #include "range.h"
@@ -52,7 +51,7 @@ class Workbook;
 class Worksheet;
 }
 
-class WORKBOOKSHARED_EXPORT Worksheet : public QObject {
+class  Worksheet : public QObject {
     Q_OBJECT
 public:
 

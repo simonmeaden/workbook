@@ -18,6 +18,7 @@
 
     It is also available on request from Simon Meaden info@smelecomp.co.uk.
 */
+#ifndef FORMULACELLPRIVATE_H
 #define FORMULACELLPRIVATE_H
 
 #include "types.h"

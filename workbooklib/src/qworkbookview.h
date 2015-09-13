@@ -43,6 +43,7 @@
 #include "range.h"
 #include "format.h"
 #include "types.h"
+#include "toolbar/qcelledittoolbar.h"
 
 class Workbook;
 class Worksheet;
@@ -50,6 +51,7 @@ class QWorkbookViewPrivate;
 class QWorksheetView;
 class WorkbookInsertSheetDialogPrivate;
 class QWorkbookToolBar;
+class QCellEditToolBar;
 class Cell;
 
 class WORKBOOKSHARED_EXPORT QWorkbookView : public QTabWidget {
@@ -62,11 +64,13 @@ class WORKBOOKSHARED_EXPORT QWorkbookView : public QTabWidget {
     Q_PROPERTY(QString comments READ comments WRITE setComments)
     Q_PROPERTY(QString category READ category WRITE setCategory)
     Q_PROPERTY(QDateTime created READ created WRITE setCreated)
+    Q_DECLARE_PRIVATE(QWorkbookView)
 public:
     QWorkbookView(QWidget *parent);
     ~QWorkbookView();
 
     QWorkbookToolBar* toolBar();
+    QCellEditToolBar* editBar();
     int indexOf(Worksheet*);
     QWorksheetView* addWorksheet();
     QWorksheetView* addWorksheet(QString name);
@@ -119,6 +123,8 @@ public:
 
 signals:
     void selectionChanged(FormatStatus*);
+    void cellChanged(QVariant);
+    void cellContentsChanged(QString); // called by cell editor when cell contents change before commit.
 
 public slots:
     void setWorkbook(Workbook *book);
@@ -131,8 +137,6 @@ public slots:
     void removeWorksheet(QString name);
     void renameSheet(QString oldname, QString newname);
     void setTabText(int index, QString text);
-
-    void triggerInitialSelection();
 
     void write(int row, int column, QVariant item);
     void write(CellReference& reference, QVariant item);
@@ -232,6 +236,8 @@ protected slots:
     void tabColor();
 
     // toolbar methods
+    void changeCellContents(QString text);
+    void triggerInitialSelection();
     void setSelectionBold(bool);
     void setSelectionItalic(bool);
     void setSelectionUnderline(bool);
@@ -249,7 +255,6 @@ protected:
 
 private:
     QScopedPointer<QWorkbookViewPrivate> d_ptr;
-    Q_DECLARE_PRIVATE(QWorkbookView)
 
     virtual QWidget* currentWidget() const;
     virtual int addTab(QWidget*widget, const QString&label);
@@ -257,6 +262,9 @@ private:
     virtual int insertTab (int index, QWidget*widget, const QString&label);
     virtual int insertTab (int index, QWidget*widget, const QIcon&icon, const QString&label);
     virtual QWidget* widget(int index) const;
+
+    friend class QWorkbookToolBarPrivate;
+    friend class QCellEditToolBar;
 
 };
 

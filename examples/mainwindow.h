@@ -9,6 +9,7 @@
 #include <QStandardItemModel>
 
 class QWorkbookToolBar;
+class QCellEditToolBar;
 class QWorkbookFunctionToolBar;
 class QWorkbookView;
 
@@ -25,6 +26,7 @@ protected:
 
     QWorkbookToolBar *pToolbar;
     QWorkbookFunctionToolBar *pFunctionBar;
+    QCellEditToolBar *pCellEditor;
 
     void initBuild();
     void initToolbar();

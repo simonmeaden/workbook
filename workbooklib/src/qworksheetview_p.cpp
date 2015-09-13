@@ -54,8 +54,7 @@ QWorksheetViewPrivate::~QWorksheetViewPrivate() {
 
 void QWorksheetViewPrivate::init() {
 
-    pSheet = new Worksheet(pPluginStore, q_ptr);
-    q_ptr->setModel(new WorksheetModel(pSheet, pPluginStore, q_ptr));
+    q_ptr->setModel(new WorksheetModel(pPluginStore, q_ptr));
     q_ptr->setItemDelegate(new FormatDelegate(q_ptr));
 
     bContiguous = true;
@@ -67,6 +66,9 @@ void QWorksheetViewPrivate::init() {
                    SIGNAL(selectionChanged(QItemSelection, QItemSelection)),
                    q_ptr,
                    SLOT(selectionHasChanged(QItemSelection, QItemSelection)));
+    q_ptr->connect(sm, SIGNAL(currentChanged(QModelIndex,QModelIndex)),
+                   q_ptr, SLOT(cellHasChanged(QModelIndex,QModelIndex)));
+
 
     // catches all events, and passes on whatever it doesn't want
     q_ptr->installEventFilter(q_ptr);
@@ -160,18 +162,20 @@ bool QWorksheetViewPrivate::eventFilter(QObject *obj, QEvent *event) {
     return false;
 }
 
-Worksheet* QWorksheetViewPrivate::worksheet() {
-    return pSheet;
-}
-
 void QWorksheetViewPrivate::setSheetName(QString name) {
-    pSheet->setSheetName(name);
+    q_ptr->model()->setSheetName(name);
 }
 
 QString QWorksheetViewPrivate::sheetName() {
-    return pSheet->sheetName();
+    return q_ptr->model()->sheetName();
 }
 
+void QWorksheetViewPrivate::cellHasChanged(QModelIndex current, QModelIndex /*previous*/) {
+    Q_Q(QWorksheetView);
+
+    QVariant value = q_ptr->model()->data(current);
+    emit q->cellChanged(value);
+}
 
 void QWorksheetViewPrivate::selectionHasChanged(QItemSelection /*selected*/, QItemSelection /*deselected*/) {
 //    QModelIndex index;
@@ -300,6 +304,13 @@ void QWorksheetViewPrivate::selectionHasChanged(QItemSelection /*selected*/, QIt
 
 }
 
+void QWorksheetViewPrivate::setCellContents(QString value) {
+    QModelIndex index = q_ptr->selectionModel()->currentIndex();
+    if (index.isValid()) {
+        q_ptr->model()->setData(index, value, Qt::EditRole);
+    }
+}
+
 void QWorksheetViewPrivate::setSelectionBold(bool value) {
 
     Format* format;
@@ -420,77 +431,24 @@ void QWorksheetViewPrivate::setSelectionMerge(bool merge) {
         int col = mFormatStatus.mMinCol;
         int rowSpan = mFormatStatus.mMaxRow - mFormatStatus.mMinRow + 1;
         int colSpan = mFormatStatus.mMaxCol - mFormatStatus.mMinCol + 1;
-        if (merge) {
-            setSpan(row, col, rowSpan, colSpan);
-            q_ptr->QTableView::setSpan(row, col, rowSpan, colSpan);
-        } else {
-            checkClearSpan(row, col, rowSpan, colSpan);
-            q_ptr->QTableView::setSpan(row, col, rowSpan, colSpan);
-        }
+        setSpan(row, col, rowSpan, colSpan);
     }
 }
 
 void QWorksheetViewPrivate::setSpan(int row, int column, int rowSpan, int colSpan) {
 
-    QWorksheetViewPrivate::MergeStatus status = checkClearSpan(row, column, rowSpan, colSpan);
+    MergeStatus status = checkClearSpan(row, column, rowSpan, colSpan);
 
     switch (status) {
     case MergePossible: {
-        QMessageBox::StandardButton btn = QMessageBox::question(q_ptr,
-                                          qApp->applicationDisplayName(),
-                                          q_ptr->tr("Should the contents of the hidden cells be moved into the first cell?"),
-                                          QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel,
-                                          QMessageBox::No);
 
-        switch (btn) {
-        case QMessageBox::Yes: // all contents merged. Old data lost.
-            mergeDataToFirstCell(row, column, rowSpan, colSpan);
-            // actually do the merge
-            q_ptr->QTableView::setSpan(row, column, rowSpan, colSpan);
-            break;
-
-        case QMessageBox::No: // first item kept. Rest stored
-            firstCellRetainedRestStored(row, column, rowSpan, colSpan);
-            // actually do the merge
-            q_ptr->QTableView::setSpan(row, column, rowSpan, colSpan);
-            break;
-        case QMessageBox::Cancel:
-        default:
-            break;
-        }
+        merge(row, column, rowSpan, colSpan);
 
         break;
     }
     case DemergePossible: {
 
-        /*
-            Convert the first cell from a merged cell to a normal cell with the same data.
-        */
-        Cell *cell = q_ptr->model()->cellAsCell(row, column);
-        MergedCell *mCell = qobject_cast<MergedCell*>(cell);
-        if (!mCell || mCell->isEmpty()) {
-            QModelIndex index = q_ptr->model()->index(row, column);
-            q_ptr->model()->setData(index, QVariant(), Qt::EditRole);
-        } else {
-            cell = new Cell(mCell->row(), mCell->column(), mCell->value(), q_ptr);
-            q_ptr->model()->setCellAsCell(cell->row(), cell->column(), cell);
-        }
-
-        /*
-            Restores all the other cells to their existing data, if any.
-        */
-        QListIterator<Cell*> it(mCell->overwritten());
-        while (it.hasNext()) {
-            cell = it.next();
-
-            if (cell->isEmpty()) {
-                // null qvariant removes this cell - saves storage space
-                QModelIndex index = q_ptr->model()->index(row, column);
-                q_ptr->model()->setData(index, QVariant(), Qt::EditRole);
-                continue;
-            }
-            q_ptr->model()->setCellAsCell(cell->row(), cell->column(), cell);
-        }
+        demerge(row, column, rowSpan, colSpan);
 
         break;
     }
@@ -505,7 +463,65 @@ void QWorksheetViewPrivate::setSpan(int row, int column, int rowSpan, int colSpa
 
 }
 
-QWorksheetViewPrivate::MergeStatus QWorksheetViewPrivate::checkClearSpan(int row, int column, int rowSpan, int colSpan) {
+void QWorksheetViewPrivate::merge(int row, int column, int rowSpan, int colSpan) {
+
+    QMessageBox::StandardButton btn = QMessageBox::question(q_ptr,
+                                      qApp->applicationDisplayName(),
+                                      q_ptr->tr("Should the contents of the hidden cells be moved into the first cell?"),
+                                      QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel,
+                                      QMessageBox::No);
+
+    switch (btn) {
+    case QMessageBox::Yes: // all contents merged. Old data lost.
+        mergeDataToFirstCell(row, column, rowSpan, colSpan);
+        // actually do the merge
+        q_ptr->QTableView::setSpan(row, column, rowSpan, colSpan);
+        break;
+
+    case QMessageBox::No: // first item kept. Rest stored
+        firstCellRetainedRestStored(row, column, rowSpan, colSpan);
+        // actually do the merge
+        q_ptr->QTableView::setSpan(row, column, rowSpan, colSpan);
+        break;
+    case QMessageBox::Cancel:
+    default:
+        break;
+    }
+
+}
+
+void QWorksheetViewPrivate::demerge(int row, int column, int rowSpan, int colSpan) {
+
+    /*
+        Convert the first cell from a merged cell to a normal cell with the same data.
+    */
+    Cell *cell = q_ptr->model()->cellAsCell(row, column);
+    MergedCell *mCell = qobject_cast<MergedCell*>(cell);
+    if (!mCell || mCell->isEmpty()) {
+        cell = new Cell(mCell->row(), mCell->column(), q_ptr);
+        q_ptr->model()->setCellAsCell(cell->row(), cell->column(), cell);
+    } else {
+        cell = new Cell(mCell->row(), mCell->column(), mCell->value(), q_ptr);
+        q_ptr->model()->setCellAsCell(cell->row(), cell->column(), cell);
+    }
+
+    /*
+        Restores all the other cells to their existing data, if any.
+    */
+    QList<Cell*> list = mCell->overwritten();
+    QListIterator<Cell*> it(list);
+    while (it.hasNext()) {
+        cell = it.next();
+
+        // doesn't matter if it is empty. Empty cells are discarded in setCellAsCell.
+        q_ptr->model()->setCellAsCell(cell->row(), cell->column(), cell);
+    }
+
+    q_ptr->QTableView::setSpan(row, column, 1, 1);
+
+}
+
+MergeStatus QWorksheetViewPrivate::checkClearSpan(int row, int column, int rowSpan, int colSpan) {
 
     // check that the first cell is a Merged cell
     Cell *cell = q_ptr->model()->cellAsCell(row, column);
@@ -529,7 +545,11 @@ QWorksheetViewPrivate::MergeStatus QWorksheetViewPrivate::checkClearSpan(int row
             }
         }
 
-        if (count != (rowSpan * colSpan))
+        if (count == 1 && (rowSpan > 1 || colSpan > 1))
+            // as empty cells/mergedcells are discarded and all cells in mergeDataToFirstCell are
+            // merged into first cell the others come back as empty Cell* not MergedCell*.
+            return DemergePossible;
+        else if (count != (rowSpan * colSpan))
             return ContainsMerge;
 
         return DemergePossible; // All of the cells are merged and the same merge.
@@ -563,7 +583,6 @@ void QWorksheetViewPrivate::mergeDataToFirstCell(int row, int column, int rowSpa
     MergedCell *topLeft;
     QVariant data;
     QString result;
-    QList<Cell*> list;
 
     // merges data as strings separated by a space.
     for (int r = row; r < row + rowSpan; r++) {
@@ -579,16 +598,15 @@ void QWorksheetViewPrivate::mergeDataToFirstCell(int row, int column, int rowSpa
     topLeft = new MergedCell(row, column, q_ptr);
     for (int r = row; r < row + rowSpan; r++) {
         for (int c = column; c < column + colSpan; c++) {
-            if (r == row && c == column) {
+            if (r == row && c == column) { // first cell
                 topLeft->setValue(result);
                 q_ptr->model()->setCellAsCell(row, column, topLeft);
             } else {
-                list.append(new Cell(r, c, q_ptr));
-                q_ptr->model()->setCellAsCell(r, c, new MergedCell(r, c, q_ptr));
+                Cell* cell = new Cell(r, c, q_ptr);
+                q_ptr->model()->setCellAsCell(r, c, cell);
             }
         }
     }
-    topLeft->setOverwritten(list);
 }
 
 /*
@@ -599,28 +617,31 @@ void QWorksheetViewPrivate::mergeDataToFirstCell(int row, int column, int rowSpa
 void QWorksheetViewPrivate::firstCellRetainedRestStored(int row, int column, int rowSpan, int colSpan) {
     MergedCell *topLeft;
     Cell *cell;
-    QList<Cell*> cells;
+    QList<Cell*> list;
 
     topLeft = new MergedCell(row, column, q_ptr);
     for (int r = row; r < row + rowSpan; r++) {
         for (int c = column; c < column + colSpan; c++) {
             cell = q_ptr->model()->cellAsCell(r, c);
             if (r == row && c == column) {
-                // set the mergedcell data to first item.
-                topLeft->setValue(cell->value());
+                if (cell)
+                    // set the mergedcell data to first item if it has anything in it.
+                    topLeft->setValue(cell->value());
                 q_ptr->model()->setCellAsCell(r, c, topLeft);
                 continue;
             } else {
-                if (!cell) {
-                    cells.append(cell);
-                    q_ptr->model()->setCellAsCell(r, c, new MergedCell(r, c, cell->value(), q_ptr));
-                } else {
-                    cells.append(new Cell(r, c, q_ptr));
-                    q_ptr->model()->setCellAsCell(r, c, new MergedCell(r, c, q_ptr));
+                if (cell)
+                    list.append(cell);
+                else {
+                    cell = new Cell(r, c, q_ptr); // empty cells are not stored and clear old cell if it exists.
+                    list.append(cell);
                 }
+
+                q_ptr->model()->setCellAsCell(r, c, cell);
             }
         }
     }
+    topLeft->setOverwritten(list);
 }
 
 QVariant QWorksheetViewPrivate::read(int row, int column) {

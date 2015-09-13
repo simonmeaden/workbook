@@ -26,21 +26,22 @@
 #include <QList>
 #include <QScopedPointer>
 
-#include <cellreference.h>
-#include <range.h>
+#include "cellreference.h"
+#include "range.h"
+#include "worksheet.h"
 
 class Worksheet;
-class PluginStore;
 class WorksheetModel;
+class PluginStore;
 class Cell;
 class Format;
 
 
 class WorksheetModelPrivate {
+    Q_DECLARE_PUBLIC(WorksheetModel)
 public:
     WorksheetModelPrivate(PluginStore *store, WorksheetModel *parent);
-    WorksheetModelPrivate(Worksheet *sheet, PluginStore *store, WorksheetModel *parent);
-    ~WorksheetModelPrivate();
+    virtual ~WorksheetModelPrivate() {}
 
     static const int INITIALCOLUMNS = 100;
     static const int INITIALROWS = 200;
@@ -64,7 +65,6 @@ public:
 
     void saveWorksheet(QString path);
 
-    void setWorksheet(Worksheet *);
     void formatChanged(int , int );
     void formatHasChanged(Format*);
     void setShowGrid(bool );
@@ -84,13 +84,14 @@ public:
     int maxRow();
     int maxColumn();
 
+    void setSheetName(QString);
+    QString sheetName();
 
-    Worksheet *pSheet;
+    const QScopedPointer<Worksheet> pSheet;
     int mRows, mColumns;
     PluginStore *pPluginStore;
     SizeStatus mStatus;
 
-    Q_DECLARE_PUBLIC(WorksheetModel)
     WorksheetModel *q_ptr;
 
 };

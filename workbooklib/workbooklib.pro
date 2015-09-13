@@ -95,7 +95,9 @@ SOURCES += \
     src/toolbar/qworkbookfonttoolbar_p.cpp \
     src/toolbar/qworkbookfunctiontoolbar_p.cpp \
     src/toolbar/qworkbookindenttoolbar_p.cpp \
-    src/toolbar/qworkbookmergetoolbar_p.cpp
+    src/toolbar/qworkbookmergetoolbar_p.cpp \
+    src/toolbar/qcelledittoolbar.cpp \
+    src/toolbar/qcelledittoolbar_p.cpp
 
 HEADERS += \
     src/workbook.h\
@@ -141,27 +143,22 @@ HEADERS += \
     src/toolbar/qworkbookfonttoolbar_p.h \
     src/toolbar/qworkbookfunctiontoolbar_p.h \
     src/toolbar/qworkbookindenttoolbar_p.h \
-    src/toolbar/qworkbookmergetoolbar_p.h
+    src/toolbar/qworkbookmergetoolbar_p.h \
+    src/toolbar/qcelledittoolbar.h \
+    src/toolbar/qcelledittoolbar_p.h
 
 RESOURCES += \
     $$PWD/src/workbook.qrc
 
 
-#unix|win32: LIBS += -L$$PWD/../../QOds/build/lib/ -lods
-#unix|win32: LIBS += -L$$PWD/../../QOds/build/lib/ -lquazip
-#unix|win32: LIBS += -L$$PWD/../../QOds/build/lib/ -lzlib
+#unix|win32: LIBS += -L$$PWD/../lib/ -lzlib
+#unix|win32: LIBS += -L$$PWD/../lib/ -lquazip
+#unix|win32: LIBS += -L$$PWD/../lib/ -lods
 
-#INCLUDEPATH += $$PWD/../../QOds/build
-#INCLUDEPATH += $$PWD/../../QOds/build
-#INCLUDEPATH += $$PWD/../../QOds/build
+#INCLUDEPATH += $$PWD/../../QOds/ods
+#INCLUDEPATH += $$PWD/../../QOds/ods
+#INCLUDEPATH += $$PWD/../../QOds/ods
 
-#DEPENDPATH += $$PWD/../../QOds/build
-#DEPENDPATH += $$PWD/../../QOds/build
-#DEPENDPATH += $$PWD/../../QOds/build
-
-#win32:!win32-g++: PRE_TARGETDEPS += $$PWD/../../QOds/build/lib/ods.lib
-#else:unix|win32-g++: PRE_TARGETDEPS += $$PWD/../../QOds/build/lib/libods.a
-#win32:!win32-g++: PRE_TARGETDEPS += $$PWD/../../QOds/build/lib/quazip.lib
-#else:unix|win32-g++: PRE_TARGETDEPS += $$PWD/../../QOds/build/lib/libquazip.a
-#win32:!win32-g++: PRE_TARGETDEPS += $$PWD/../../QOds/build/lib/zlib.lib
-#else:unix|win32-g++: PRE_TARGETDEPS += $$PWD/../../QOds/build/lib/libzlib.a
+#DEPENDPATH += $$PWD/../../QOds/ods
+#DEPENDPATH += $$PWD/../../QOds/ods
+#DEPENDPATH += $$PWD/../../QOds/ods

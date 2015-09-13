@@ -56,14 +56,14 @@ public:
     QMap<QModelIndex, Format*> selectedFormats();
 
     QString sheetName();
-    Worksheet* worksheet();
 
 signals:
     void selectionChanged(FormatStatus*);
+    void cellChanged(QVariant); // called by current worksheet view when cell changes
+    void cellContentsChanged(QString); // called by cell editor when cell contents change before commit.
 
 public slots:
     void setSheetName(QString);
-
 
     void write(int, int, QVariant);
     void write(const CellReference&, QVariant);
@@ -73,6 +73,8 @@ public slots:
     void setFormat(const CellReference&, Format*);
     void setFormat(Range &, Format*);
     void setSelectedFormat(Format*);
+
+    void setCellContents(QString);
 
     void setSelectionBold(bool);
     void setSelectionItalic(bool);
@@ -85,7 +87,7 @@ public slots:
     virtual void setSpan(int, int, int, int);
 
     void selectionHasChanged(const QItemSelection, const QItemSelection);
-//    void currentCellChanged(const QModelIndex current, const QModelIndex previous);
+    void cellHasChanged(QModelIndex, QModelIndex);
 
 
 private slots:

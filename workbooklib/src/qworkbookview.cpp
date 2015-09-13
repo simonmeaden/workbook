@@ -43,6 +43,12 @@ QWorkbookToolBar* QWorkbookView::toolBar() {
 }
 
 
+QCellEditToolBar* QWorkbookView::editBar() {
+    // TODO function cell edit toolbar
+    return d_ptr->editBar();
+}
+
+
 QString QWorkbookView::title() {
     return d_ptr->title();
 }
@@ -469,6 +475,10 @@ void QWorkbookView::triggerInitialSelection() {
 
 void QWorkbookView::setSelectedFormat(Format *format) {
     d_ptr->setSelectedFormat(format);
+}
+
+void QWorkbookView::changeCellContents(QString text) {
+    d_ptr->changeCellContents(text);
 }
 
 void QWorkbookView::setSelectionBold(bool value) {

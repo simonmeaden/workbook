@@ -29,16 +29,21 @@
 #include <QTextCharFormat>
 #include <QTextCursor>
 #include <QBrush>
+#include <QLineEdit>
 
 class FormatDelegate;
 class Format;
 
 class FormatDelegatePrivate {
+    Q_DECLARE_PUBLIC(FormatDelegate)
 public:
     FormatDelegatePrivate(FormatDelegate *parent);
     ~FormatDelegatePrivate();
 
+    QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem option, const QModelIndex &index) const;
+
     void setOptions(QStyleOptionViewItem &option, const QModelIndex &index) const;
+    void paint(QPainter *painter, QStyleOptionViewItem &option, const QModelIndex &index) const;
     void paintBorder(QPainter *painter, QStyleOptionViewItem &option, const QModelIndex &index) const;
     void paintTopBorder(QPainter *painter, Format *format, QRect rect) const;
     void paintBottomBorder(QPainter *painter, Format *format, QRect rect) const;
@@ -46,7 +51,6 @@ public:
     void paintRightBorder(QPainter *painter, Format *format, QRect rect) const;
 
     FormatDelegate *q_ptr;
-    Q_DECLARE_PUBLIC(FormatDelegate)
 };
 
 #endif // FORMATDELEGATEPRIVATE_H

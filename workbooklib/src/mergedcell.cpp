@@ -64,3 +64,20 @@ MergedCell::~MergedCell() {
 
 }
 
+QList<Cell*> MergedCell::overwritten() {
+    Q_D(MergedCell);
+    return d->overwritten();
+}
+
+void MergedCell::setOverwritten(QList<Cell*> cells) {
+    Q_D(MergedCell);
+    d->mOverwritten = cells;
+}
+void MergedCell::setMergedData() {
+    Q_D(MergedCell);
+    d->mMergedData = MergedCellPrivate::MergedData;
+}
+void MergedCell::setFirstCell() {
+    Q_D(MergedCell);
+    d->mMergedData = MergedCellPrivate::FirstCellData;
+}

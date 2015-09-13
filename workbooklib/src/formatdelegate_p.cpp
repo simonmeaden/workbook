@@ -23,6 +23,7 @@
 #include "formatdelegate_p.h"
 #include "formatdelegate.h"
 #include "worksheetmodel.h"
+#include "qworksheetview.h"
 #include "format.h"
 
 FormatDelegatePrivate::FormatDelegatePrivate(FormatDelegate *parent) :
@@ -62,6 +63,39 @@ void FormatDelegatePrivate::setOptions(QStyleOptionViewItem &option, const QMode
 
 
     }
+}
+
+QWidget* FormatDelegatePrivate::createEditor(QWidget *parent,
+        const QStyleOptionViewItem option,
+        const QModelIndex &index) const {
+
+    QWidget* widget = q_ptr->QStyledItemDelegate::createEditor(parent, option, index);
+
+    QLineEdit *le = dynamic_cast<QLineEdit*>(widget);
+    if (le) {
+        q_ptr->connect(le, SIGNAL(textChanged(QString)),
+                       q_ptr->pView, SIGNAL(cellContentsChanged(QString)), Qt::UniqueConnection);
+        QPalette p = le->palette();
+        QBrush highlightBrush("cornflowerblue");
+        QBrush highlightTextBrush(Qt::white);
+        p.setBrush(QPalette::Highlight, highlightBrush);
+        p.setBrush(QPalette::HighlightedText, highlightTextBrush);
+        le->setPalette(p);
+    }
+
+    return widget;
+}
+
+void FormatDelegatePrivate::paint(QPainter *painter,
+                                  QStyleOptionViewItem &option,
+                                  const QModelIndex &index) const {
+
+    setOptions(option, index);
+
+    q_ptr->QStyledItemDelegate::paint(painter, option, index);
+
+    paintBorder(painter, option, index);
+
 }
 
 void FormatDelegatePrivate::paintBorder(QPainter *painter, QStyleOptionViewItem &option, const QModelIndex &index) const {

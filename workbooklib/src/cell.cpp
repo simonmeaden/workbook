@@ -138,8 +138,5 @@ void Cell::setValue(const QVariant &value) {
 }
 
 QVariant Cell::value() const {
-    QVariant v = d_ptr->value();
-    if (v.isValid())
-        return v;
-    return QVariant();
+    return d_ptr->value();
 }

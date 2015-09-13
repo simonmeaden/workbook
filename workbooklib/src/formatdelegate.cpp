@@ -23,9 +23,11 @@
 #include "cell.h"
 #include "format.h"
 #include "worksheetmodel.h"
+#include "qworksheetview.h"
 
-FormatDelegate::FormatDelegate(QObject *parent) :
+FormatDelegate::FormatDelegate(QWorksheetView *parent) :
     QStyledItemDelegate(parent),
+    pView(parent),
     d_ptr(new FormatDelegatePrivate(this)) {
 
 }
@@ -34,14 +36,22 @@ FormatDelegate::~FormatDelegate() {
 
 }
 
-void FormatDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const {
+void FormatDelegate::paint(QPainter *painter, const
+                           QStyleOptionViewItem &option,
+                           const QModelIndex &index) const {
+
     QStyleOptionViewItem opt = option;
+
     initStyleOption(&opt, index);
 
-    d_ptr->setOptions(opt, index);
-    QStyledItemDelegate::paint(painter, opt, index);
-
-    d_ptr->paintBorder(painter, opt, index);
+    d_ptr->paint(painter, opt, index);
 
 }
 
+QWidget* FormatDelegate::createEditor(QWidget *parent,
+        const QStyleOptionViewItem &option,
+        const QModelIndex &index) const {
+
+    return d_ptr->createEditor(parent, option, index);
+
+}

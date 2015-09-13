@@ -33,20 +33,6 @@ WorksheetModel::WorksheetModel(PluginStore *store, QObject *parent) :
 
 }
 
-WorksheetModel::WorksheetModel(Worksheet *sheet, PluginStore *store, QObject *parent) :
-    QAbstractTableModel(parent),
-    d_ptr(new WorksheetModelPrivate(sheet, store, this)) {
-
-}
-
-WorksheetModel::~WorksheetModel() {
-
-}
-
-void WorksheetModel::setWorksheet(Worksheet *sheet) {
-    d_ptr->setWorksheet(sheet);
-}
-
 bool WorksheetModel::setData(const QModelIndex &index, const QVariant &value, int role) {    
     return d_ptr->setData(index, value, role);
 }
@@ -179,4 +165,12 @@ Cell* WorksheetModel::cellAsCell(int row, int column) {
 void WorksheetModel::setCellAsCell(int row, int column, Cell *cell) {
     Q_D(WorksheetModel);
     d->pSheet->setCellAsCell(row, column, cell);
+}
+
+void WorksheetModel::setSheetName(QString name) {
+    d_ptr->setSheetName(name);
+}
+
+QString WorksheetModel::sheetName() {
+    return d_ptr->sheetName();
 }

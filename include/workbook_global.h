@@ -45,6 +45,12 @@
 
 #include <QtCore/qglobal.h>
 
+#define QT_BEGIN_NAMESPACE_QWORKBOOK namespace QWorkbook {
+
+#define QT_END_NAMESPACE_QWORKBOOK }
+
+#define QWORKBOOK_USE_NAMESPACE using namespace QWorkbook;
+
 #if defined NO_WORKBOOK_LIBRARY
 #   define WORKBOOKSHARED_EXPORT
 #else

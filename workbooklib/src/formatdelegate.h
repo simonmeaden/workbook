@@ -27,17 +27,21 @@
 #include <QScopedPointer>
 
 class FormatDelegatePrivate;
+class QWorksheetView;
 
 class FormatDelegate : public QStyledItemDelegate {
+    Q_DECLARE_PRIVATE(FormatDelegate)
 public:
-    FormatDelegate(QObject *parent = 0);
+    FormatDelegate(QWorksheetView *parent);
     ~FormatDelegate();
 
     void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const;
+    QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const;
 
 public slots:
 
 protected:
+    QWorksheetView *pView;
     const QScopedPointer<FormatDelegatePrivate> d_ptr;
 
 };

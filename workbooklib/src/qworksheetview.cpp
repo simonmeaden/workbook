@@ -56,16 +56,20 @@ QString QWorksheetView::sheetName() {
     return d_ptr->sheetName();
 }
 
-Worksheet* QWorksheetView::worksheet() {
-    return d_ptr->worksheet();
-}
-
 bool QWorksheetView::eventFilter(QObject *obj, QEvent *event) {
     return d_ptr->eventFilter(obj, event);
 }
 
 void QWorksheetView::selectionHasChanged(const QItemSelection selected, const QItemSelection deselected) {
     d_ptr->selectionHasChanged(selected, deselected);
+}
+
+void QWorksheetView::cellHasChanged(QModelIndex current, QModelIndex previous) {
+    d_ptr->cellHasChanged(current, previous);
+}
+
+void QWorksheetView::setCellContents(QString value) {
+    d_ptr->setCellContents(value);
 }
 
 void QWorksheetView::setSelectionBold(bool value) {

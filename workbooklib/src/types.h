@@ -61,6 +61,13 @@ enum UnderlineStyle {
     UnderlineSpellCheck,
 };
 
+enum MergeStatus {
+    MergePossible,
+    DemergePossible,
+    ContainsMerge,
+};
+
+
 const static QString ButtonStyle = "padding: 0px; " \
                                    "margin: 0px; " \
                                    ;

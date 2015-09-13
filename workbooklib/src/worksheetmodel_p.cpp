@@ -20,58 +20,44 @@
 */
 #include "worksheetmodel_p.h"
 #include "worksheetmodel.h"
-#include "worksheet.h"
 #include "cell.h"
 #include "cellreference.h"
 #include "format.h"
 #include "range.h"
 #include "cellreference.h"
 
-WorksheetModelPrivate::WorksheetModelPrivate(PluginStore *store, WorksheetModel *parent) :
+WorksheetModelPrivate::WorksheetModelPrivate(PluginStore *store, WorksheetModel *q) :
     mRows(INITIALROWS),
     mColumns(INITIALCOLUMNS),
     pPluginStore(store),
-    q_ptr(parent) {
+    pSheet(new Worksheet(store, q)),
+    q_ptr(q) {
 
-    setWorksheet(new Worksheet(pPluginStore, q_ptr));
-
-}
-
-WorksheetModelPrivate::WorksheetModelPrivate(Worksheet *sheet, PluginStore *store, WorksheetModel *parent) :
-    mRows(INITIALROWS),
-    mColumns(INITIALCOLUMNS),
-    pPluginStore(store),
-    q_ptr(parent) {
-
-    setWorksheet(sheet);
-
-}
-
-WorksheetModelPrivate::~WorksheetModelPrivate() {
-
-}
-
-void WorksheetModelPrivate::setWorksheet(Worksheet *sheet) {
-    pSheet = sheet;
     pSheet->setModel(q_ptr);
-    q_ptr->connect(sheet, SIGNAL(formatHasChanged(int,int)), q_ptr, SLOT(formatChanged(int,int)));
+    q_ptr->connect(pSheet.data(), SIGNAL(formatHasChanged(int,int)), q_ptr, SLOT(formatChanged(int,int)));
+
 }
 
 bool WorksheetModelPrivate::setData(const QModelIndex &index, const QVariant &value, int role) {
-    if (index.isValid() && role == Qt::EditRole) {
+    if (index.isValid()) {
+        switch (role) {
+        case Qt::EditRole: {
+            int row = index.row();
+            int column = index.column();
 
-        int row = index.row();
-        int column = index.column();
+            pSheet->setCell(row, column, value);
 
-        pSheet->setCell(row, column, value);
-
-        emit q_ptr->dataChanged(index, index);
+            emit q_ptr->dataChanged(index, index);
 
 
-        mStatus.mMaxRow = (row > mStatus.mMaxRow ? row : mStatus.mMaxRow);
-        mStatus.mMaxCol = (column > mStatus.mMaxCol ? column : mStatus.mMaxCol);
+            mStatus.mMaxRow = (row > mStatus.mMaxRow ? row : mStatus.mMaxRow);
+            mStatus.mMaxCol = (column > mStatus.mMaxCol ? column : mStatus.mMaxCol);
 
-        return true;
+            return true;
+        }
+        default:
+            break;
+        }
 
     }
     return false;
@@ -200,11 +186,16 @@ int WorksheetModelPrivate::columnCount() const {
 }
 
 QVariant WorksheetModelPrivate::data(const QModelIndex &index, int role) const {
-    if (role == Qt::DisplayRole) {
+    switch (role) {
+    case Qt::EditRole:
+    case Qt::DisplayRole: {
         int row = index.row();
         int column = index.column();
-        QVariant cell = pSheet->cell(row, column);
-        return cell;
+        QVariant cellValue = pSheet->cell(row, column);
+        return cellValue;
+    }
+    default:
+        break;
     }
     return QVariant();
 }
@@ -278,4 +269,12 @@ void WorksheetModelPrivate::setShowGrid(bool showGrid) {
 
 bool WorksheetModelPrivate::showGrid() {
     return pSheet->showGrid();
+}
+
+void WorksheetModelPrivate::setSheetName(QString name) {
+    pSheet->setSheetName(name);
+}
+
+QString WorksheetModelPrivate::sheetName() {
+    return pSheet->sheetName();
 }

@@ -28,8 +28,8 @@
 #include <QScopedPointer>
 
 #include "pluginstore.h"
+#include "worksheetmodel_p.h"
 
-class Worksheet;
 class Format;
 class Range;
 class CellReference;
@@ -39,11 +39,10 @@ class WorksheetModelPrivate;
 
 class WorksheetModel : public QAbstractTableModel {
     Q_OBJECT
+    Q_DECLARE_PRIVATE(WorksheetModel)
 public:
     WorksheetModel(PluginStore *store, QObject *parent);
-    WorksheetModel(Worksheet *sheet, PluginStore *store, QObject *parent);
-    ~WorksheetModel();
-
+    virtual ~WorksheetModel() {}
     static const int COLUMNS = 100;
     static const int ROWS = 200;
 
@@ -68,8 +67,10 @@ public:
     int maxRow();
     int maxColumn();
 
+    void setSheetName(QString);
+    QString sheetName();
+
 public slots:
-    void setWorksheet(Worksheet *sheet);
     void formatChanged(int row, int column);
     void formatHasChanged(Format*);
     void setShowGrid(bool showGrid);
@@ -85,8 +86,6 @@ public slots:
     void unlockColumn(int &column);
     void unlockRange(Range &range);
     void unlockSheet();
-//    void span(int, int, int, int , QList<Cell *> = QList<Cell*>());
-//    void despan(int, int, int, int );
 
 protected:
     QScopedPointer<WorksheetModelPrivate> d_ptr;
@@ -97,7 +96,6 @@ protected slots:
     void setCellAsCell(int, int, Cell*);
 
 private:
-    Q_DECLARE_PRIVATE(WorksheetModel)
 
 
     friend class QWorksheetViewPrivate;

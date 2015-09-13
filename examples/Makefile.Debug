@@ -717,6 +717,9 @@ compiler_clean: compiler_moc_header_clean
 		/opt/Qt/5.40/5.4/gcc_64/include/QtWidgets/QLineEdit \
 		/opt/Qt/5.40/5.4/gcc_64/include/QtWidgets/qlineedit.h \
 		/workspace/qt/common/workbook/workbooklib/src/toolbar/qworkbookfunctiontoolbar_p.h \
+		/workspace/qt/common/workbook/workbooklib/src/include/QCellEditToolbar \
+		/workspace/qt/common/workbook/workbooklib/src/toolbar/qcelledittoolbar.h \
+		/workspace/qt/common/workbook/workbooklib/src/toolbar/qcelledittoolbar_p.h \
 		/workspace/qt/common/workbook/workbooklib/src/include/Workbook \
 		/workspace/qt/common/workbook/workbooklib/src/workbook.h \
 		/opt/Qt/5.40/5.4/gcc_64/include/QtWidgets/QFileDialog \

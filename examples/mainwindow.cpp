@@ -3,6 +3,7 @@
 #include <QWorksheetView>
 #include <QWorkbookView>
 #include <QWorkbookToolbar>
+#include <QCellEditToolbar>
 #include <Workbook>
 
 #include <qstd.h>
@@ -20,6 +21,10 @@ void MainWindow::initToolbar() {
     pToolbar = new QWorkbookToolBar(this);
     addToolBar(pToolbar);
     pToolbar->setWorkbookView(pView);
+
+    pCellEditor = new QCellEditToolBar("celleditor", this);
+    addToolBar(pCellEditor);
+    pCellEditor->setWorkbookView(pView);
 
     pFunctionBar = new QWorkbookFunctionToolBar("function", this);
 //    pFunctionVisibleAction = functionBar->toggleViewAction();

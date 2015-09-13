@@ -393,8 +393,14 @@ Cell* WorksheetPrivate::cellAsCell(int row, int column) {
 void WorksheetPrivate::setCellAsCell(int row, int column, Cell *cell) {
     QMap<int, Cell*> rowData = mCellData.value(row);
 
-    rowData.insert(column, cell);
+    if (cell->isEmpty()) {
+        if (rowData.contains(column))
+            rowData.remove(column);
+    } else
+        rowData.insert(column, cell);
+
     mCellData.insert(row, rowData);
+
 }
 
 /*

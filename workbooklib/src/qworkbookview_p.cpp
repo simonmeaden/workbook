@@ -24,6 +24,7 @@
 
 #include "qworkbookview_p.h"
 #include "toolbar/qworkbooktoolbar.h"
+#include "toolbar/qcelledittoolbar.h"
 #include "qworkbookview.h"
 #include "workbook.h"
 #include "worksheet.h"
@@ -59,11 +60,22 @@ QWorkbookViewPrivate::~QWorkbookViewPrivate() {
 
 }
 
+QCellEditToolBar* QWorkbookViewPrivate::editBar() {
+
+    QCellEditToolBar* cellEditor = new QCellEditToolBar("celleditor", q_ptr);
+
+    q_ptr->connect(q_ptr, SIGNAL(cellChanged(QVariant)),
+                   cellEditor, SLOT(setValueWithoutSignal(QVariant)));
+    q_ptr->connect(q_ptr, SIGNAL(cellContentsChanged(QString)),
+                   cellEditor, SLOT(setTextWithoutSignal(QString)));
+
+                   return cellEditor;
+
+}
+
 QWorkbookToolBar* QWorkbookViewPrivate::toolBar() {
 
-    QWorkbookToolBar* toolBar = NULL;
-
-    toolBar = new QWorkbookToolBar("workbook", q_ptr);
+    QWorkbookToolBar* toolBar = new QWorkbookToolBar("workbook", q_ptr);
 
     // bar to view
     q_ptr->connect(toolBar, SIGNAL(boldChanged(bool)), q_ptr, SLOT(setSelectionBold(bool)));
@@ -85,8 +97,7 @@ QWorkbookToolBar* QWorkbookViewPrivate::toolBar() {
 //    q_ptr->connect(toolBar, SIGNAL(fontChanged(QFont)), q_ptr, SLOT(setFont(QFont)));
 
     q_ptr->connect(q_ptr, SIGNAL(selectionChanged(FormatStatus*)),
-            toolBar, SLOT(selectionChanged(FormatStatus*)));
-
+                   toolBar, SLOT(selectionChanged(FormatStatus*)));
     triggerInitialSelection();
 
     return toolBar;
@@ -605,6 +616,11 @@ void QWorkbookViewPrivate::alignmentHasChanged(Qt::Alignment alignment) {
         }
     }
 }
+
+void QWorkbookViewPrivate::changeCellContents(QString text) {
+    pCurrentView->setCellContents(text);
+}
+
 void QWorkbookViewPrivate::setSelectionBold(bool value) {
     pCurrentView->setSelectionBold(value);
 }
@@ -790,8 +806,6 @@ void QWorkbookViewPrivate::setWorkbook(Workbook *book) {
     QList<QString> names;
     pBook = book;
     int count = pBook->count();
-    Worksheet *sheet;
-//    WorksheetModel *model;
     QWorksheetView *view;
 
     // remove the old stuff.
@@ -802,13 +816,10 @@ void QWorkbookViewPrivate::setWorkbook(Workbook *book) {
 
     // set up the new stuff.
     for (int i = 0; i < count; i++) {
-        sheet = pBook->worksheet(i);
-//        model = new WorksheetModel(sheet, pPluginStore, q_ptr);
         view = new QWorksheetView(pParser, pPluginStore, q_ptr);
-//        view->setModel(model);
         views.append(view);
-        names.append(sheet->sheetName());
-        q_ptr->addTab(view, sheet->sheetName());
+        names.append(view->sheetName());
+        q_ptr->addTab(view, view->sheetName());
     }
 }
 
@@ -852,18 +863,22 @@ QWorksheetView* QWorkbookViewPrivate::addWorksheet(QString name) {
 
 QWorksheetView* QWorkbookViewPrivate::initWorksheet() {
     // create new view
-    QWorksheetView *view = new QWorksheetView(pParser, pPluginStore, q_ptr);
+    QWorksheetView *sheetView = new QWorksheetView(pParser, pPluginStore, q_ptr);
 
     // link selectionChanged to internal modifier slot.
-    q_ptr->connect(view->selectionModel(),
+    q_ptr->connect(sheetView->selectionModel(),
                    SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
-                   view,
+                   sheetView,
                    SLOT(selectionHasChanged(QItemSelection, QItemSelection)));
     // link the result to the outside world.
-    q_ptr->connect(view, SIGNAL(selectionChanged(FormatStatus*)),
-                  q_ptr, SIGNAL(selectionChanged(FormatStatus*)));
+    q_ptr->connect(sheetView, SIGNAL(selectionChanged(FormatStatus*)),
+                   q_ptr, SIGNAL(selectionChanged(FormatStatus*)));
+    q_ptr->connect(sheetView, SIGNAL(cellChanged(QVariant)),
+                   q_ptr, SIGNAL(cellChanged(QVariant)));
+    q_ptr->connect(sheetView, SIGNAL(cellContentsChanged(QString)),
+                   q_ptr, SIGNAL(cellContentsChanged(QString)));
 
-    return view;
+                   return sheetView;
 }
 
 QWorksheetView* QWorkbookViewPrivate::insertWorksheet(int index) {

@@ -31,7 +31,7 @@ QWorkbookMergeToolbarPrivate::QWorkbookMergeToolbarPrivate(QWorkbookMergeToolbar
 void QWorkbookMergeToolbarPrivate::init() {
 
     pMergeBtn = new QPushButton(q_ptr);
-    pMergeBtn->setToolTip("Merge Cells");
+    pMergeBtn->setToolTip(q_ptr->tr("Merge Cells"));
     pMergeBtn->setStyleSheet(ButtonStyle);
     pMergeBtn->setContentsMargins(0, 0, 0, 0);
     pMergeBtn->setIcon(QIcon("://cell-merge"));

@@ -18,7 +18,7 @@
 
     It is also available on request from Simon Meaden info@smelecomp.co.uk.
 */
-include "qworkbookfunctiontoolbar_p.h"
+#include "qworkbookfunctiontoolbar_p.h"
 #include "qworkbookfunctiontoolbar.h"
 #include "qworkbookview.h"
 #include "types.h"

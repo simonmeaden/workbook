@@ -38,24 +38,12 @@ public:
     explicit MergedCell(CellReference reference, QObject *parent=0);
     ~MergedCell();
 
-    QList<Cell*> overwritten() {
-        Q_D(MergedCell);
-        return d->overwritten();
-    }
+    QList<Cell*> overwritten();
 
 public slots:
-    void setOverwritten(QList<Cell*> cells) {
-        Q_D(MergedCell);
-        d->mOverwritten = cells;
-    }
-    void setMergedData() {
-        Q_D(MergedCell);
-        d->mMergedData = MergedCellPrivate::MergedData;
-    }
-    void setFirstCell() {
-        Q_D(MergedCell);
-        d->mMergedData = MergedCellPrivate::FirstCellData;
-    }
+    void setOverwritten(QList<Cell*> cells);
+    void setMergedData();
+    void setFirstCell();
 
 protected:
     MergedCell(MergedCellPrivate &d, QObject *parent) : Cell(d, parent) {}

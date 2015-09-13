@@ -40,13 +40,7 @@ class Worksheet;
 
 
 class QWorksheetViewPrivate {
-
-    enum MergeStatus {
-        MergePossible,
-        DemergePossible,
-        ContainsMerge,
-    };
-
+    Q_DECLARE_PUBLIC(QWorksheetView)
 public:
     QWorksheetViewPrivate(QWorksheetView *parent);
     QWorksheetViewPrivate(WorkbookParser *parser, PluginStore *store, QWorksheetView *parent);
@@ -54,7 +48,7 @@ public:
 
     WorkbookParser *pParser;
     PluginStore *pPluginStore;
-    Worksheet *pSheet;
+    QScopedPointer<Worksheet> pSheet;
 
     QVariant read(int row, int column);
     QVariant read(const CellReference& reference);
@@ -72,6 +66,8 @@ public:
     void setFormat(Range& range, Format *format);
 
     // toolbar interaction
+    void setCellContents(QString);
+//    void setValue(QVariant);
     void setSelectionBold(bool);
     void setSelectionItalic(bool);
     void setSelectionUnderline(bool);
@@ -81,6 +77,8 @@ public:
     void setSelectionMerge(bool);
 
     virtual void setSpan(int, int, int, int);
+    void merge(int, int, int, int);
+    void demerge(int, int, int, int);
     virtual MergeStatus checkClearSpan(int, int, int, int);
     void mergeDataToFirstCell(int row, int column, int rowSpan, int colSpan);
     void firstCellRetainedRestStored(int row, int column, int rowSpan, int colSpan);
@@ -92,15 +90,15 @@ public:
     FormatStatus mFormatStatus;
     QModelIndexList mItems;
     void selectionHasChanged(QItemSelection, QItemSelection);
+    void cellHasChanged(QModelIndex, QModelIndex);
 
     void init();
     void setSheetName(QString);
     QString sheetName();
-    Worksheet* worksheet();
 
 
     QWorksheetView*  const q_ptr;
-    Q_DECLARE_PUBLIC(QWorksheetView)
+
 };
 
 #endif // WORKSHEETVIEWPRIVATE_H

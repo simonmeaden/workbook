@@ -51,6 +51,7 @@ class Format;
 class PluginStore;
 class WorkbookParser;
 class QWorkbookToolBar;
+class QCellEditToolBar;
 
 class QWorkbookViewPrivate {
 
@@ -82,6 +83,7 @@ public:
 
     void createActions();
     QWorkbookToolBar* toolBar();
+    QCellEditToolBar* editBar();
 
     bool showGrid();
     bool showGrid(int index);
@@ -211,6 +213,7 @@ public:
     void enableTabMenu(bool);
 
     // toolbar methods
+    void changeCellContents(QString text);
     void triggerInitialSelection();
     void alignmentHasChanged(Qt::Alignment);
     void setSelectionBold(bool);
