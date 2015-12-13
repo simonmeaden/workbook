@@ -31,6 +31,10 @@
 #include <QBrush>
 #include <QLineEdit>
 
+#include "workbook_global.h"
+
+namespace QWorkbook {
+
 class FormatDelegate;
 class Format;
 
@@ -38,7 +42,7 @@ class FormatDelegatePrivate {
     Q_DECLARE_PUBLIC(FormatDelegate)
 public:
     FormatDelegatePrivate(FormatDelegate *parent);
-    ~FormatDelegatePrivate();
+    virtual ~FormatDelegatePrivate() {}
 
     QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem option, const QModelIndex &index) const;
 
@@ -52,5 +56,8 @@ public:
 
     FormatDelegate *q_ptr;
 };
+
+
+}
 
 #endif // FORMATDELEGATEPRIVATE_H

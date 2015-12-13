@@ -1,5 +1,8 @@
 #include "sinhfunction.h"
 
+namespace QWorkbook {
+
+
 SinhFunction::SinhFunction(QObject *parent) : QObject(parent) {
 
     setName("SINH");
@@ -24,4 +27,6 @@ QStringList SinhFunction::importer() const {
 
 QVariant SinhFunction::calculate(qreal radians) {
     return sinh(radians);
+}
+
 }

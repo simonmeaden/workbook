@@ -1,5 +1,7 @@
 #include "coshfunction.h"
 
+namespace QWorkbook {
+
 CoshFunction::CoshFunction(QObject *parent) : QObject(parent) {
 
     setName("COSH");
@@ -24,4 +26,6 @@ QStringList CoshFunction::importer() const {
 
 QVariant CoshFunction::calculate(qreal radians) {
     return cosh(radians);
+}
+
 }

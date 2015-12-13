@@ -20,10 +20,19 @@
 */
 #include <QFontMetrics>
 
+// includes from qt module
+#include "xlsxformat.h"
+
+// included from external libary
+#include <Style.hpp>
+
+#include "workbook_global.h"
 #include "format_p.h"
 #include "format.h"
 #include "worksheetmodel.h"
 
+
+namespace QWorkbook {
 
 
 FormatPrivate::FormatPrivate(int row, int column, Format *parent) :
@@ -36,10 +45,9 @@ FormatPrivate::FormatPrivate(int row, int column, Format *parent) :
     mRow = row;
     mColumn = column;
     mFont = QFont("Times", 10, QFont::Normal);
-    QFontMetrics fm(mFont);
-//    xWidth = fm.width("x");
     xWidth = 0;
-    mAlignment = Qt::AlignLeft | Qt::AlignVCenter;
+    mAlignment = Qt::AlignLeft/* | Qt::AlignVCenter*/; // compiler didn't like this in one line in namespace for some reason
+    mAlignment |= Qt::AlignVCenter;
     mUnderlineStyle = UnderlineNone;
     mUnderlineColor = QColor("black");
     mWhite = QColor("white");
@@ -50,10 +58,6 @@ FormatPrivate::FormatPrivate(int row, int column, Format *parent) :
     mRightBorder = Border();
     mIndentCount = 0;
     mFontColor = QColor("black");
-}
-
-FormatPrivate::~FormatPrivate() {
-
 }
 
 void FormatPrivate::indent() {
@@ -69,129 +73,120 @@ void FormatPrivate::undent() {
 
 
 
-QXlsx::Format FormatPrivate::toXlsx() {
-    QXlsx::Format format;
+QXlsx::Format *FormatPrivate::toXlsx() {
+    QXlsx::Format *format = new QXlsx::Format();
 
-    switch (mUnderlineStyle) {
-    case UnderlineSingle:
-        format.setFontUnderline(QXlsx::Format::FontUnderlineSingle);
-        break;
-    case UnderlineDouble:
-        format.setFontUnderline(QXlsx::Format::FontUnderlineDouble);
-        break;
-    default:
-        format.setFontUnderline(QXlsx::Format::FontUnderlineNone);
-        break;
-    }
+    QFont font = mFont;
 
-    format.setFontBold(bBold);
-    format.setFontItalic(bItalic);
-    format.setFontStrikeOut(bStrikeout);
+    format->setFontBold(bBold);
+    format->setFontItalic(bItalic);
+    format->setFontStrikeOut(bStrikeout);
 
-    if (bOverline)
-        mFont.setOverline(bOverline);
+    font.setUnderline(bUnderline);
 
-    format.setFontColor(mFontColor);
+    font.setOverline(bOverline);
+
+    format->setFontColor(mFontColor);
 
     // TODO Only solid fill supported so far
-    format.setFillPattern(QXlsx::Format::PatternSolid);
-    format.setPatternBackgroundColor(mBackground);
+    format->setFillPattern(QXlsx::Format::PatternSolid);
+    format->setPatternBackgroundColor(mBackground);
 
-    format.setFont(mFont);
+    format->setFont(mFont);
 
     if (mTopBorder.isEnabled()) {
         int thickness = qRound(mTopBorder.thickness());
         switch(thickness) {
         case 0:
-            format.setTopBorderStyle(QXlsx::Format::BorderNone);
+            format->setTopBorderStyle(QXlsx::Format::BorderNone);
             break;
         case 1:
-            format.setTopBorderStyle(QXlsx::Format::BorderHair);
+            format->setTopBorderStyle(QXlsx::Format::BorderHair);
             break;
         case 2:
-            format.setTopBorderStyle(QXlsx::Format::BorderMedium);
+            format->setTopBorderStyle(QXlsx::Format::BorderMedium);
             break;
         case 3:
-            format.setTopBorderStyle(QXlsx::Format::BorderThick);
+            format->setTopBorderStyle(QXlsx::Format::BorderThick);
             break;
         default:
-            format.setTopBorderStyle(QXlsx::Format::BorderNone);
+            format->setTopBorderStyle(QXlsx::Format::BorderNone);
             break;
         }
-        format.setTopBorderColor(mTopBorder.color());
+        format->setTopBorderColor(mTopBorder.color());
     }
 
     if (mLeftBorder.isEnabled()) {
         int thickness = qRound(mLeftBorder.thickness());
         switch(thickness) {
         case 0:
-            format.setLeftBorderStyle(QXlsx::Format::BorderNone);
+            format->setLeftBorderStyle(QXlsx::Format::BorderNone);
             break;
         case 1:
-            format.setLeftBorderStyle(QXlsx::Format::BorderHair);
+            format->setLeftBorderStyle(QXlsx::Format::BorderHair);
             break;
         case 2:
-            format.setLeftBorderStyle(QXlsx::Format::BorderMedium);
+            format->setLeftBorderStyle(QXlsx::Format::BorderMedium);
             break;
         case 3:
-            format.setLeftBorderStyle(QXlsx::Format::BorderThick);
+            format->setLeftBorderStyle(QXlsx::Format::BorderThick);
             break;
         default:
-            format.setLeftBorderStyle(QXlsx::Format::BorderNone);
+            format->setLeftBorderStyle(QXlsx::Format::BorderNone);
             break;
         }
-        format.setLeftBorderColor(mLeftBorder.color());
+        format->setLeftBorderColor(mLeftBorder.color());
     }
 
     if (mRightBorder.isEnabled()) {
         int thickness = qRound(mRightBorder.thickness());
         switch(thickness) {
         case 0:
-            format.setRightBorderStyle(QXlsx::Format::BorderNone);
+            format->setRightBorderStyle(QXlsx::Format::BorderNone);
             break;
         case 1:
-            format.setRightBorderStyle(QXlsx::Format::BorderHair);
+            format->setRightBorderStyle(QXlsx::Format::BorderHair);
             break;
         case 2:
-            format.setRightBorderStyle(QXlsx::Format::BorderMedium);
+            format->setRightBorderStyle(QXlsx::Format::BorderMedium);
             break;
         case 3:
-            format.setRightBorderStyle(QXlsx::Format::BorderThick);
+            format->setRightBorderStyle(QXlsx::Format::BorderThick);
             break;
         default:
-            format.setRightBorderStyle(QXlsx::Format::BorderNone);
+            format->setRightBorderStyle(QXlsx::Format::BorderNone);
             break;
         }
-        format.setRightBorderColor(mRightBorder.color());
+        format->setRightBorderColor(mRightBorder.color());
     }
 
     if (mBottomBorder.isEnabled()) {
         int thickness = qRound(mBottomBorder.thickness());
         switch(thickness) {
         case 0:
-            format.setBottomBorderStyle(QXlsx::Format::BorderNone);
+            format->setBottomBorderStyle(QXlsx::Format::BorderNone);
             break;
         case 1:
-            format.setBottomBorderStyle(QXlsx::Format::BorderHair);
+            format->setBottomBorderStyle(QXlsx::Format::BorderHair);
             break;
         case 2:
-            format.setBottomBorderStyle(QXlsx::Format::BorderMedium);
+            format->setBottomBorderStyle(QXlsx::Format::BorderMedium);
             break;
         case 3:
-            format.setBottomBorderStyle(QXlsx::Format::BorderThick);
+            format->setBottomBorderStyle(QXlsx::Format::BorderThick);
             break;
         default:
-            format.setBottomBorderStyle(QXlsx::Format::BorderNone);
+            format->setBottomBorderStyle(QXlsx::Format::BorderNone);
             break;
         }
-        format.setBottomBorderColor(mBottomBorder.color());
+        format->setBottomBorderColor(mBottomBorder.color());
     }
 
     return format;
 }
 
-void FormatPrivate::fromXlsx(QXlsx::Format format) {
-    switch(format.fontUnderline()) {
+void FormatPrivate::fromXlsx(QXlsx::Format *format) {
+    switch(format->fontUnderline()) {
     case QXlsx::Format::FontUnderlineSingle:
     case QXlsx::Format::FontUnderlineSingleAccounting:
         mUnderlineStyle = UnderlineSingle;
@@ -204,6 +199,14 @@ void FormatPrivate::fromXlsx(QXlsx::Format format) {
         mUnderlineStyle = UnderlineNone;
         break;
     }
+}
+
+ods::Style* FormatPrivate::toOds() {
+    // TODO
+}
+
+void FormatPrivate::fromOds(ods::Style */*style*/) {
+    // TODO
 }
 
 void FormatPrivate::setAlignment(Qt::Alignment alignment) {
@@ -392,3 +395,5 @@ void FormatPrivate::updateRightBorder(bool enabled, QColor color, BorderStyle st
 }
 
 
+
+}

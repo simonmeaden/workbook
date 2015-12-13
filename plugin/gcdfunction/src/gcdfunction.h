@@ -6,8 +6,10 @@
 #include <QStringList>
 #include <QVariant>
 
-#include "interface.h"
+#include <interface.h>
 #include <workbook_global.h>
+
+namespace QWorkbook {
 
 quint32 gcd ( quint32 a, quint32 b );
 quint32 gcdList(QList<quint32> list);
@@ -22,7 +24,7 @@ class WORKBOOKSHARED_EXPORT GcdFunction :
         public IFunction {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID IFunction_iid )
-    Q_INTERFACES(IFunction)
+    Q_INTERFACES(QWorkbook::IFunction)
 public:
     explicit GcdFunction(QObject *parent = 0);
 
@@ -40,5 +42,7 @@ protected:
     quint32 gcdList(QList<quint32> list);
 
 };
+
+}
 
 #endif // GCDFUNCTION_H

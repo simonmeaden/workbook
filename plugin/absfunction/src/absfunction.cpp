@@ -1,5 +1,9 @@
 #include "absfunction.h"
 
+#include <workbook_global.h>
+
+namespace QWorkbook {
+
 AbsFunction::AbsFunction(QObject *parent) :QObject(parent) {
 
     setName("ABS");
@@ -24,4 +28,6 @@ QStringList AbsFunction::importer() const {
 
 QVariant AbsFunction::calculate(qreal value) {
     return fabs(value);
+}
+
 }

@@ -28,6 +28,9 @@
 #include "workbook_global.h"
 #include "qworkbookindenttoolbar_p.h"
 
+
+namespace QWorkbook {
+
 class QWorkbookView;
 class FormatStatus;
 
@@ -63,4 +66,7 @@ protected:
 private:
 
 };
+
+}
+
 #endif // WORKBOOKINDENTTOOLBAR_H

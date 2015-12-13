@@ -1,5 +1,8 @@
 #include "acosecfunction.h"
 
+namespace QWorkbook {
+
+
 AcosecFunction::AcosecFunction(QObject *parent) : QObject(parent) {
 
     setName("ACOSEC");
@@ -24,4 +27,6 @@ QStringList AcosecFunction::importer() const {
 
 QVariant AcosecFunction::calculate(qreal radians) {
     return asin(1.0 / radians);
+}
+
 }

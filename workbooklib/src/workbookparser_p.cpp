@@ -18,21 +18,44 @@
 
     It is also available on request from Simon Meaden info@smelecomp.co.uk.
 */
+
 #include "workbookparser_p.h"
 #include "workbookparser.h"
-#include "worksheet.h"
-#include <qstd.h>
+#include "regex.h"
+#include "workbook_global.h"
+#include "pluginstore.h"
+#include "qworkbookview.h"
+#include "qworksheetview.h"
+#include "worksheetmodel.h"
 
-const QString WorkbookParserPrivate::CellReferenceRegex = "[^0-9a-zA-Z_$:](\\$?[a-zA-Z]{1,2}\\$?[1-9][0-9]*)(?![0-9a-zA-Z_:])";
-//const QString WorkbookParserPrivate::ScientificNumberRegex = "((\\b[0-9]+)?\\.)?\\b[0-9]+([eE][-+]?[0-9]+)?\\b";
-const QString WorkbookParserPrivate::HexNumberRegex = "\\b0[xX][0-9a-fA-F]+\\b";
-//const QString WorkbookParserPrivate::MatchedParenthesisRegex = "((?>[^()]|(?R))*";
-const QString WorkbookParserPrivate::NumbersRegex = "[+-]?([0-9]*\\.?[0-9]+|[0-9]+\\.?[0-9]*)([eE][+-]?[0-9]+)?";
+namespace QWorkbook {
 
-WorkbookParserPrivate::WorkbookParserPrivate(PluginStore *store, WorkbookParser *parent) :
-    pPluginStore(store),
+const QString WorkbookParserPrivate::WithDelimiter = "((?<=%1)|(?=%1))";
+
+WorkbookParserPrivate::WorkbookParserPrivate(QWorkbookView *book, WorkbookParser *parent) :
+    pWorkbook(book),
+    pWorksheet(NULL),
+    pPluginStore(new PluginStore(parent)),
+    mError(NoError),
     q_ptr(parent) {
-    mError = NoError;
+
+    // bracket types.
+    brackets << "(" << ")";
+    specials << "," << ":";
+
+}
+
+WorkbookParserPrivate::WorkbookParserPrivate(QWorksheetView *sheet, WorkbookParser *parent) :
+    pWorkbook(NULL),
+    pWorksheet(sheet),
+    pPluginStore(new PluginStore(parent)),
+    mError(NoError),
+    q_ptr(parent) {
+
+    // bracket types.
+    brackets << "(" << ")";
+    specials << "," << ":";
+
 }
 
 ParserErrors WorkbookParserPrivate::error() {
@@ -43,590 +66,229 @@ void WorkbookParserPrivate::clearErrors() {
     mError = NoError;
 }
 
-QVariant WorkbookParserPrivate::parse(Worksheet *sheet, const QString expression) {
+void WorkbookParserPrivate::dataHasChanged(const QModelIndex &topLeft,
+                                    const QModelIndex &bottomRight,
+                                    const QVector<int> &roles) {
+    mTopLeft = topLeft;
+    mBottomRight = bottomRight;
+    mChangedRoles = roles;
+
+}
+
+QVariant WorkbookParserPrivate::parse() {
+
+    QString expression;
+    QModelIndex index;
+
+    // TODO possibly a range of data has changed.
+
+    if (pWorkbook) {
+        index = pWorkbook->currentWorksheetView()->currentIndex();
+        expression = pWorkbook->currentWorksheetView()->model()->data(index).toString();
+    } else if (pWorksheet) {
+        index = pWorksheet->currentIndex();
+        expression = pWorksheet->model()->data(index).toString();
+    }
 
     clearErrors();
 
-    QString exp = expression.toUpper();
-
-    QMap<int, Token*> tokenMap = analyseExpression(exp);
-
-    // convert the map of position/Token to an ordered list.
-    QList<Token*> tokens;
-    QList<int> positions = tokenMap.keys();
-
-    if (positions.size() == 0) {
-
-        mError |= NotAFunction;
-        return QVariant(QVariant::Double);
-
-    } else {
-
-        QListIterator<int> posIt(positions);
-        while (posIt.hasNext()) {
-            int p = posIt.next();
-            tokens.append(tokenMap.value(positions.at(p)));
-        }
-
-        QVariant value = parseExpression(sheet, tokens);
-        return value;
+    // formulae must start with an = sign but it has no relevance later.
+    if (expression.startsWith("=")) {
+        QStringList tokenList = splitExpression(expression.mid(1));
+        tokenise(tokenList);
     }
 
     return QVariant(QVariant::Double);
 
 }
 
-
-QVariant WorkbookParserPrivate::parseExpression(Worksheet* sheet, QList<Token *> tokens) {
-
-    int index = 0;
-    Token *token;
-    for (; index < tokens.size(); index++) {
-
-        token = tokens.value(index);
-        NumberToken *num = dynamic_cast<NumberToken*>(token);
-        OperatorToken *op = dynamic_cast<OperatorToken*>(token);
-        CellReferenceToken *cellRef = dynamic_cast<CellReferenceToken*>(token);
-        ConstantToken *constant = dynamic_cast<ConstantToken*>(token);
-        FunctionToken *func = dynamic_cast<FunctionToken*>(token);
-
-        if (num) {
-            valueStack.push(num->value());
-            continue;
-        }
-
-        if (op) {
-            IOperator *iop = pPluginStore->getOperator(op->getOperator());
-            if (iop)
-                opStack.push(iop);
-            continue;
-        }
-
-        if (cellRef) {
-            QVariant v = sheet->cell(cellRef->row(), cellRef->column());
-            valueStack.push(v);
-            continue;
-        }
-
-        if (constant) {
-            IConstant *con = pPluginStore->getConstant(constant->value());
-            if (con)
-                valueStack.push(con->value());
-        }
-
-        if (func) {
-
-
-            QList<Token*> functionList = separateFunctionList(index, tokens);
-
-            IFunction *f = pPluginStore->getFunction(func->function());
-
-            QVariant v = parseFunction(sheet, f, functionList);
-            valueStack.push(v);
-
-        }
-    }
-    // TODO parse valueList/ operatorList
-    return QVariant();
-}
-
-QList<Token*> WorkbookParserPrivate::separateFunctionList(int index, QList<Token *> tokens) {
-
-    Token *nextToken = tokens.at(index + 1);
-    OpenParenthesisToken *openToken = dynamic_cast<OpenParenthesisToken*>(nextToken);
-    QList<Token*> tokenList;
-
-    if (openToken) {
-        CloseParenthesisToken *closeToken = openToken->partner();
-        if (closeToken != NULL) {
-
-            int start = tokens.indexOf(openToken);
-            int end = tokens.indexOf(closeToken);
-
-
-
-            for (int i = start + 1; i < end; i++) {
-                tokenList.append(tokens.at(i));
-            }
-
-        }
-    }
-    return tokenList;
-}
-
-QVariant WorkbookParserPrivate::parseFunction(Worksheet *sheet, IFunction *iFunction, QList<Token *> tokens) {
-
-    /*
-        A function can contain :
-        - A value.
-        - A function
-        - An expression
-        - a godawful mix of above, ie.
-         A comma deliniated list of values, expressions and functions.
-         Any of the first three can be condensed down into a single value list.
-    */
-
-    Token *t;
-    QVariant value;
-    OperatorToken *opToken;
-    NumberToken *numToken;
-    CommaToken *commaToken;
-    FunctionToken *functionToken;
-    QList<QVariant> valueList;
-    QList<Token*> expressionList;
-
-    for (int index = 0; index < tokens.size(); index++) {
-        t = tokens.at(index);
-
-        // an operator gets added to the expression list
-        opToken = dynamic_cast<OperatorToken*>(t);
-        if (opToken) {
-
-            expressionList.append(opToken);
-
-        }
-
-        // a value gets added to the expression list.
-        numToken = dynamic_cast<NumberToken*>(t);
-        if (numToken) {
-
-            expressionList.append(numToken);
-            continue;
-
-        }
-
-        // a function gets separated out and recursed to get it's value
-        functionToken = dynamic_cast<FunctionToken*>(t);
-        if (functionToken) {
-
-            QList<Token*> functionList = separateFunctionList(index, tokens);
-
-            IFunction *f = pPluginStore->getFunction(functionToken->function());
-
-            QVariant v = parseFunction(sheet, f, functionList);
-            numToken = new NumberToken(q_ptr->parent()); // unfortunately the list needs tokens
-            numToken->setValue(v);
-            expressionList.append(numToken);
-
-        }
-
-        // end of current expression
-        commaToken = dynamic_cast<CommaToken*>(t);
-        if (commaToken) {
-
-            numToken = dynamic_cast<NumberToken*>(expressionList.at(0));
-
-            if (expressionList.size() == 1 && numToken) {
-                // if it's a single value add it to the value list.
-
-                valueList.append(numToken->value());
-                expressionList.clear();
-
-            } else {
-                // otherwise it was an expression of some type so evaluate it.
-
-                value = parseExpression(sheet, expressionList);
-
-                // empty expression so return with whatever error was already set.
-                if (value.isNull()) return value;
-
-                valueList.append(value);
-
-            }
-
-        }
-
-
-    }
-
-    // add the last item to the value list after the last comma
-    numToken = dynamic_cast<NumberToken*>(expressionList.at(0));
-    if (expressionList.size() == 1 && numToken) {
-
-        valueList.append(numToken->value());
-
-    } else {
-
-        value = parseExpression(sheet, expressionList);
-        valueList.append(value);
-
-    }
-
-    // at this point we should just have a list of values
-
+QPair<int, double> WorkbookParserPrivate::calculateInfix(int start, QStringList items) {
+    int i = start;
     bool ok;
-    // should be either one value, two or more values separated by commas,
-    if (valueList.size() == 1) {
+    qreal d, n1, n2;
+    QStack<qreal> values;
+    QStack<OperatorBase<qreal>*> operators;
+    QPair<int, double> result;
 
-        NumberToken *num= dynamic_cast<NumberToken*>(expressionList.at(0));
-        if (!num)  {
-            mError |= WrongParameterType;
-            return nullVariant();
+    // TODO add in errors ie unbalanced brackets wrong number
+    // of values or operators
+    // TODO handle cell references and ranges.
+
+    while(i < items.size()) {
+        QString s = items.at(i);
+
+        if (s == ")") {
+            result.first = i + 1;
+            result.second = values.pop();
+            return result;
         }
 
-        IOneValueFunction<qreal> *oneFunc1 = dynamic_cast<IOneValueFunction<qreal>*>(iFunction);
-        if (oneFunc1) {
-            qreal v = num->value().toDouble(&ok);
-            if (!ok) {
-                mError |= WrongParameterType;
-                return nullVariant();
+        if (s == "(") {
+            i++;
+            result = calculateInfix(i, items); // Recurse.
+            i = result.first;
+            values.push(result.second);
+            continue;
+        }
+
+        d = s.toDouble(&ok);
+        if (ok) {
+            values.insert(i++, d);
+            continue;
+        }
+        // turns constants into their actual value in the list.
+        ConstantBase *constant = dynamic_cast<ConstantBase*>(pPluginStore->getConstant(s));
+        if (constant) {
+            values.insert(i++, constant->value());
+            continue;
+        }
+
+        IFunction *func = dynamic_cast<IFunction*>(pPluginStore->getFunction(s));
+        if (func) {
+            result = calculateInfixFunction(func, i, items); // functioss should return a value.
+            i = result.first;
+            values.push(result.second);
+            continue;
+        }
+
+        OperatorBase<qreal> *op1 = dynamic_cast<OperatorBase<qreal>*>(pPluginStore->getOperator(s));
+        if (op1) {
+            if (operators.size() == 0 || operators.top()->level() < op1->level()) {
+                OperatorBase<qreal> *op2 = operators.pop();
+                n1 = values.pop();
+                n2 = values.pop();
+                d = op2->calculate(n2, n1);
+                values.push(d);
             }
-            QVariant value = oneFunc1->calculate(v);
-            return value;
+            operators.push(op1);
+
+            i++;
+            continue;
         }
 
-        IOneValueFunction<quint32> *oneFunc2 = dynamic_cast<IOneValueFunction<quint32>*>(iFunction);
-        if (oneFunc1) {
-            quint32 v = num->value().toUInt(&ok);
-            if (!ok) {
-                mError |= WrongParameterType;
-                return nullVariant();
-            }
-            QVariant value = oneFunc2->calculate(v);
-            return value;
-        }
+        // TODO string handling
+//        OperatorBase<QString> *ops1 = dynamic_cast<OperatorBase<QString>*>(pPluginStore->getOperator(s));
+//        if (op1) {
+//            // convert numbers to strings if necessary
+//        }
 
-        mError |= NoFunctionAvailable;
-        return nullVariant();
+    }
 
-    } else if (valueList.size() == 2) {
+    return result;
+}
 
-        NumberToken *num1 = dynamic_cast<NumberToken*>(expressionList.at(0));
-        if (!num1) {
-            mError |= WrongParameterType;
-            return nullVariant();
-        }
+QPair<int, double> WorkbookParserPrivate::calculateInfixFunction(IFunction *func, int start, QStringList items) {
+    // TODO
+}
 
-        NumberToken *num2 = dynamic_cast<NumberToken*>(expressionList.at(1));
-        if (!num2) {
-            mError |= WrongParameterType;
-            return nullVariant();
-        }
+void WorkbookParserPrivate::tokenise(QStringList items) {
 
-        ITwoValueFunction<qreal, qreal> *twoFunc2a = dynamic_cast<ITwoValueFunction<qreal, qreal>*>(iFunction);
-        if (twoFunc2a) {
-            qreal v1 = num1->value().toDouble(&ok);
-            if (!ok) {
-                mError |= WrongParameterType;
-                return nullVariant();
-            }
+    calculateInfix(0, items);
 
-            qreal v2 = num2->value().toDouble();
-            if (!ok) {
-                mError |= WrongParameterType;
-                return nullVariant();
-            }
+}
 
-            value = twoFunc2a->calculate(v1, v2);
-            return value;
-        }
+QStringList WorkbookParserPrivate::splitExpression(QString expression) {
+    QStringList listIn;
 
-        ITwoValueFunction<quint32, quint32> *twoFunc2b = dynamic_cast<ITwoValueFunction<quint32, quint32>*>(iFunction);
-        if (twoFunc2b) {
+    mLeftBrackets = 0;
+    mRightBrackets = 0;
 
-            quint32 v1 = num1->value().toUInt(&ok);
-            if (!ok) {
-                mError |= WrongParameterType;
-                return nullVariant();
-            }
+    if (mRightBrackets != mLeftBrackets) {
+        mError = UnbalancedParethesis;
+    }
 
-            quint32 v2 = num2->value().toUInt();
-            if (!ok) {
-                mError |= WrongParameterType;
-                return nullVariant();
-            }
+    listIn = splitoutCellReference(expression);
+    listIn = splitoutBrackets(listIn);
 
-            value = twoFunc2b->calculate(v1, v2);
-            return value;
-        }
+    listIn = splitoutItems(listIn, specials);
+    listIn = splitoutItems(listIn, pPluginStore->operatorNames());
+    listIn = splitoutItems(listIn, pPluginStore->functionNames());
+    listIn = splitoutItems(listIn, pPluginStore->constantNames());
 
-        mError |= NoFunctionAvailable;
-        return nullVariant();
+    return listIn;
+}
 
-    } else {
-        IListFunction<qreal> *listFunca = dynamic_cast<IListFunction<qreal>*>(iFunction);
-        if (listFunca) {
+QStringList WorkbookParserPrivate::splitoutCellReference(QString expression) {
+    QStringList result;
+    QRegularExpression re = QRegularExpression(REGEX_CELL_REFERENCE_2);
+    QRegularExpressionMatch match;
+    int start, end = 0;
 
-            QList<qreal> list;
-            QListIterator<QVariant> it(valueList);
+    QRegularExpressionMatchIterator it = re.globalMatch(expression);
+    while (it.hasNext()) {
+        match = it.next();
+        start = match.capturedStart(0);
+        result.append(expression.mid(end, start - end));
+        // TODO replace cell references with actual contents of cell
+        result.append(match.captured(0));
+        // TODO above
+        end = match.capturedEnd(0);
+    }
+
+    if (end < expression.length())
+        result.append(expression.mid(end));
+
+    return result;
+}
+
+QStringList WorkbookParserPrivate::splitoutItems(QStringList listIn, QStringList items) {
+    QStringList listOut, splits;
+
+    foreach(QString item, items) {
+
+        QString pattern = QString(WithDelimiter).arg(QRegularExpression::escape(item));
+        QRegularExpression re = QRegularExpression(pattern);
+
+        foreach(QString s, listIn) {
+
+            splits = s.split(re);
+            QListIterator<QString> it(splits);
             while (it.hasNext()) {
-
-                qreal v = it.next().toDouble(&ok);
-                if (!ok)  {
-                    mError |= WrongParameterType;
-                    return nullVariant();
-                }
-
-                list.append(v);
-
-
-                value = listFunca->calculate(list);
-                return value;
+                QString s = it.next();
+                if (!s.isEmpty())
+                    listOut.append(s);
             }
-        }
-        IListFunction<quint32> *listFuncb = dynamic_cast<IListFunction<quint32>*>(iFunction);
-        if (listFuncb) {
 
-            QList<quint32> list;
-            QListIterator<QVariant> it(valueList);
+        }
+
+        listIn = listOut;
+        listOut.clear();
+    }
+
+    return listIn;
+}
+
+QStringList WorkbookParserPrivate::splitoutBrackets(QStringList listIn) {
+    QStringList listOut, splits;
+
+    foreach(QString item, brackets) {
+
+        QString pattern = QString(WithDelimiter).arg(QRegularExpression::escape(item));
+        QRegularExpression re = QRegularExpression(pattern);
+
+        foreach(QString s, listIn) {
+            if (s == "(") mLeftBrackets++;
+            else if (s == ")") mRightBrackets++;
+
+            splits = s.split(re);
+            QListIterator<QString> it(splits);
             while (it.hasNext()) {
-
-                quint32 v = it.next().toUInt(&ok);
-                if (!ok)  {
-                    mError |= WrongParameterType;
-                    return nullVariant();
-                }
-
-                list.append(v);
-
-                value = listFuncb->calculate(list);
-                return value;
+                QString s = it.next();
+                if (!s.isEmpty())
+                    listOut.append(s);
             }
-        }
-
-    }
-    return QVariant();
-}
-
-QMap<int, Token*>  WorkbookParserPrivate::analyseExpression(QString exp) {
-
-    QMap<int, Token*> tokens;
-
-    // first analyse the expression
-    if (exp.trimmed().startsWith("=")) {
-
-        QRegularExpression re;
-        QRegularExpressionMatch match;
-        QRegularExpressionMatchIterator it;
-        QString refString, s;
-        Token *token;
-
-        int start = 0, end, len;
-        re.setPattern(CellReferenceRegex);
-        it = re.globalMatch(exp);
-        while (it.hasNext()) {
-            match = it.next();
-
-            refString = match.captured();
-            start = match.capturedStart();
-            end = match.capturedStart();
-            len = end - start;
-            token = new CellReferenceToken(refString, start, end, q_ptr->parent());
-            tokens.insert(start, token);
-
-            s.fill(' ', len);
-            exp.replace(start, len, s);
 
         }
 
-        // Functions MUST be followed by an opening parenthesis
-        re.setPattern(mFunctionsRegex);
-        it = re.globalMatch(exp);
-        while (it.hasNext()) {
-            match = it.next();
-
-            refString = match.captured();
-            start = match.capturedStart();
-            end = match.capturedStart();
-            len = end - start;
-            // only save the function, not the opening parenthesis
-            token = new FunctionToken(refString.left(len - 1), start, end, q_ptr->parent());
-            tokens.insert(start, token);
-
-            s.fill(' ', len - 1);
-            exp.replace(start, len, s);
-        }
-
-        re.setPattern(mOperationsRegex);
-        it = re.globalMatch(exp);
-        while (it.hasNext()) {
-            match = it.next();
-
-            refString = match.captured();
-            start = match.capturedStart();
-            end = match.capturedStart();
-            len = end - start;
-            token = new OperatorToken(refString, start, end, q_ptr->parent());
-            tokens.insert(start, token);
-
-            s.fill(' ', len);
-            exp.replace(start, len, s);
-        }
-
-        re.setPattern(mConstantsRegex);
-        it = re.globalMatch(exp);
-        while (it.hasNext()) {
-            match = it.next();
-
-            refString = match.captured();
-            start = match.capturedStart();
-            end = match.capturedStart();
-            len = end - start;
-            token = new ConstantToken(refString, start, end, q_ptr->parent());
-
-            tokens.insert(start, token);
-
-            s.fill(' ', len);
-            exp.replace(start, len, s);
-        }
-
-        re.setPattern(NumbersRegex);
-        it = re.globalMatch(exp);
-        while (it.hasNext()) {
-            match = it.next();
-
-            refString = match.captured();
-            start = match.capturedStart();
-            end = match.capturedStart();
-            len = end - start;
-            token = new NumberToken(refString, start, end, q_ptr->parent());
-            tokens.insert(start, token);
-
-            s.fill(' ', len);
-            exp.replace(start, len, s);
-        }
-
-        // handle comma separated list.
-        int pos;
-        pos = exp.indexOf(",");
-        while(pos != -1) {
-            token = new CommaToken(pos, q_ptr->parent());
-            tokens.insert(pos, token);
-            exp.replace(start, 1, " ");
-        }
-
-        // handle open parenthesis
-        QList<Token*> parenthesis;
-        int count = 0;
-        pos = exp.indexOf("(");
-        while (pos != -1) {
-            token = new OpenParenthesisToken(pos, q_ptr->parent());
-            parenthesis.append(token);
-            tokens.insert(pos, token);
-            count++;
-            pos = exp.indexOf("(", pos + 1);
-
-            exp.replace(start, 1, " ");
-        }
-
-        // handle close parenthesis
-        pos = exp.indexOf(")");
-        while (pos != -1) {
-            token = new CloseParenthesisToken(pos, q_ptr->parent());
-            parenthesis.append(token);
-            count--;
-            pos = exp.indexOf(")", pos + 1);
-
-            exp.replace(start, 1, " ");
-        }
-        // count should == 0 at this point otherwise
-        // parenthesis are unbalanced.
-
-        if (count != 0) {
-            // shit unbalanced parenthesis.
-            // TODO some sort of error
-            cout << "Unbalanced parenthesis - bugger" << flush;
-            mError |= UnbalancedParethesis;
-            tokens.clear();
-            return tokens;
-        }
-
-        // partner up the parenthesis
-        QStack<OpenParenthesisToken*> openers;
-        for (int i = 0; i < parenthesis.size(); i++) {
-            token = parenthesis.at(i);
-            OpenParenthesisToken *openToken = dynamic_cast<OpenParenthesisToken*>(token);
-            if (openToken)
-                openers.push(openToken);
-            else {
-                CloseParenthesisToken *closeToken = dynamic_cast<CloseParenthesisToken*>(token);
-                if (openers.size() > 0) {
-                    openToken = openers.pop();
-                    openToken->setPartner(closeToken);
-                } else  {
-                    mError |= UnbalancedParethesis;
-                    tokens.clear();
-                    return tokens;
-                }
-            }
-        }
-
-
-        if (exp.trimmed().length() > 0) {
-            // shit forgot something.
-            // TODO some sort of error
-            cout << "Something was left over - bugger : " << exp << flush;
-            mError |= UnhandledPartialExpression;
-            tokens.clear();
-            return tokens;
-        }
-
-        mError |= NotAFunction;
-        return tokens;
+        listIn = listOut;
+        listOut.clear();
     }
 
-    return tokens;
+    bBracketsMatch = (mLeftBrackets == mRightBrackets);
+
+    return listIn;
 }
 
-void WorkbookParserPrivate::setFunctions(QStringList list) {
-    mFunctionsRegex = "";
-    QString funcName;
-    IFunction* func;
-    for (int i = 0; i < list.length(); i++) {
-        funcName = list.at(i);
-        func = pPluginStore->getFunction(funcName);
-
-        mFunctionsRegex.append(funcName);
-        mFunctionsRegex.append("\\(");
-        if (i < list.length() - 1)
-            mFunctionsRegex.append("|");
-
-        mFunctions.insert(funcName, func);
-    }
-}
-
-void WorkbookParserPrivate::setOperations(QStringList list) {
-    mOperationsRegex = "";
-    QString opName;
-    IOperator* op;
-    for (int i = 0; i < list.length(); i++) {
-        opName = list.at(i);
-        op = pPluginStore->getOperator(opName);
-
-        mOperationsRegex.append(opName);
-        mOperationsRegex.append("\\(");
-        if (i < list.length() - 1)
-            mOperationsRegex.append("|");
-
-        mOperators.insert(opName, op);
-    }
-}
-
-void WorkbookParserPrivate::setConstants(QStringList list) {
-    mConstantsRegex = "";
-    QString conName;
-    IConstant* con;
-    for (int i = 0; i < list.length(); i++) {
-        conName = list.at(i);
-        con = pPluginStore->getConstant(conName);
-
-        mConstantsRegex.append(conName);
-        mConstantsRegex.append("\\(");
-        if (i < list.length() - 1)
-            mConstantsRegex.append("|");
-
-        mConstants.insert(conName, con);
-    }
-}
-
-CellReferenceToken::CellReferenceToken(QString &ref, int &start, int &end, QObject *parent) :
-    Token(start, end, parent) {
-
-    QQuad<QString, QString, QString, QString> quad = init(ref);
-
-    if (!quad.first.isEmpty() && !quad.second.isEmpty()) {
-        mColumn = columnFromString(quad.first);
-        mRow = rowFromString(quad.second);
-    }
 
 }
+

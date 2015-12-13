@@ -22,12 +22,16 @@
 
 // TODO manage cell as formula.
 
+#include "workbook_global.h"
+
+namespace QWorkbook {
+
 FormulaCell::FormulaCell(QObject *parent) :
-    Cell(*new FormulaCellPrivate(), parent) {
+    MergedCell(*new FormulaCellPrivate(), parent) {
 }
 
 FormulaCell::FormulaCell(int row, int column, QObject *parent) :
-    Cell(*new FormulaCellPrivate(), parent) {
+    MergedCell(*new FormulaCellPrivate(), parent) {
 
     Q_D(Cell);
     d->mRow = row;
@@ -35,7 +39,7 @@ FormulaCell::FormulaCell(int row, int column, QObject *parent) :
 }
 
 FormulaCell::FormulaCell(int row, int column, const QVariant &value, QObject *parent) :
-    Cell(*new FormulaCellPrivate(), parent) {
+    MergedCell(*new FormulaCellPrivate(), parent) {
 
     Q_D(Cell);
     d->mRow = row;
@@ -44,7 +48,7 @@ FormulaCell::FormulaCell(int row, int column, const QVariant &value, QObject *pa
 }
 
 FormulaCell::FormulaCell(CellReference reference, QObject *parent) :
-    Cell(*new FormulaCellPrivate(), parent) {
+    MergedCell(*new FormulaCellPrivate(), parent) {
 
     Q_D(Cell);
     d->mRow = reference.row();
@@ -52,7 +56,7 @@ FormulaCell::FormulaCell(CellReference reference, QObject *parent) :
 }
 
 FormulaCell::FormulaCell(CellReference reference, QVariant &value, QObject *parent) :
-    Cell(*new FormulaCellPrivate(), parent) {
+    MergedCell(*new FormulaCellPrivate(), parent) {
 
     Q_D(Cell);
     d->mRow = reference.row();
@@ -60,6 +64,6 @@ FormulaCell::FormulaCell(CellReference reference, QVariant &value, QObject *pare
     d->mValue = value;
 }
 
-FormulaCell::~FormulaCell() {
 
 }
+

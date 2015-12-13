@@ -2,7 +2,7 @@ QT          += core
 
 TEMPLATE    = lib
 CONFIG      += plugin shared
-INCLUDEPATH  += $$PWD/../include
+
 INCLUDEPATH  += $$PWD/../../include
 
 DEFINES += WORKBOOK_LIBRARY

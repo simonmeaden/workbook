@@ -1,5 +1,7 @@
 #include "lcmfunction.h"
 
+namespace QWorkbook {
+
 /*!
     \class LcmFunction
     \brief Calculates the least common multiple of two or more unsigned integer values.
@@ -79,3 +81,4 @@ quint32 LcmFunction::lcm(quint32 a, quint32 b) {
     return (b / gcd(a, b) ) * a;
 }
 
+}

@@ -18,10 +18,14 @@
 
     It is also available on request from Simon Meaden info@smelecomp.co.uk.
 */
-#include "qstd.h"
+
 
 #include "pluginstore.h"
 #include "interface.h"
+
+#include "workbook_global.h"
+
+namespace QWorkbook {
 
 PluginStore::PluginStore() :
     d_ptr(new PluginStorePrivate(this)) {
@@ -34,24 +38,32 @@ PluginStore::PluginStore(QObject *parent) :
 
 }
 
-PluginStore::~PluginStore() {
-
-}
-
 bool PluginStore::isEmpty() {
     return d_ptr->isEmpty();
 }
 
-IOperator *PluginStore::getOperator(QString name) {
+IOperator* PluginStore::getOperator(QString name) {
     return d_ptr->getOperator(name);
+}
+
+QStringList PluginStore::operatorNames() {
+    return d_ptr->operatorNames();
 }
 
 IFunction* PluginStore::getFunction(QString name) {
     return d_ptr->getFunction(name);
 }
 
+QStringList PluginStore::functionNames() {
+    return d_ptr->functionNames();
+}
+
 IConstant* PluginStore::getConstant(QString name) {
     return d_ptr->getConstant(name);
+}
+
+QStringList PluginStore::constantNames() {
+    return d_ptr->constantNames();
 }
 
 void PluginStore::addOperator(IOperator *interface) {
@@ -69,3 +81,6 @@ void PluginStore::addConstant(IConstant *interface) {
 void PluginStore::loadPlugins() {
     d_ptr->loadPlugins();
 }
+
+}
+

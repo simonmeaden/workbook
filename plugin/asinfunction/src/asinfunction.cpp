@@ -1,5 +1,6 @@
 #include "asinfunction.h"
 
+namespace QWorkbook {
 
 AsinFunction::AsinFunction(QObject *parent) :QObject(parent) {
 
@@ -25,4 +26,6 @@ QStringList AsinFunction::importer() const {
 
 QVariant AsinFunction::calculate(qreal radians) {
     return qAsin(radians);
+}
+
 }

@@ -9,7 +9,10 @@
 #include "workbook_global.h"
 #include "qcelledittoolbar_p.h"
 
+namespace QWorkbook {
+
 class QWorkbookView;
+class QWorksheetView;
 class FormatStatus;
 
 class WORKBOOKSHARED_EXPORT QCellEditToolBar : public QToolBar {
@@ -25,14 +28,15 @@ signals:
 
 public slots:
     void setWorkbookView(QWorkbookView *);
+    void setWorksheetView(QWorksheetView *);
     void setText(QString);
 
 protected slots:
     void setValueWithoutSignal(QVariant);
     void setTextWithoutSignal(QString);
-    void setCellEditor();
-    void setCellEditor(QString);
-    void drop();
+//    void setCellEditor();
+//    void setCellEditor(QString);
+//    void drop();
 
 
 protected:
@@ -48,5 +52,8 @@ private:
 
     friend class QWorkbookView;
 };
+
+
+}
 
 #endif // QCELLEDIT_H

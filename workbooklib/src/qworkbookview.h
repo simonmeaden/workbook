@@ -38,16 +38,18 @@
 #include <QDateTime>
 #include <QScopedPointer>
 
-#include <workbook_global.h>
 #include "cellreference.h"
 #include "range.h"
 #include "format.h"
 #include "types.h"
 #include "toolbar/qcelledittoolbar.h"
+#include "qworkbookview_p.h"
+
+#include "workbook_global.h"
+
+namespace QWorkbook {
 
 class Workbook;
-class Worksheet;
-class QWorkbookViewPrivate;
 class QWorksheetView;
 class WorkbookInsertSheetDialogPrivate;
 class QWorkbookToolBar;
@@ -67,11 +69,11 @@ class WORKBOOKSHARED_EXPORT QWorkbookView : public QTabWidget {
     Q_DECLARE_PRIVATE(QWorkbookView)
 public:
     QWorkbookView(QWidget *parent);
-    ~QWorkbookView();
+    virtual ~QWorkbookView() {}
 
     QWorkbookToolBar* toolBar();
     QCellEditToolBar* editBar();
-    int indexOf(Worksheet*);
+    int indexOf(QWorksheetView *);
     QWorksheetView* addWorksheet();
     QWorksheetView* addWorksheet(QString name);
     QWorksheetView* insertWorksheet(int position);
@@ -119,7 +121,7 @@ public:
     QString category();
     void setCategory(QString category);
 
-
+    QStringList names();
 
 signals:
     void selectionChanged(FormatStatus*);
@@ -127,13 +129,17 @@ signals:
     void cellContentsChanged(QString); // called by cell editor when cell contents change before commit.
 
 public slots:
-    void setWorkbook(Workbook *book);
-    void setCurrentWorksheet(int index);
-    void setCurrentWorksheet(QString name);
+
+    void enableMovableTabs(bool);
+    void enableContextMenu(bool);
+    void enableTabMenu(bool);
+
+    void setCurrentWorksheetView(int index);
+    void setCurrentWorksheetView(QString name);
     void saveWorkbook(QString filename);
     void saveWorkbook(QString filename, WorksheetType type);
     void removeWorksheet(int position);
-    void removeWorksheet(Worksheet *sheet);
+    void removeWorksheet(QWorksheetView *sheet);
     void removeWorksheet(QString name);
     void renameSheet(QString oldname, QString newname);
     void setTabText(int index, QString text);
@@ -229,8 +235,10 @@ protected slots:
     void showContextMenu(const QPoint &point);
 
     // context menu methods.
-    void insertSheet();
+    void insertSheetBefore();
+    void insertSheetAfter();
     void renameSheet();
+    void deleteSheet();
     void moveCopySheet();
     void protectSheet();
     void tabColor();
@@ -238,20 +246,20 @@ protected slots:
     // toolbar methods
     void changeCellContents(QString text);
     void triggerInitialSelection();
+    void triggerCurrentSelection();
     void setSelectionBold(bool);
     void setSelectionItalic(bool);
     void setSelectionUnderline(bool);
     void setSelectionFont(QFont);
     void setSelectionFontSize(int);
     void setSelectionAlignment(Qt::Alignment);
-    void setSelectionMerge(bool);
+    void setSelectionMerge();
     void indentCells();
     void undentCells();
     void setFont(QFont);
 
 protected:
-    Worksheet* currentWorksheet();
-    QWorksheetView* currentWorksheetView();
+    QWorksheetView *currentWorksheetView();
 
 private:
     QScopedPointer<QWorkbookViewPrivate> d_ptr;
@@ -264,8 +272,13 @@ private:
     virtual QWidget* widget(int index) const;
 
     friend class QWorkbookToolBarPrivate;
-    friend class QCellEditToolBar;
+    friend class QCellEditToolBarPrivate;
+    friend class WorkbookParserPrivate;
+    friend class WorkbookPrivate;
 
 };
+
+
+}
 
 #endif // WORKBOOKVIEW_H

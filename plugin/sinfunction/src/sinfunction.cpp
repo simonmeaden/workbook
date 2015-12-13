@@ -1,6 +1,8 @@
 #include "sinfunction.h"
 
 
+namespace QWorkbook {
+
 SinFunction::SinFunction(QObject *parent) : QObject(parent) {
 
     setName("SIN");
@@ -25,4 +27,6 @@ QStringList SinFunction::importer() const {
 
 QVariant SinFunction::calculate(qreal radians) {
     return qSin(radians);
+}
+
 }

@@ -1,8 +1,6 @@
-cache()
-
 #-------------------------------------------------
 #
-# Project created by QtCreator 2015-02-23T11:48:33
+# Project created by QtCreator 2015-09-14T16:13:59
 #
 #-------------------------------------------------
 
@@ -39,25 +37,33 @@ CONFIG(release, debug|release) {
     UI_DIR = $$DESTDIR/.ui
 }
 
+#include($$PWD/../../simonsoft/qstd.pri)
+#include($$PWD/../../simonsoft/extendedtabwidget.pri)
+
 INCLUDEPATH += $$PWD/../include
 INCLUDEPATH += $$PWD/../workbooklib/src
 INCLUDEPATH += $$PWD/../workbooklib/src/include
 INCLUDEPATH += $$PWD/../../QtXlsxWriter/src/xlsx
-DEPENDPATH  += $$PWD/../workbooklib/src
 
-include($$PWD/../../simonsoft/qstd.pri)
+DEPENDPATH  += $$PWD/../../workbooklib/src
 
-SOURCES += main.cpp\
-        mainwindow.cpp
+SOURCES += \
+    main.cpp \
+    mainwindow.cpp
 
-HEADERS  += mainwindow.h
+HEADERS  += \
+    mainwindow.h
 
-FORMS    +=
-
-
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../../build/workbook/ -lworkbook
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../../build/workbook/ -lworkbookd
-else:unix:CONFIG(release, debug|release): LIBS += -L$$PWD/../../../build/workbook/ -lworkbook
-else:unix:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../../build/workbook/ -lworkbookd
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../../../build/workbook/ -lworkbook
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../../../build/workbook/ -lworkbookd
+else:unix:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../../../build/workbook/ -lworkbook
+else:unix:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../../../build/workbook/ -lworkbookd
 
 
+unix|win32: LIBS += -L$$PWD/../../QOds/build/lib/ -lods
+unix|win32: LIBS += -L$$PWD/../../QOds/build/lib/ -lquazip
+unix|win32: LIBS += -L$$PWD/../../QOds/build/lib/ -lzlib
+
+INCLUDEPATH += $$PWD/../../QOds/ods
+
+DEPENDPATH += $$PWD/../../QOds/ods

@@ -23,6 +23,10 @@
 #include "qworkbooktoolbar.h"
 #include "qworkbookview.h"
 
+#include "workbook_global.h"
+
+namespace QWorkbook {
+
 QWorkbookIndentToolBar::QWorkbookIndentToolBar(QWidget *parent) :
     QToolBar(parent),
     d_ptr(new QWorkbookIndentToolBarPrivate(this)) {
@@ -52,3 +56,6 @@ void QWorkbookIndentToolBar::undent() {
     Q_D(QWorkbookIndentToolBar);
     d->undent();
 }
+
+}
+

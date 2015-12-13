@@ -21,10 +21,19 @@
 #include "qworkbookaligntoolbar_p.h"
 #include "qworkbookaligntoolbar.h"
 #include "qworkbookview.h"
+#include "qworksheetview.h"
 #include "types.h"
 
+#include "workbook_global.h"
+
+namespace QWorkbook {
+
+AlignStatus AlignToolBarHelper::mStatus;
+
 QWorkbookAlignToolBarPrivate::QWorkbookAlignToolBarPrivate(QWorkbookAlignToolBar *q) :
-    q_ptr(q) {
+//    AlignToolBarHelper(),
+    q_ptr(q),
+    pView(NULL) {
 
 }
 
@@ -64,16 +73,46 @@ void QWorkbookAlignToolBarPrivate::init()  {
 
 }
 
-void QWorkbookAlignToolBarPrivate::setWorkbookView(QWorkbookView *view) {
+void QWorkbookAlignToolBarPrivate::setView(QObject *view) {
 
     Q_Q(QWorkbookAlignToolBar);
-    // view to bar
-    q->connect(view, SIGNAL(selectionChanged(FormatStatus*)),
-               q, SLOT(selectionChanged(FormatStatus*)));
+    QWorkbookView *wb;
+    QWorksheetView *ws;
 
-    // bar to view (sets format in view)
-    q->connect(q, SIGNAL(alignmentChanged(Qt::Alignment)),
-               view, SLOT(setSelectionAlignment(Qt::Alignment)));
+    // remove old connections
+    if (pView) {
+        wb = qobject_cast<QWorkbookView*>(pView);
+        ws = qobject_cast<QWorksheetView*>(pView);
+
+        if (wb) {
+            q->disconnect(wb, SIGNAL(selectionChanged(FormatStatus*)),
+                       q, SLOT(selectionChanged(FormatStatus*)));
+            q->disconnect(q, SIGNAL(alignmentChanged(Qt::Alignment)),
+                       wb, SLOT(setSelectionAlignment(Qt::Alignment)));
+        } else if (ws) {
+            q->disconnect(ws, SIGNAL(selectionChanged(FormatStatus*)),
+                       q, SLOT(selectionChanged(FormatStatus*)));
+            q->disconnect(q, SIGNAL(alignmentChanged(Qt::Alignment)),
+                       ws, SLOT(setSelectionAlignment(Qt::Alignment)));
+        }
+    }
+
+    // make new ones.
+    wb = qobject_cast<QWorkbookView*>(view);
+    ws = qobject_cast<QWorksheetView*>(view);
+    if (wb) {
+        q->connect(wb, SIGNAL(selectionChanged(FormatStatus*)),
+                   q, SLOT(selectionChanged(FormatStatus*)));
+        q->connect(q, SIGNAL(alignmentChanged(Qt::Alignment)),
+                   wb, SLOT(setSelectionAlignment(Qt::Alignment)));
+    } else if (ws) {
+        q->connect(ws, SIGNAL(selectionChanged(FormatStatus*)),
+                   q, SLOT(selectionChanged(FormatStatus*)));
+        q->connect(q, SIGNAL(alignmentChanged(Qt::Alignment)),
+                   ws, SLOT(setSelectionAlignment(Qt::Alignment)));
+    }
+
+    pView = view;
 
 }
 
@@ -85,21 +124,16 @@ void QWorkbookAlignToolBarPrivate::selectionChanged(FormatStatus* status) {
 }
 
 void QWorkbookAlignToolBarPrivate::alignHasClicked() {
-    Qt::Alignment valign = Qt::AlignVCenter;
-    Qt::Alignment halign = Qt::AlignLeft;
-    Qt::Alignment align;
 
     if (pLeftBtn->isChecked())
-        halign = Qt::AlignLeft;
+        setHorizontalAlign(Qt::AlignLeft);
     else if (pHCentreBtn->isChecked())
-        halign = Qt::AlignHCenter;
+        setHorizontalAlign(Qt::AlignHCenter);
     else if (pRightBtn->isChecked())
-        halign = Qt::AlignRight;
-
-    align = halign | valign;
+        setHorizontalAlign(Qt::AlignRight);
 
     Q_Q(QWorkbookAlignToolBar);
-    emit q->alignmentChanged(align);
+    emit q->alignmentChanged(alignment());
 }
 
 void QWorkbookAlignToolBarPrivate::setAlign(bool set, Qt::Alignment alignment) {
@@ -120,3 +154,131 @@ void QWorkbookAlignToolBarPrivate::setAlign(bool set, Qt::Alignment alignment) {
             pRightBtn->setChecked(false);
     }
 }
+
+QWorkbookVerticalAlignToolBarPrivate::QWorkbookVerticalAlignToolBarPrivate(QWorkbookVerticalAlignToolBar *q) :
+//    AlignToolBarHelper(),
+    q_ptr(q),
+    pView(NULL) {
+
+}
+
+void QWorkbookVerticalAlignToolBarPrivate::init()  {
+
+    pTopBtn = new QPushButton(QIcon("://justify-top"), "", q_ptr);
+    pTopBtn->setToolTip("Align top");
+    pTopBtn->setStyleSheet(ButtonStyle);
+    pTopBtn->setContentsMargins(0, 0, 0, 0);
+    pTopBtn->setCheckable(true);
+    q_ptr->addWidget(pTopBtn);
+    q_ptr->connect(pTopBtn, SIGNAL(clicked()), q_ptr, SLOT(alignHasClicked()));
+
+    pVCentreBtn = new QPushButton(q_ptr);
+    pVCentreBtn->setToolTip("Align Vertical Centre");
+    pVCentreBtn->setStyleSheet(ButtonStyle);
+    pVCentreBtn->setContentsMargins(0, 0, 0, 0);
+    pVCentreBtn->setCheckable(true);
+    pVCentreBtn->setIcon(QIcon("://justify-middle"));
+    q_ptr->addWidget(pVCentreBtn);
+    q_ptr->connect(pVCentreBtn, SIGNAL(clicked()), q_ptr, SLOT(alignHasClicked()));
+
+    pBottomBtn = new QPushButton(q_ptr);
+    pBottomBtn->setToolTip("Align Bottom");
+    pBottomBtn->setStyleSheet(ButtonStyle);
+    pBottomBtn->setContentsMargins(0, 0, 0, 0);
+    pBottomBtn->setCheckable(true);
+    pBottomBtn->setIcon(QIcon("://justify-bottom"));
+    q_ptr->addWidget(pBottomBtn);
+    q_ptr->connect(pBottomBtn, SIGNAL(clicked()), q_ptr, SLOT(alignHasClicked()));
+
+    pButtonGroup = new QButtonGroup(q_ptr);
+    pButtonGroup->addButton(pTopBtn);
+    pButtonGroup->addButton(pVCentreBtn);
+    pButtonGroup->addButton(pBottomBtn);
+    pTopBtn->setChecked(true);
+
+}
+
+void QWorkbookVerticalAlignToolBarPrivate::setView(QObject *view) {
+
+    Q_Q(QWorkbookVerticalAlignToolBar);
+    QWorkbookView *wb;
+    QWorksheetView *ws;
+
+    // remove old connections
+    if (pView) {
+        wb = qobject_cast<QWorkbookView*>(pView);
+        ws = qobject_cast<QWorksheetView*>(pView);
+
+        if (wb) {
+            q->disconnect(wb, SIGNAL(selectionChanged(FormatStatus*)),
+                       q, SLOT(selectionChanged(FormatStatus*)));
+            q->disconnect(q, SIGNAL(alignmentChanged(Qt::Alignment)),
+                       wb, SLOT(setSelectionAlignment(Qt::Alignment)));
+        } else if (ws) {
+            q->disconnect(ws, SIGNAL(selectionChanged(FormatStatus*)),
+                       q, SLOT(selectionChanged(FormatStatus*)));
+            q->disconnect(q, SIGNAL(alignmentChanged(Qt::Alignment)),
+                       ws, SLOT(setSelectionAlignment(Qt::Alignment)));
+        }
+    }
+
+    // make new ones.
+    wb = qobject_cast<QWorkbookView*>(view);
+    ws = qobject_cast<QWorksheetView*>(view);
+    if (wb) {
+        q->connect(wb, SIGNAL(selectionChanged(FormatStatus*)),
+                   q, SLOT(selectionChanged(FormatStatus*)));
+        q->connect(q, SIGNAL(alignmentChanged(Qt::Alignment)),
+                   wb, SLOT(setSelectionAlignment(Qt::Alignment)));
+    } else if (ws) {
+        q->connect(ws, SIGNAL(selectionChanged(FormatStatus*)),
+                   q, SLOT(selectionChanged(FormatStatus*)));
+        q->connect(q, SIGNAL(alignmentChanged(Qt::Alignment)),
+                   ws, SLOT(setSelectionAlignment(Qt::Alignment)));
+    }
+
+    pView = view;
+
+}
+
+void QWorkbookVerticalAlignToolBarPrivate::selectionChanged(FormatStatus* status) {
+    if (!status) return;
+
+    // sets changes in buttons
+    setAlign(status->bAllSameAlignment, status->mAlignment);
+}
+
+void QWorkbookVerticalAlignToolBarPrivate::alignHasClicked() {
+
+    if (pTopBtn->isChecked())
+        setVerticalAlign(Qt::AlignTop);
+    else if (pVCentreBtn->isChecked())
+        setVerticalAlign(Qt::AlignVCenter);
+    else if (pBottomBtn->isChecked())
+        setVerticalAlign(Qt::AlignBottom);
+
+    Q_Q(QWorkbookVerticalAlignToolBar);
+    emit q->alignmentChanged(alignment());
+}
+
+void QWorkbookVerticalAlignToolBarPrivate::setAlign(bool set, Qt::Alignment alignment) {
+    if (set) {
+        if (alignment.testFlag(Qt::AlignTop))
+            pTopBtn->setChecked(true);
+        else
+            pTopBtn->setChecked(false);
+
+        if (alignment.testFlag(Qt::AlignVCenter))
+            pVCentreBtn->setChecked(true);
+        else
+            pVCentreBtn->setChecked(false);
+
+        if (alignment.testFlag(Qt::AlignBottom))
+            pBottomBtn->setChecked(true);
+        else
+            pBottomBtn->setChecked(false);
+    }
+}
+
+}
+

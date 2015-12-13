@@ -29,7 +29,10 @@
 #include "workbook_global.h"
 #include "qworkbookfonttoolbar_p.h"
 
+namespace QWorkbook {
+
 class QWorkbookView;
+class QWorksheetView;
 class FormatStatus;
 
 class WORKBOOKSHARED_EXPORT QWorkbookFontToolBar : public QToolBar {
@@ -38,7 +41,7 @@ class WORKBOOKSHARED_EXPORT QWorkbookFontToolBar : public QToolBar {
 public:
     QWorkbookFontToolBar(QWidget *parent);
     QWorkbookFontToolBar(QString title, QWidget *parent);
-    virtual ~QWorkbookFontToolBar();
+    virtual ~QWorkbookFontToolBar() {}
 
 signals:
     void bold(bool);
@@ -50,6 +53,7 @@ public slots:
     void setFont(QFont);
     void setFont(bool, QFont, int);
     void setWorkbookView(QWorkbookView *);
+    void setWorksheetView(QWorksheetView *);
     void selectionChanged(FormatStatus*);
 
 protected slots:
@@ -68,4 +72,8 @@ protected:
 private:
 
 };
+
+
+}
+
 #endif // WORKBOOKFONTTOOLBAR_H

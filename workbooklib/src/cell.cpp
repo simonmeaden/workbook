@@ -23,8 +23,9 @@
 #include "cellreference.h"
 #include "format.h"
 
-#include "xlsxcell.h"
-#include "xlsxworksheet.h"
+#include "workbook_global.h"
+
+namespace QWorkbook {
 
 Cell::Cell() :
     d_ptr(new CellPrivate(this)) {
@@ -37,6 +38,15 @@ Cell::Cell(QObject *parent) :
 
 }
 
+Cell::Cell(QModelIndex &index, QObject *parent) :
+    QObject(parent),
+    d_ptr(new CellPrivate(this)) {
+
+    Q_D(Cell);
+    d->mRow = index.row();
+    d->mColumn = index.column();
+}
+
 Cell::Cell(int row, int column, QObject *parent) :
     QObject(parent),
     d_ptr(new CellPrivate(this)) {
@@ -46,7 +56,17 @@ Cell::Cell(int row, int column, QObject *parent) :
     d->mColumn = column;
 }
 
-Cell::Cell(int row, int column, const QVariant &value, QObject *parent) :
+Cell::Cell(QModelIndex &index, QVariant value, QObject *parent) :
+    QObject(parent),
+    d_ptr(new CellPrivate(this)) {
+
+    Q_D(Cell);
+    d->mRow = index.row();
+    d->mColumn = index.column();
+    d->mValue = value;
+}
+
+Cell::Cell(int row, int column, QVariant value, QObject *parent) :
     QObject(parent),
     d_ptr(new CellPrivate(this)) {
 
@@ -65,7 +85,7 @@ Cell::Cell(CellReference reference, QObject *parent) :
     d->mColumn = reference.column();
 }
 
-Cell::Cell(CellReference reference, QVariant &value, QObject *parent) :
+Cell::Cell(CellReference reference, QVariant value, QObject *parent) :
     QObject(parent),
     d_ptr(new CellPrivate(this)) {
 
@@ -73,14 +93,6 @@ Cell::Cell(CellReference reference, QVariant &value, QObject *parent) :
     d->mRow = reference.row();
     d->mColumn = reference.column();
     d->mValue = value;
-}
-
-Cell::~Cell() {
-
-}
-
-CellType Cell::type() {
-    return d_ptr->type();
 }
 
 QString Cell::name() {
@@ -132,11 +144,13 @@ void Cell::setPosition(CellReference &reference) {
     d->mColumn = reference.column();
 }
 
-void Cell::setValue(const QVariant &value) {
+void Cell::setValue(const QVariant value) {
     Q_D(Cell);
     d->mValue = value;
 }
 
 QVariant Cell::value() const {
     return d_ptr->value();
+}
+
 }

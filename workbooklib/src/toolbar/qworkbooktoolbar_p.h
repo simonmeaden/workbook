@@ -26,55 +26,60 @@
 #include <QString>
 
 #include "types.h"
-//#include "qworkbookfonttoolbar.h"
-#include "qworkbookfonteffectstoolbar.h"
-#include "qworkbookaligntoolbar.h"
-#include "qworkbookmergetoolbar.h"
-#include "qworkbookindenttoolbar.h"
+
+#include "workbook_global.h"
+
+namespace QWorkbook {
 
 class QWorkbookToolBar;
 class QWorkbookFontToolBar;
+class QWorkbookFontEffectsToolBar;
+class QWorkbookIndentToolBar;
+class QWorkbookAlignToolBar;
+class QWorkbookVerticalAlignToolBar;
+class QWorkbookMergeToolbar;
 class QWorkbookView;
+class QWorksheetView;
 
 class QWorkbookToolBarPrivate {
     Q_DECLARE_PUBLIC(QWorkbookToolBar)
 public:
     QWorkbookToolBarPrivate(QWorkbookToolBar *parent);
+    virtual ~QWorkbookToolBarPrivate() {}
 
     void selectionChanged(FormatStatus*);
-    void setWorkbookView(QWorkbookView *);
+    void setView(QObject *);
 
     void showFontBar(bool);
     void showFontEffectsBar(bool);
-    void showIndentBar(bool);
+//    void showIndentBar(bool);
     void showAlignBar(bool);
+    void showMergeBar(bool);
 
-    void setBold(bool);
-    void setItalic(bool);
-    void setUnderline(bool);
-    void setFont(QFont);
-    void setAlign(Qt::Alignment);
 
     void showContextMenu(const QPoint&);
 
 protected:
     QWorkbookFontToolBar *pFontBar;
     QWorkbookFontEffectsToolBar *pFontEffectsBar;
-    QWorkbookIndentToolBar *pIndentBar;
+//    QWorkbookIndentToolBar *pIndentBar;
     QWorkbookAlignToolBar *pAlignBar;
+    QWorkbookVerticalAlignToolBar *pVAlignBar;
     QWorkbookMergeToolbar *pMergeBar;
-    QWorkbookView *pView;
 
     QMenu *pPopupMenu;
     QMenu *pToolbarMenu;
 
     QAction *pFontVisibleAction, *pFontEffectsVisibleAction, *pIndentVisibleAction, *pAlignVisibleAction;
-    QAction *pMergeVisibleAction;
+    QAction *pMergeVisibleAction, *pVAlignVisibleAction;
 
     void init();
 
     QWorkbookToolBar *q_ptr;
 
 };
+
+
+}
 
 #endif // QWORKBOOKTOOLBARPRIVATE_H

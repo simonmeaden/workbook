@@ -25,14 +25,14 @@
 #include "worksheetmodel.h"
 #include "qworksheetview.h"
 
+#include "workbook_global.h"
+
+namespace QWorkbook {
+
 FormatDelegate::FormatDelegate(QWorksheetView *parent) :
     QStyledItemDelegate(parent),
     pView(parent),
     d_ptr(new FormatDelegatePrivate(this)) {
-
-}
-
-FormatDelegate::~FormatDelegate() {
 
 }
 
@@ -55,3 +55,6 @@ QWidget* FormatDelegate::createEditor(QWidget *parent,
     return d_ptr->createEditor(parent, option, index);
 
 }
+
+}
+

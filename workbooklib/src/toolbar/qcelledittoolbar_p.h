@@ -5,6 +5,10 @@
 #include <QPlainTextEdit>
 #include <QToolButton>
 
+#include "workbook_global.h"
+
+namespace QWorkbook {
+
 class QCellEditToolBar;
 class QWorkbookView;
 class FormatStatus;
@@ -15,24 +19,27 @@ public:
     QCellEditToolBarPrivate(QCellEditToolBar *q);
     virtual ~QCellEditToolBarPrivate() {}
 
-    void setWorkbookView(QWorkbookView *);
+    void setView(QObject *);
     void setText(QString);
     void setValueWithoutSignal(QVariant);
     void setTextWithoutSignal(QString);
 
 protected:
     QLineEdit *pCellEdit;
-    QPlainTextEdit *pDropDownEdit;
-    QToolButton *pDropBtn;
+//    QPlainTextEdit *pDropDownEdit;
+//    QToolButton *pDropBtn;
     QWidget *pEditor;
     QCellEditToolBar *q_ptr;
     QString mOldText;
-    QWorkbookView *pView;
+    QObject *pView;
 
     void init();
-    void setCellEditorValue(QObject*);
-    void drop();
+//    void setCellEditorValue(QObject*);
+//    void drop();
 
 };
+
+
+}
 
 #endif // QCELLEDITTOOLBARPRIVATE_H

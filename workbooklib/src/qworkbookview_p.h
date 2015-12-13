@@ -28,23 +28,31 @@
 #include <QGridLayout>
 #include <QDialog>
 #include <QPushButton>
+#include <QRadioButton>
 #include <QCheckBox>
 #include <QLabel>
 #include <QSpinBox>
 #include <QButtonGroup>
 #include <QLineEdit>
+#include <QListWidget>
 #include <QVariant>
 #include <QDateTime>
 #include <QItemSelectionModel>
+#include <QInputDialog>
+#include <QDialog>
 
+#include "workbook_global.h"
 #include "cellreference.h"
 #include "range.h"
 #include "types.h"
+#include "workbookparser.h"
+
+
+namespace QWorkbook {
 
 class QWorkbookView;
 class QWorksheetView;
 class Workbook;
-class Worksheet;
 class WorkbookInsertSheetDialog;
 class WorksheetModel;
 class Format;
@@ -53,33 +61,70 @@ class WorkbookParser;
 class QWorkbookToolBar;
 class QCellEditToolBar;
 
+
 class QWorkbookViewPrivate {
 
 public:
     QWorkbookViewPrivate(QWorkbookView *parent);
-    ~QWorkbookViewPrivate();
+    virtual ~QWorkbookViewPrivate();
 
     // document properties
     QString sTitle, sSubject, sDescription, sKeywords, sComments, sCreator, sCompany, sCategory;
     QDateTime mCreated;
-    QString title() { return sTitle; }
-    void setTitle(QString title) { sTitle = title; }
-    QString subject() { return sSubject; }
-    void setSubject(QString subject) { sSubject = subject; }
-    QString description() { return sDescription; }
-    void setDescription(QString description) { sDescription = description; }
-    QString keywords() { return sKeywords; }
-    void setKeywords(QString keywords) { sKeywords = keywords; }
-    QString comments() { return sComments; }
-    void setComments(QString comments) { sComments = comments; }
-    QString category() { return sCategory; }
-    void setCategory(QString category) { sCategory = category; }
-    QString creator() { return sCreator; }
-    void setCreator(QString creator) { sCreator = creator; }
-    QString company() { return sCompany; }
-    void setCompany(QString company) { sCompany = company; }
-    QDateTime created() { return mCreated; }
-    void setCreated(QDateTime created) { mCreated = created; }
+    QString title() {
+        return sTitle;
+    }
+    void setTitle(QString title) {
+        sTitle = title;
+    }
+    QString subject() {
+        return sSubject;
+    }
+    void setSubject(QString subject) {
+        sSubject = subject;
+    }
+    QString description() {
+        return sDescription;
+    }
+    void setDescription(QString description) {
+        sDescription = description;
+    }
+    QString keywords() {
+        return sKeywords;
+    }
+    void setKeywords(QString keywords) {
+        sKeywords = keywords;
+    }
+    QString comments() {
+        return sComments;
+    }
+    void setComments(QString comments) {
+        sComments = comments;
+    }
+    QString category() {
+        return sCategory;
+    }
+    void setCategory(QString category) {
+        sCategory = category;
+    }
+    QString creator() {
+        return sCreator;
+    }
+    void setCreator(QString creator) {
+        sCreator = creator;
+    }
+    QString company() {
+        return sCompany;
+    }
+    void setCompany(QString company) {
+        sCompany = company;
+    }
+    QDateTime created() {
+        return mCreated;
+    }
+    void setCreated(QDateTime created) {
+        mCreated = created;
+    }
 
     void createActions();
     QWorkbookToolBar* toolBar();
@@ -165,56 +210,57 @@ public:
     void unlockRange(QString name, Range &range);
     void unlockSheet(QString name);
 
-    int indexOf(Worksheet*);
+    int indexOf(QWorksheetView *);
     QWorksheetView *addWorksheet();
     QWorksheetView *addWorksheet(QString name);
     QWorksheetView *insertWorksheet(int position);
     QWorksheetView* insertWorksheet(int position, QString name);
     QWorksheetView *initWorksheet();
     void removeWorksheet(int position);
-    void removeWorksheet(Worksheet *sheet);
+    void removeWorksheet(QWorksheetView *sheet);
     void removeWorksheet(QString name);
 
     QWorksheetView* currentWorksheetView();
-    Worksheet* currentWorksheet();
-    void setCurrentWorksheet(int index);
-    void setCurrentWorksheet(QString name);
+    void setCurrentWorksheetView(int index);
+    void setCurrentWorksheetView(QString name);
 
-    void saveWorkbook(QString filename);
     void saveWorkbook(QString filename, WorksheetType type);
 
-    QWorksheetView* worksheetview(int index);
-    QWorksheetView* worksheetview(QString name);
+    QWorksheetView* worksheetView(int index);
+    QWorksheetView* worksheetView(QString name);
 
     void renameSheet(QString oldname, QString newname);
     void setTabText(int index, QString text);
 
-    Workbook* book() {return pBook; }
+    Workbook* book() {
+        return pBook;
+    }
     void setWorkbook(Workbook *book);
 
-//    void closeEditor(QWidget* editor, QAbstractItemDelegate::EndEditHint hint);
-//    void keyPressEvent(QKeyEvent* event);
-
     // popup menu for tabs
-    QAction *pInsertSheetAction, *pRenameSheetAction, *pMoveCopySheetAction;
-    QAction *pProtectSheetAction, *pTabColorAction;
-    bool bEnableContextMenu, pEnableTabMenu;
+    QAction *pInsertSheetBeforeAction, *pInsertSheetAfterAction, *pRenameSheetAction, *pMoveCopySheetAction;
+    QAction *pProtectSheetAction, *pTabColorAction, *pDeleteSheetAction;
+    bool bEnableContextMenu, bEnableTabMenu;
     int mCurrentIndex;
-    QWorksheetView *pCurrentView;
 
-    void enablePopup();
-    void insertSheet();
+    void enableMovableTabs(bool);
+    void enableContextMenu(bool);
+    void enableTabMenu(bool);
+
+    void enableTabPopup();
+    void insertSheetBefore();
+    void insertSheetAfter();
+    void deleteSheet();
     void renameSheet();
     void moveCopySheet();
     void protectSheet();
     void tabColor();
     void showContextMenu(const QPoint &point);
-    void enableContextMenu(bool);
-    void enableTabMenu(bool);
 
     // toolbar methods
     void changeCellContents(QString text);
     void triggerInitialSelection();
+    void triggerCurrentSelection();
     void alignmentHasChanged(Qt::Alignment);
     void setSelectionBold(bool);
     void setSelectionItalic(bool);
@@ -222,21 +268,32 @@ public:
     void setSelectionFont(QFont);
     void setSelectionFontSize(int);
     void setSelectionAlignment(Qt::Alignment);
-    void setSelectionMerge(bool);
+    void setSelectionMerge();
     void setFont(QFont);
     void indentCells();
     void undentCells();
 
+
+
+    QWorkbookView *pView;
+    QStringList names();
+
 protected:
     QTabBar *pTabBar;
-    WorkbookParser *pParser;
-    PluginStore *pPluginStore;
+    PWorkbookParser pParser;
+    QSharedPointer<PluginStore> pPluginStore;
+    int mTabIndex;
     static quint8 sheetNumber;
 
 private:
     Workbook *pBook;
     QWorkbookView *q_ptr;
     Q_DECLARE_PUBLIC(QWorkbookView)
+
+    friend class MoveCopyDialog;
 };
+
+
+}
 
 #endif // WORKBOOKVIEWPRIVATE_H

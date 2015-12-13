@@ -22,20 +22,30 @@
 #include "qworkbookview_p.h"
 #include "toolbar/qworkbooktoolbar.h"
 #include "workbook.h"
-#include "worksheet.h"
 #include "qworksheetview.h"
 #include "workbookparser.h"
 #include "cell.h"
+#include "types.h"
+
+#include "workbook_global.h"
+
+namespace QWorkbook {
 
 QWorkbookView::QWorkbookView(QWidget *parent) :
     QTabWidget(parent),
     d_ptr(new QWorkbookViewPrivate(this)) {
 
+    int type = QMetaType::type("WorkbookParser");
+    if (type == QMetaType::UnknownType)
+        qRegisterMetaType<WorkbookParser>("WorkbookParser");
+
+    // needs to be here rather than in the private class
+    // because it calls a q_ptr that is not fully created
+    // until after the private class constructor is completed.
+    d_ptr->addWorksheet();
+
 }
 
-QWorkbookView::~QWorkbookView() {
-
-}
 
 QWorkbookToolBar* QWorkbookView::toolBar() {
     // TODO function toolbar
@@ -473,6 +483,10 @@ void QWorkbookView::triggerInitialSelection() {
     d_ptr->triggerInitialSelection();
 }
 
+void QWorkbookView::triggerCurrentSelection() {
+    d_ptr->triggerCurrentSelection();
+}
+
 void QWorkbookView::setSelectedFormat(Format *format) {
     d_ptr->setSelectedFormat(format);
 }
@@ -505,8 +519,8 @@ void QWorkbookView::setSelectionAlignment(Qt::Alignment alignment) {
     d_ptr->setSelectionAlignment(alignment);
 }
 
-void QWorkbookView::setSelectionMerge(bool merge) {
-    d_ptr->setSelectionMerge(merge);
+void QWorkbookView::setSelectionMerge(/*bool merge*/) {
+    d_ptr->setSelectionMerge(/*merge*/);
 }
 
 void QWorkbookView::setSelectedFormat(int index, Format *format) {
@@ -529,8 +543,28 @@ QMap<QModelIndex, Format*> QWorkbookView::selectedFormats(QString name) {
     return d_ptr->selectedFormats(name);
 }
 
-void QWorkbookView::insertSheet() {
-    d_ptr->insertSheet();
+void QWorkbookView::enableMovableTabs(bool enable) {
+    d_ptr->enableMovableTabs(enable);
+}
+
+void QWorkbookView::enableTabMenu(bool enable) {
+    d_ptr->enableTabMenu(enable);
+}
+
+void QWorkbookView::enableContextMenu(bool enable) {
+    d_ptr->enableContextMenu(enable);
+}
+
+void QWorkbookView::insertSheetBefore() {
+    d_ptr->insertSheetBefore();
+}
+
+void QWorkbookView::insertSheetAfter() {
+    d_ptr->insertSheetAfter();
+}
+
+void QWorkbookView::deleteSheet() {
+    d_ptr->deleteSheet();
 }
 
 void QWorkbookView::renameSheet() {
@@ -549,23 +583,23 @@ void QWorkbookView::tabColor() {
     d_ptr->tabColor();
 }
 
+QStringList QWorkbookView::names() {
+    return d_ptr->names();
+}
+
 void QWorkbookView::showContextMenu(const QPoint &point) {
     d_ptr->showContextMenu(point);
 }
 
 void QWorkbookView::saveWorkbook(QString filename) {
-    d_ptr->saveWorkbook(filename);
+    d_ptr->saveWorkbook(filename, ODS);
 }
 
 void QWorkbookView::saveWorkbook(QString filename, WorksheetType type) {
     d_ptr->saveWorkbook(filename, type);
 }
 
-void QWorkbookView::setWorkbook(Workbook *book) {
-    d_ptr->setWorkbook(book);
-}
-
-int QWorkbookView::indexOf(Worksheet *sheet) {
+int QWorkbookView::indexOf(QWorksheetView *sheet) {
     return d_ptr->indexOf(sheet);
 }
 
@@ -573,16 +607,12 @@ QWorksheetView* QWorkbookView::currentWorksheetView() {
     return d_ptr->currentWorksheetView();
 }
 
-Worksheet* QWorkbookView::currentWorksheet() {
-    return d_ptr->currentWorksheet();
+void QWorkbookView::setCurrentWorksheetView(int index) {
+    d_ptr->setCurrentWorksheetView(index);
 }
 
-void QWorkbookView::setCurrentWorksheet(int index) {
-    d_ptr->setCurrentWorksheet(index);
-}
-
-void QWorkbookView::setCurrentWorksheet(QString name) {
-    d_ptr->setCurrentWorksheet(name);
+void QWorkbookView::setCurrentWorksheetView(QString name) {
+    d_ptr->setCurrentWorksheetView(name);
 }
 
 QWorksheetView* QWorkbookView::addWorksheet() {
@@ -625,7 +655,7 @@ void QWorkbookView::removeWorksheet(int index) {
     d_ptr->removeWorksheet(index);
 }
 
-void QWorkbookView::removeWorksheet(Worksheet *sheet) {
+void QWorkbookView::removeWorksheet(QWorksheetView *sheet) {
     d_ptr->removeWorksheet(sheet);
 }
 
@@ -657,3 +687,6 @@ QWidget* QWorkbookView::currentWidget() const {
 QWidget* QWorkbookView::widget(int index) const {
     return QTabWidget::widget(index);
 }
+
+}
+

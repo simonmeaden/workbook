@@ -24,29 +24,105 @@
 #include <QPushButton>
 #include <QButtonGroup>
 
+#include "workbook_global.h"
+
+namespace QWorkbook {
 
 class QWorkbookAlignToolBar;
 class QWorkbookView;
 class FormatStatus;
+class QWorkbookAlignToolBar;
+class QWorkbookVerticalAlignToolBar;
 
-class QWorkbookAlignToolBarPrivate {
+struct AlignStatus {
+
+    AlignStatus() {
+        mVAalign = Qt::AlignVCenter;
+        mHAlign = Qt::AlignLeft;
+        mAlign = mVAalign | mHAlign;
+    }
+    virtual ~AlignStatus() {}
+
+
+    Qt::Alignment mVAalign;
+    Qt::Alignment mHAlign;
+    Qt::Alignment mAlign;
+
+};
+
+class AlignToolBarHelper {
+public:
+    AlignToolBarHelper() {    }
+    virtual ~AlignToolBarHelper() {}
+
+    void setVerticalAlign(Qt::Alignment align) {
+
+        mStatus.mVAalign = align;
+
+        mStatus.mAlign = mStatus.mHAlign | mStatus.mVAalign;
+
+    }
+
+    void setHorizontalAlign(Qt::Alignment align) {
+
+        mStatus.mHAlign = align;
+
+        mStatus.mAlign = mStatus.mHAlign | mStatus.mVAalign;
+
+    }
+
+    Qt::Alignment alignment() { return mStatus.mAlign; }
+
+protected:
+    static AlignStatus mStatus;
+
+};
+
+
+class QWorkbookAlignToolBarPrivate : public AlignToolBarHelper {
     Q_DECLARE_PUBLIC(QWorkbookAlignToolBar)
 public:
     QWorkbookAlignToolBarPrivate(QWorkbookAlignToolBar *q);
     virtual ~QWorkbookAlignToolBarPrivate() {}
 
     void setAlign(bool, Qt::Alignment);
-    void setWorkbookView(QWorkbookView *);
+    void setView(QObject *);
     void selectionChanged(FormatStatus*);
 
 protected:
     QPushButton *pLeftBtn, *pHCentreBtn, *pRightBtn;
     QButtonGroup *pButtonGroup;
     QWorkbookAlignToolBar *q_ptr;
+    QObject *pView;
 
     void init();
     void alignHasClicked();
 
 };
+
+class QWorkbookVerticalAlignToolBarPrivate : public AlignToolBarHelper {
+    Q_DECLARE_PUBLIC(QWorkbookVerticalAlignToolBar)
+public:
+    QWorkbookVerticalAlignToolBarPrivate(QWorkbookVerticalAlignToolBar *q);
+    virtual ~QWorkbookVerticalAlignToolBarPrivate() {}
+
+    void setAlign(bool, Qt::Alignment);
+    void setView(QObject *);
+    void selectionChanged(FormatStatus*);
+
+protected:
+    QPushButton *pTopBtn, *pVCentreBtn, *pBottomBtn;
+    QButtonGroup *pButtonGroup;
+    QWorkbookVerticalAlignToolBar *q_ptr;
+    QObject *pView;
+
+    void init();
+    void alignHasClicked();
+
+};
+
+
+
+}
 
 #endif // QWORKBOOKALIGNTOOLBARPRIVATE_H

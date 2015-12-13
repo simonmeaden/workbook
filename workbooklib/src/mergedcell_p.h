@@ -28,6 +28,10 @@
 #include "cell.h"
 #include "cell_p.h"
 
+#include "workbook_global.h"
+
+namespace QWorkbook {
+
 class MergedCell;
 
 class MergedCellPrivate : public CellPrivate {
@@ -38,6 +42,8 @@ public:
         FirstCellData,
         NotMerged,
     };
+
+    virtual ~MergedCellPrivate() {}
 
     QList<Cell*> overwritten() {
         return mOverwritten;
@@ -55,9 +61,12 @@ public:
     QList<Cell*> mOverwritten;
     MergeType mMergedData;
 
-protected:
-//    MergedCell *q_ptr;
+    int mRowSpan, mColSpan;
+
 
 };
+
+
+}
 
 #endif // MERGEDCELLPRIVATE_H

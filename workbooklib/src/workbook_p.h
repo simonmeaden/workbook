@@ -28,54 +28,73 @@
 
 #include "types.h"
 #include "pluginstore.h"
+#include "workbookparser.h"
+
+#include "workbook_global.h"
+
+namespace QWorkbook {
 
 class Workbook;
-class Worksheet;
+class QWorkbookView;
 class QWorkbookToolBar;
+class QWorksheetView;
+class WorkbookParser;
 
 class WorkbookPrivate {
 public:
-    WorkbookPrivate(Workbook *parent);
-    ~WorkbookPrivate();
+    WorkbookPrivate(PWorkbookParser parser,
+                    QWorkbookView *bookView,
+                    Workbook *parent);
+    virtual ~WorkbookPrivate() {}
 
-    Worksheet* worksheet(int index);
-    Worksheet* worksheet(QString name);
-    Worksheet* currentWorksheet();
-    void setCurrentWorksheet(int index);
-    void setCurrentWorksheet(QString name);
-    Worksheet *addWorksheet();
-    Worksheet* insertWorksheet(int index);
-    int indexOf(Worksheet*);
-    inline int count() { return mSheets.size(); }
+    QWorksheetView* worksheetView(int index);
+    QWorksheetView* worksheetView(QString name);
+    QWorksheetView* currentWorksheetView();
+    void setCurrentWorksheetView(int index);
+    void setCurrentWorksheetView(QString name);
+    QWorksheetView *addWorksheet();
+    QWorksheetView *insertWorksheet(int index, QWorksheetView *view);
+    QWorksheetView* insertNewWorksheet(int index);
+    int indexOf(QWorksheetView *);
+    int size() { return mSheets.size(); }
 
     int removeWorksheet(int index);
     int removeWorksheet(QString name);
-    int removeWorksheet(Worksheet *sheet);
-    int renameSheet(QString oldname, QString newname);
+    int removeWorksheet(QWorksheetView *sheet);
 
-    void saveWorkbook(QString filename);
+    int renameSheet(QString oldname, QString newname);
+    void moveSheet(int oldIndex, int newIndex);
+
     void saveWorkbook(QString filename, WorksheetType type);
     void saveOds(QString filename);
+    void saveCSV(QString filename);
+    void saveDif(QString filename);
     void saveXls(QString filename);
     void saveXlsx(QString filename);
     void loadWorkbook(QString filename);
 
     void setToolbar(QWorkbookToolBar *pToolbar);
 
+    QStringList names();
+
 protected:
     void renameSheets(int index);
     bool areNumbers(QString str);
     bool isRealName(QString str);
 
-    QList<Worksheet*> mSheets;
-    QMap<QString, Worksheet*> mNames;
-    QMap<Worksheet*, bool> mRealnames;
-    Worksheet* pCurrentWorksheet;
+    QWorkbookView *pBookView;
+    QList<QWorksheetView*> mSheets;
+    QMap<QString, QWorksheetView*> mNames;
+    QMap<QWorksheetView*, bool> mRealnames;
+    QWorksheetView* pCurrentWorksheet;
     QWorkbookToolBar *pToolbar;
-    PluginStore *pPluginStore;
+    const PWorkbookParser pParser;
 
     Workbook* q_ptr;
     Q_DECLARE_PUBLIC(Workbook)
 };
+
+
+}
 
 #endif // WORKBOOKPRIVATE_H

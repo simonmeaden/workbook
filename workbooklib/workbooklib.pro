@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT += core gui widgets
+QT += core gui widgets xlsx
 
 TEMPLATE = lib
 
@@ -48,12 +48,12 @@ CONFIG(release, debug|release) {
 
 INCLUDEPATH += $$PWD/src
 INCLUDEPATH += $$PWD/../include
-INCLUDEPATH += $$PWD/../plugin/include
+INCLUDEPATH += $$PWD/../../QOds/
 
-include($$PWD/../../simonsoft/extendedtabwidget.pri)
-include($$PWD/../../simonsoft/qstd.pri)
-include($$PWD/../../simonsoft/qquad.pri)
-include($$PWD/../../QtXlsxWriter/src/xlsx/qtxlsx.pri)
+#include($$PWD/../../simonsoft/extendedtabwidget.pri)
+#include($$PWD/../../simonsoft/qstd.pri)
+#include($$PWD/../../simonsoft/qquad.pri)
+#include($$PWD/../../QtXlsxWriter/src/xlsx/qtxlsx.pri)
 
 SOURCES += \
     src/workbook.cpp \
@@ -63,8 +63,6 @@ SOURCES += \
     src/cellreference.cpp \
     src/cellreference_p.cpp \
     src/range.cpp \
-    src/worksheet.cpp \
-    src/worksheet_p.cpp \
     src/range_p.cpp \
     src/formatdelegate.cpp \
     src/format.cpp \
@@ -97,7 +95,8 @@ SOURCES += \
     src/toolbar/qworkbookindenttoolbar_p.cpp \
     src/toolbar/qworkbookmergetoolbar_p.cpp \
     src/toolbar/qcelledittoolbar.cpp \
-    src/toolbar/qcelledittoolbar_p.cpp
+    src/toolbar/qcelledittoolbar_p.cpp \
+    src/movecopydialog.cpp
 
 HEADERS += \
     src/workbook.h\
@@ -108,8 +107,6 @@ HEADERS += \
     src/cellreference_p.h \
     src/range.h \
     src/range_p.h \
-    src/worksheet.h \
-    src/worksheet_p.h \
     src/formatdelegate.h \
     src/format.h \
     src/format_p.h \
@@ -145,20 +142,29 @@ HEADERS += \
     src/toolbar/qworkbookindenttoolbar_p.h \
     src/toolbar/qworkbookmergetoolbar_p.h \
     src/toolbar/qcelledittoolbar.h \
-    src/toolbar/qcelledittoolbar_p.h
+    src/toolbar/qcelledittoolbar_p.h \
+    src/regex.h \
+    src/movecopydialog.h \
+    src/parser.h
 
 RESOURCES += \
     $$PWD/src/workbook.qrc
 
 
-#unix|win32: LIBS += -L$$PWD/../lib/ -lzlib
-#unix|win32: LIBS += -L$$PWD/../lib/ -lquazip
-#unix|win32: LIBS += -L$$PWD/../lib/ -lods
+unix|win32: LIBS += -L$$PWD/../lib/ -lzlib
+unix|win32: LIBS += -L$$PWD/../lib/ -lquazip
+unix|win32: LIBS += -L$$PWD/../lib/ -lods
 
-#INCLUDEPATH += $$PWD/../../QOds/ods
-#INCLUDEPATH += $$PWD/../../QOds/ods
-#INCLUDEPATH += $$PWD/../../QOds/ods
+INCLUDEPATH += $$PWD/../../QOds/ods
+INCLUDEPATH += $$PWD/../../QOds/ods
+INCLUDEPATH += $$PWD/../../QOds/ods
 
-#DEPENDPATH += $$PWD/../../QOds/ods
-#DEPENDPATH += $$PWD/../../QOds/ods
-#DEPENDPATH += $$PWD/../../QOds/ods
+DEPENDPATH += $$PWD/../../QOds/ods
+DEPENDPATH += $$PWD/../../QOds/ods
+DEPENDPATH += $$PWD/../../QOds/ods
+
+# Installation shit.
+#documentation.path = /usr/local/program/doc
+#documentation.files = docs/*
+
+#INSTALLS += documentation

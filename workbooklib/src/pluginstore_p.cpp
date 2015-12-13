@@ -21,11 +21,15 @@
 #include "pluginstore_p.h"
 #include "pluginstore.h"
 
-bool PluginStorePrivate::pluginsAreLoaded = false;
+#include "workbook_global.h"
+
+namespace QWorkbook {
 
 PluginStorePrivate::PluginStorePrivate(PluginStore *parent) :
     q_ptr(parent) {
+
     loadPlugins();
+
 }
 
 IOperator* PluginStorePrivate::getOperator(QString name) {
@@ -34,7 +38,7 @@ IOperator* PluginStorePrivate::getOperator(QString name) {
     return NULL;
 }
 
-IFunction* PluginStorePrivate::getFunction(QString name){
+IFunction* PluginStorePrivate::getFunction(QString name) {
     if (mFunctions.contains(name))
         return mFunctions.value(name);
     return NULL;
@@ -52,22 +56,34 @@ bool PluginStorePrivate::isEmpty() {
 
 void PluginStorePrivate::addOperator(IOperator* interface) {
     mOperators.insert(interface->name(), interface);
+    mOperatorNames.append(interface->name());
 }
 
 void PluginStorePrivate::addFunction(IFunction* interface) {
     mFunctions.insert(interface->name(), interface);
+    mFunctionNames.append(interface->name());
 }
 
 void PluginStorePrivate::addConstant(IConstant* interface) {
     mConstants.insert(interface->name(), interface);
+    mConstantNames.append(interface->name());
+}
+
+QStringList PluginStorePrivate::functionNames() {
+    return mFunctionNames;
+}
+
+QStringList PluginStorePrivate::operatorNames() {
+    return mOperatorNames;
+}
+
+QStringList PluginStorePrivate::constantNames() {
+    return mConstantNames;
 }
 
 void PluginStorePrivate::loadPlugins() {
 
-    // only need to be loaded once.
-    if (pluginsAreLoaded) return;
-
-    QDir pluginsDir = QDir(qApp->applicationDirPath());
+    QDir pluginsDir = QDir(qApp->applicationDirPath() + "/plugins");
 
     pluginsDir.cd("plugins");
 
@@ -79,7 +95,7 @@ void PluginStorePrivate::loadPlugins() {
             IOperator *opInterface = qobject_cast<IOperator*>(plugin);
             if (opInterface) {
                 addOperator(opInterface);
-//                cout << "Plugin file " << opInterface->name() << " is valid." << endl;
+//                qDebug() << "Plugin file " << opInterface->name() << " is valid.";
                 // now the plugin can be initialized and used
             }
 
@@ -87,18 +103,20 @@ void PluginStorePrivate::loadPlugins() {
             if (conInterface) {
                 // now the plugin can be initialized and used
                 addConstant(conInterface);
-//                cout << "Plugin file " << conInterface->name() << " is valid." << endl;
+//                qDebug() << "Plugin file " << conInterface->name() << " is valid.";
             }
 
             IFunction *func = qobject_cast<IFunction*>(plugin);
             if (func) {
                 // now the plugin can be initialized and used
                 addFunction(func);
-//                cout << "Plugin file " << func->name() << " is valid." << endl;
+//                qDebug() << "Plugin file " << func->name() << " is valid.";
             }
 
         }
     }
 
-    pluginsAreLoaded = true;
 }
+
+} // end namespace QWorkbook
+

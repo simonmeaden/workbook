@@ -45,10 +45,18 @@
 
 #include <QObject>
 #include <QList>
+#include <QString>
+#include <QStringList>
+#include <QVariant>
 
-class QString;
-class QStringList;
-class QVariant;
+#include "workbook_global.h"
+
+#define IBase_iid     "uk.co.smelecomp.Plugin.IBase"
+#define IConstant_iid "uk.co.smelecomp.Plugin.IConstant"
+#define IOperator_iid "uk.co.smelecomp.Plugin.IOperator"
+#define IFunction_iid "uk.co.smelecomp.Plugin.IFunction"
+
+namespace QWorkbook {
 
 class IBase {
 public:
@@ -73,28 +81,78 @@ protected:
 };
 
 template<class TI>
-class OperatorInterface : public IOperator {
+class OperatorBase : public IOperator {
 public:
 
-    virtual QVariant calculate(TI left, TI right) = 0;
+    virtual TI calculate(TI left, TI right) = 0;
+
+    QString name() {
+        return sName;
+    }
+
+    int level() {
+        return mLevel;
+    }
+
+    QStringList importer() const {
+        QStringList values;
+
+        values << sName;
+
+        return values;
+    }
+
 
 protected:
+    QString sName;
+    int mLevel;
+
+    void setName(QString name) {
+        sName = name;
+    }
+    void setlevel(int level) {
+        mLevel = level;
+    }
 
 };
 
 class IConstant : public IBase {
 public:
 
-    virtual QVariant value() = 0;
+    virtual qreal value() = 0;
 
 };
 
-template<class T>
-class ConstantInterface : public IConstant {
+class ConstantBase : public IConstant {
 public:
 
+    QString name() {
+        return sName;
+    }
+
+    qreal value() {
+        return mValue;
+    }
+
+    QStringList importer() const {
+        QStringList values;
+
+        values << sName;
+
+        return values;
+    }
+
 protected:
-    virtual void setValue(T value) = 0;
+    qreal mValue;
+    QString sName;
+
+    void setName(QString name) {
+        sName = name;
+    }
+
+    void setValue(qreal value) {
+        mValue = value;
+    }
 
 };
 
@@ -128,14 +186,13 @@ public:
 };
 
 
-#define IBase_iid     "uk.co.smelecomp.Plugin.IBase"
-#define IConstant_iid "uk.co.smelecomp.Plugin.IConstant"
-#define IOperator_iid "uk.co.smelecomp.Plugin.IOperator"
-#define IFunction_iid "uk.co.smelecomp.Plugin.IFunction"
+} // end of namespace
 
-Q_DECLARE_INTERFACE(IBase, IBase_iid)
-Q_DECLARE_INTERFACE(IConstant, IConstant_iid)
-Q_DECLARE_INTERFACE(IOperator, IOperator_iid)
-Q_DECLARE_INTERFACE(IFunction, IFunction_iid)
+// These have to be declared outside the namespace.
+Q_DECLARE_INTERFACE(QWorkbook::IBase, IBase_iid)
+Q_DECLARE_INTERFACE(QWorkbook::IConstant, IConstant_iid)
+Q_DECLARE_INTERFACE(QWorkbook::IOperator, IOperator_iid)
+Q_DECLARE_INTERFACE(QWorkbook::IFunction, IFunction_iid)
+
 
 #endif // ONEVALUEFUNCTIONINTERFACE_H

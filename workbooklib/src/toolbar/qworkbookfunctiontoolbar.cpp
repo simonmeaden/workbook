@@ -22,6 +22,10 @@
 #include "qworkbookfunctiontoolbar_p.h"
 #include "qworkbooktoolbar.h"
 
+#include "workbook_global.h"
+
+namespace QWorkbook {
+
 QWorkbookFunctionToolBar::QWorkbookFunctionToolBar(QWidget *parent) :
     QToolBar(parent),
     d_ptr(new QWorkbookFunctionToolBarPrivate(this)) {
@@ -40,9 +44,6 @@ QWorkbookFunctionToolBar::QWorkbookFunctionToolBar(QString title, QWidget *paren
      * when th private class constructor is called */
     d_ptr->init();
 
-}
-
-QWorkbookFunctionToolBar::~QWorkbookFunctionToolBar() {
 }
 
 void QWorkbookFunctionToolBar::drop() {
@@ -77,5 +78,8 @@ void QWorkbookFunctionToolBar::function() {
 void QWorkbookFunctionToolBar::setRange(QString value) {
     Q_D(QWorkbookFunctionToolBar);
     d->setRange(value);
+}
+
+
 }
 

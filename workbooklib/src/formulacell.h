@@ -24,10 +24,14 @@
 #include <QObject>
 #include <QScopedPointer>
 
-#include "cell.h"
+#include "mergedcell.h"
 #include "formulacell_p.h"
 
-class FormulaCell : public Cell {
+#include "workbook_global.h"
+
+namespace QWorkbook {
+
+class FormulaCell : public MergedCell {
     Q_OBJECT
 public:
     explicit FormulaCell(QObject *parent);
@@ -35,12 +39,12 @@ public:
     explicit FormulaCell(int row, int column, const QVariant &value, QObject *parent=0) ;
     explicit FormulaCell(CellReference reference, QVariant &value, QObject *parent=0);
     explicit FormulaCell(CellReference reference, QObject *parent=0);
-    ~FormulaCell();
+    virtual ~FormulaCell() {}
 
 public slots:
 
 protected:
-    FormulaCell(FormulaCellPrivate &d, QObject *parent) : Cell(d, parent) {}
+    FormulaCell(FormulaCellPrivate &d, QObject *parent) : MergedCell(d, parent) {}
     const QScopedPointer<FormulaCell> d_ptr;
 
 private:
@@ -48,5 +52,8 @@ private:
 
     friend class WorksheetPrivate;
 };
+
+
+}
 
 #endif // FORMULACELL_H

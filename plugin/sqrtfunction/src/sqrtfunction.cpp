@@ -1,5 +1,7 @@
 #include "sqrtfunction.h"
 
+namespace QWorkbook {
+
 SqrtFunction::SqrtFunction(QObject *parent) :QObject(parent) {
 
     setName("QSRT");
@@ -24,4 +26,6 @@ QStringList SqrtFunction::importer() const {
 
 QVariant SqrtFunction::calculate(qreal value) {
     return qSqrt(value);
+}
+
 }

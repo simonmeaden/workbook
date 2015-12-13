@@ -1,12 +1,22 @@
 #include "qcelledittoolbar.h"
 
+#include "workbook_global.h"
+#include "qworkbookview.h"
+#include "qworksheetview.h"
+
+namespace QWorkbook {
+
 /*!
  * \class  QCellEditToolBar
+ *
+ * \brief A OpenOffice style edit cell toolbar for the QWorkbook class.
+ *
+ * \ingroup QWorkbookView
  *
  * A toolbar that holds a spreadsheet style editing window that links to the selected cell
  * on the QWorkbook. Changes to the editor are followed by the cell and changes
  * made in the cell are followed by the editor..
- *\
+ */
 
 /*!
  * \fn QCellEditToolBar::contentsChanged(QString text);
@@ -51,7 +61,20 @@ QCellEditToolBar::QCellEditToolBar(QString title, QWidget *parent) :
 void QCellEditToolBar::setWorkbookView(QWorkbookView *view) {
 
     Q_D(QCellEditToolBar);
-    d->setWorkbookView(view);
+    d->setView(view);
+
+}
+
+/*!
+ * \brief Attaches the supplied QWorksheetView to the toolbar.
+ *
+ * The toolbar signals/slots are set up correctly to enable changes to the
+ * toolbar and view to be correctly shown.
+ */
+void QCellEditToolBar::setWorksheetView(QWorksheetView *view) {
+
+    Q_D(QCellEditToolBar);
+    d->setView(view);
 
 }
 
@@ -95,31 +118,44 @@ void QCellEditToolBar::setText(QString value) {
 
 }
 
-/*!
- * \internal
- *
- * Internal class that sets the value of the both editors to the same value
- * when there are changes but only sends one signal.
- */
-void QCellEditToolBar::setCellEditor() {
-    d_ptr->setCellEditorValue(sender());
-}
+///*!
+// * \internal
+// *
+// * Internal class that sets the value of the both editors to the same value
+// * when there are changes but only sends one signal.
+// */
+//void QCellEditToolBar::setCellEditor() {
+//    d_ptr->setCellEditorValue(sender());
+//}
 
-/*!
- * \internal
- *
- * Internal class that sets the value of the both editors to the same value
- * when there are changes but only sends one signal.
- */
-void QCellEditToolBar::setCellEditor(QString) {
-    d_ptr->setCellEditorValue(sender());
-}
+///*!
+// * \internal
+// *
+// * Internal class that sets the value of the both editors to the same value
+// * when there are changes but only sends one signal.
+// */
+//void QCellEditToolBar::setCellEditor(QString) {
+//    d_ptr->setCellEditorValue(sender());
+//}
 
-/*!
- * \internal
- *
- * toggle button causes the cell editor to be exchanged with a multiline editor.
- */
-void QCellEditToolBar::drop() {
-    d_ptr->drop();
-}
+///*!
+// * \internal
+// *
+// * toggle button causes the cell editor to be exchanged with a multiline editor.
+// */
+//void QCellEditToolBar::drop() {
+//    d_ptr->drop();
+//}
+
+
+///*!
+// * \internal
+// *
+// * toggle button causes the cell editor to be exchanged with a multiline editor.
+// */
+//void QCellEditToolBar::drop() {
+//    d_ptr->drop();
+//}
+
+
+} // end of namespace QWorkbook

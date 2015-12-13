@@ -1,5 +1,7 @@
 #include "atan2function.h"
 
+namespace QWorkbook {
+
 Atan2Function::Atan2Function(QObject *parent) : QObject(parent) {
 
     setName("ATAN2");
@@ -26,3 +28,4 @@ QVariant Atan2Function::calculate(qreal y, qreal x) {
     return qAtan2(y, x);
 }
 
+}

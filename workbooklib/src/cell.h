@@ -25,17 +25,14 @@
 #include <QDebug>
 #include <QMetaType>
 #include <QScopedPointer>
+#include <QModelIndex>
 
-#include <qquad.h>
-
-#include "worksheet.h"
 #include "types.h"
 #include "cell_p.h"
 
-namespace QXlsx {
-    class Cell;
-    class Worksheet;
-}
+#include "workbook_global.h"
+
+namespace QWorkbook {
 
 class CellReference;
 
@@ -44,19 +41,21 @@ class Cell : public QObject {
 public:
     explicit Cell();
     explicit Cell(QObject *parent);
+    explicit Cell(QModelIndex&, QObject *parent);
+    explicit Cell(QModelIndex&, QVariant, QObject *parent);
     explicit Cell(int row, int column, QObject *parent);
-    explicit Cell(int row, int column, const QVariant &value, QObject *parent) ;
-    explicit Cell(CellReference reference, QVariant &value, QObject *parent);
+    explicit Cell(int row, int column, QVariant, QObject *parent) ;
+    explicit Cell(CellReference reference, QVariant value, QObject *parent);
     explicit Cell(CellReference reference, QObject *parent);
     Cell(const Cell&);
-    ~Cell();
+    virtual ~Cell() {}
 
     QVariant value() const;
     int row() const;
     int column() const;
     bool empty();
     bool locked();
-    CellType type();
+//    CellType type();
     bool isEmpty();
 
     QString toString();
@@ -71,7 +70,7 @@ public slots:
 
     void setPosition(int &row, int &column);
     void setPosition(CellReference &reference);
-    void setValue(const QVariant &value);
+    void setValue(const QVariant value);
     void setLocked(bool locked);
     void setName(QString name);
 
@@ -88,6 +87,11 @@ private:
 };
 
 
-Q_DECLARE_METATYPE(Cell)
+
+
+}
+
+Q_DECLARE_METATYPE(QWorkbook::Cell)
 
 #endif // CELL_H
+

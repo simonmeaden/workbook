@@ -10,8 +10,10 @@
 
 #include <cstdarg>
 
-#include "interface.h"
+#include <interface.h>
 #include <workbook_global.h>
+
+namespace QWorkbook {
 
 class WORKBOOKSHARED_EXPORT MinFunction:
         public QObject,
@@ -20,7 +22,7 @@ class WORKBOOKSHARED_EXPORT MinFunction:
         public IFunction  {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID IFunction_iid)
-    Q_INTERFACES(IFunction)
+    Q_INTERFACES(QWorkbook::IFunction)
 public:
     MinFunction(QObject *parent=0);
 
@@ -35,5 +37,7 @@ protected:
 
     void setName(QString name);
 };
+
+}
 
 #endif // MINFUNCTION_H

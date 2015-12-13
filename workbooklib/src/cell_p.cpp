@@ -27,12 +27,15 @@
 #include "xlsxworksheet.h"
 
 
+#include "workbook_global.h"
+
+namespace QWorkbook {
+
 CellPrivate::CellPrivate() :
     mRow(-1),
     mColumn(-1),
     mValue(QVariant()),
-    bLocked(false),
-    mType(TextType) {
+    bLocked(false) {
 }
 
 CellPrivate::CellPrivate(Cell *q) :
@@ -40,7 +43,6 @@ CellPrivate::CellPrivate(Cell *q) :
     mColumn(-1),
     mValue(QVariant()),
     bLocked(false),
-    mType(TextType),
     q_ptr(q) {
 }
 
@@ -51,27 +53,11 @@ QVariant CellPrivate::value() const {
 
 void CellPrivate::setValue(QVariant &value) {
     mValue = value;
-    QVariant::Type type = value.type();
-    if (type == QVariant::String) {
-        QString v = value.toString();
-        if (v.startsWith("="))
-            mType = FormulaType;
-        else
-            mType = TextType;
-    } else if (type == QVariant::Double || type == QVariant::Int || type == QVariant::LongLong) {
-        mType = NumberType;
-    } else if (type == QVariant::Bool) {
-        mType = BooleanType;
-    }
-}
-
-CellType CellPrivate::type() {
-    return mType;
 }
 
 QString CellPrivate::name() {
     if (mName.isEmpty()) {
-        return CellReference::cellToString(mRow, mColumn);
+        return Reference::cellToString(mRow, mColumn);
     }
 
     return mName;
@@ -93,9 +79,11 @@ bool CellPrivate::isEmpty() {
 
 QString CellPrivate::toString() {
     QString str;
-    str.append(CellReference::columnToString(column()));
+    str.append(Reference::columnToString(column()));
     str.append(QString::number(row()));
     str.append(":");
     str.append(mValue.toString());
     return str;
+}
+
 }

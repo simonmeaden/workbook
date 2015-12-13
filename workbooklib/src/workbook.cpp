@@ -20,64 +20,73 @@
 */
 #include "workbook.h"
 #include "workbook_p.h"
-#include "worksheet.h"
 #include "qworksheetview.h"
+
+#include "workbook_global.h"
+
+namespace QWorkbook {
 
 const QString Workbook::SHEET = "Sheet ";
 const QString Workbook::SHEETNAME = SHEET + " %1";
 
-Workbook::Workbook(QObject *parent) :
+Workbook::Workbook(PWorkbookParser parser,
+                   QWorkbookView *parent) :
     QObject(parent),
-    d_ptr(new WorkbookPrivate(this)) {
+    d_ptr(new WorkbookPrivate(parser, parent, this)) {
 
 }
 
-Workbook::~Workbook() {
-
-}
-
-void Workbook::saveWorkbook(QString filename) {
-    d_ptr->saveWorkbook(filename);
-}
 
 void Workbook::saveWorkbook(QString filename, WorksheetType type) {
     d_ptr->saveWorkbook(filename, type);
 }
 
-Worksheet* Workbook::worksheet(int index) {
-    return d_ptr->worksheet(index);
+QWorksheetView* Workbook::worksheetView(int index) {
+    return d_ptr->worksheetView(index);
 }
 
-Worksheet* Workbook::worksheet(QString name) {
-    return d_ptr->worksheet(name);
+QStringList Workbook::names() {
+    return d_ptr->names();
 }
 
-Worksheet* Workbook::currentWorksheet() {
-    return d_ptr->currentWorksheet();
+QWorksheetView* Workbook::worksheetView(QString name) {
+    return d_ptr->worksheetView(name);
 }
 
-void Workbook::setCurrentWorksheet(int index) {
-    d_ptr->setCurrentWorksheet(index);
+QWorksheetView* Workbook::currentWorksheetView() {
+    return d_ptr->currentWorksheetView();
 }
 
-void Workbook::setCurrentWorksheet(QString name) {
-    d_ptr->setCurrentWorksheet(name);
+void Workbook::setCurrentWorksheetView(int index) {
+    d_ptr->setCurrentWorksheetView(index);
 }
 
-int Workbook::indexOf(Worksheet* sheet) {
+void Workbook::setCurrentWorksheetView(QString name) {
+    d_ptr->setCurrentWorksheetView(name);
+}
+
+int Workbook::indexOf(QWorksheetView* sheet) {
     return d_ptr->indexOf(sheet);
 }
 
-int Workbook::count() {
-    return d_ptr->count();
+int Workbook::size() {
+    return d_ptr->size();
 }
 
-Worksheet* Workbook::addWorksheet() {
+QWorksheetView* Workbook::addWorksheet() {
     return d_ptr->addWorksheet();
 }
 
-Worksheet *Workbook::insertWorksheet(int index) {
-    return d_ptr->insertWorksheet(index);
+void Workbook::moveSheet(int oldIndex, int newIndex) {
+    d_ptr->moveSheet(oldIndex, newIndex);
+}
+
+QWorksheetView *Workbook::insertNewWorksheet(int index) {
+    return d_ptr->insertNewWorksheet(index);
+}
+
+QWorksheetView *Workbook::insertWorksheet(int index, QWorksheetView* view) {
+    return d_ptr->insertWorksheet(index, view);
 }
 
 int Workbook::removeWorksheet(int index) {
@@ -88,10 +97,13 @@ int Workbook::removeWorksheet(QString name) {
     return d_ptr->removeWorksheet(name);
 }
 
-int Workbook::removeWorksheet(Worksheet *sheet) {
+int Workbook::removeWorksheet(QWorksheetView *sheet) {
     return d_ptr->removeWorksheet(sheet);
 }
 
 int Workbook::renameSheet(QString oldname, QString newname) {
     return d_ptr->renameSheet(oldname, newname);
 }
+
+}
+

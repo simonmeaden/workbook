@@ -1,5 +1,7 @@
 #include "atanfunction.h"
 
+namespace QWorkbook {
+
 AtanFunction::AtanFunction(QObject *parent) :QObject(parent) {
 
     setName("ATAN");
@@ -24,4 +26,6 @@ QStringList AtanFunction::importer() const {
 
 QVariant AtanFunction::calculate(qreal radians) {
     return qAtan(radians);
+}
+
 }

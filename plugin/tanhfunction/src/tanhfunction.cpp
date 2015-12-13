@@ -1,5 +1,7 @@
 #include "tanhfunction.h"
 
+namespace QWorkbook {
+
 TanhFunction::TanhFunction(QObject *parent) : QObject(parent) {
 
     setName("TANH");
@@ -24,4 +26,6 @@ QStringList TanhFunction::importer() const {
 
 QVariant TanhFunction::calculate(qreal radians) {
     return tanh(radians);
+}
+
 }

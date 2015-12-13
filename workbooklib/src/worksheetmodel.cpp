@@ -20,20 +20,39 @@
 */
 #include "worksheetmodel.h"
 #include "worksheetmodel_p.h"
-#include "worksheet.h"
 #include "cell.h"
 #include "cellreference.h"
 #include "format.h"
 #include "range.h"
 #include "cellreference.h"
+#include "workbook_global.h"
 
-WorksheetModel::WorksheetModel(PluginStore *store, QObject *parent) :
+#include "xlsxworksheet.h"
+
+#include <Sheet.hpp>
+
+namespace QWorkbook {
+
+WorksheetModel::WorksheetModel(QObject *parent) :
     QAbstractTableModel(parent),
-    d_ptr(new WorksheetModelPrivate(store, this)) {
+    d_ptr(new WorksheetModelPrivate(this)) {
 
 }
 
-bool WorksheetModel::setData(const QModelIndex &index, const QVariant &value, int role) {    
+//void WorksheetModel::setWorksheet(Worksheet *sheet) {
+//    d_ptr->setWorksheet(sheet);
+//}
+
+WorksheetModel* WorksheetModel::clone() {
+    return d_ptr->clone();
+}
+
+bool WorksheetModel::setData(const QModelIndex &index, const QVariant value, int role) {
+    return d_ptr->setData(index, value, role);
+}
+
+bool WorksheetModel::setData(int row, int column, const QVariant value, int role) {
+    QModelIndex index = d_ptr->getIndex(row, column);
     return d_ptr->setData(index, value, role);
 }
 
@@ -105,12 +124,20 @@ Qt::ItemFlags WorksheetModel::flags(const QModelIndex &index) const {
      return d_ptr->flags(index);
 }
 
-void WorksheetModel::saveWorksheet(QString path) {
-    d_ptr->saveWorksheet(path);
+void WorksheetModel::saveWorksheet(QString path, WorksheetType type) {
+    d_ptr->saveWorksheet(path, type);
 }
 
-void WorksheetModel::formatChanged(int row, int column) {
-    d_ptr->formatChanged(row, column);
+void WorksheetModel::saveWorksheet(QXlsx::Worksheet *sheet) {
+    d_ptr->writeXlsx(sheet);
+}
+
+void WorksheetModel::saveWorksheet(ods::Sheet *sheet) {
+    d_ptr->writeOds(sheet);
+}
+
+void WorksheetModel::formatChanged(QModelIndex index) {
+    d_ptr->formatChanged(index);
 }
 
 int WorksheetModel::rowCount(const QModelIndex& /*parent*/) const {
@@ -149,22 +176,14 @@ QVariant WorksheetModel::headerData(int section, Qt::Orientation orientation, in
     return d_ptr->headerData(section, orientation, role);
 }
 
-void WorksheetModel::setShowGrid(bool showGrid) {
-    d_ptr->setShowGrid(showGrid);
-}
-
-bool WorksheetModel::showGrid() {
-    return d_ptr->showGrid();
-}
-
 Cell* WorksheetModel::cellAsCell(int row, int column) {
     Q_D(WorksheetModel);
-    return d->pSheet->cellAsCell(row, column);
+    return d_ptr->cellAsCell(row, column);
 }
 
 void WorksheetModel::setCellAsCell(int row, int column, Cell *cell) {
     Q_D(WorksheetModel);
-    d->pSheet->setCellAsCell(row, column, cell);
+    d_ptr->setCellAsCell(row, column, cell);
 }
 
 void WorksheetModel::setSheetName(QString name) {
@@ -174,3 +193,6 @@ void WorksheetModel::setSheetName(QString name) {
 QString WorksheetModel::sheetName() {
     return d_ptr->sheetName();
 }
+
+}
+

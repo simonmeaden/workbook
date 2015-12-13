@@ -10,12 +10,14 @@
 #include <interface.h>
 #include <workbook_global.h>
 
+namespace QWorkbook {
+
 class WORKBOOKSHARED_EXPORT LnFunction :
         public QObject, public IOneValueFunction<qreal>,
         public IFunction  {
         Q_OBJECT
         Q_PLUGIN_METADATA(IID IFunction_iid)
-        Q_INTERFACES(IFunction)
+        Q_INTERFACES(QWorkbook::IFunction)
 public:
     LnFunction(QObject *parent=0);
 
@@ -29,5 +31,7 @@ protected:
 
     void setName(QString name);
 };
+
+}
 
 #endif // LNFUNCTION_H

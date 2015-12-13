@@ -10,13 +10,15 @@
 #include <interface.h>
 #include <workbook_global.h>
 
+namespace QWorkbook {
+
 class WORKBOOKSHARED_EXPORT CoSecFunction :
         public QObject,
         public IOneValueFunction<qreal>,
         public IFunction {
         Q_OBJECT
         Q_PLUGIN_METADATA(IID IFunction_iid)
-        Q_INTERFACES(IFunction)
+        Q_INTERFACES(QWorkbook::IFunction)
 public:
     explicit CoSecFunction(QObject *parent = 0);
 
@@ -30,5 +32,7 @@ protected:
 
     void setName(QString name);
 };
+
+}
 
 #endif // COSECFUNCTION_H

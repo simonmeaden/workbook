@@ -27,18 +27,26 @@
 #include "cell.h"
 #include "mergedcell_p.h"
 
+#include "workbook_global.h"
+
+namespace QWorkbook {
+
 class MergedCell : public Cell {
     Q_OBJECT
 public:
 
-    explicit MergedCell(QObject *parent);
-    explicit MergedCell(int row, int column, QObject *parent);
-    explicit MergedCell(int row, int column, const QVariant &value, QObject *parent=0) ;
-    explicit MergedCell(CellReference reference, QVariant &value, QObject *parent=0);
-    explicit MergedCell(CellReference reference, QObject *parent=0);
-    ~MergedCell();
+    explicit MergedCell(QObject *);
+    explicit MergedCell(int , int , int , int , QObject *);
+    explicit MergedCell(int , int, int, int, const QVariant &, QObject *) ;
+    explicit MergedCell(CellReference, int , int , QObject *);
+    explicit MergedCell(CellReference, CellReference, QObject *);
+    explicit MergedCell(CellReference, int, int, QVariant &, QObject *);
+    explicit MergedCell(CellReference, CellReference, QVariant &, QObject *);
+    virtual ~MergedCell() {}
 
     QList<Cell*> overwritten();
+    int rowSpan();
+    int columnSpan();
 
 public slots:
     void setOverwritten(QList<Cell*> cells);
@@ -47,11 +55,15 @@ public slots:
 
 protected:
     MergedCell(MergedCellPrivate &d, QObject *parent) : Cell(d, parent) {}
+    int mRowSpan, mColumnSpan;
 
 private:
     Q_DECLARE_PRIVATE(MergedCell)
 
     friend class WorksheetPrivate;
 };
+
+
+}
 
 #endif // MERGEDCELL_H

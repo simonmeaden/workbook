@@ -1,5 +1,7 @@
 #include "degreesfunction.h"
 
+namespace QWorkbook {
+
 DegreesFunction::DegreesFunction(QObject *parent) : QObject(parent){
 
     setName("DEGREES");
@@ -24,4 +26,6 @@ QStringList DegreesFunction::importer() const {
 
 QVariant DegreesFunction::calculate(qreal value) {
     return qRadiansToDegrees(value);
+}
+
 }

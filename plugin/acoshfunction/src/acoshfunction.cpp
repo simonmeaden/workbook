@@ -1,5 +1,7 @@
 #include "acoshfunction.h"
 
+namespace QWorkbook {
+
 AcoshFunction::AcoshFunction(QObject *parent) : QObject(parent) {
 
     setName("ACOSH");
@@ -24,4 +26,6 @@ QStringList AcoshFunction::importer() const {
 
 QVariant AcoshFunction::calculate(qreal radians) {
     return acosh(radians);
+}
+
 }

@@ -27,8 +27,11 @@
 #include <QLineEdit>
 #include <QToolBar>
 
-#include "workbook_global.h"
 #include "qworkbookfunctiontoolbar_p.h"
+
+#include "workbook_global.h"
+
+namespace QWorkbook {
 
 class QWorkbookView;
 class FormatStatus;
@@ -39,7 +42,7 @@ class WORKBOOKSHARED_EXPORT QWorkbookFunctionToolBar : public QToolBar {
 public:
     QWorkbookFunctionToolBar(QWidget *parent);
     QWorkbookFunctionToolBar(QString title, QWidget *parent);
-    virtual ~QWorkbookFunctionToolBar();
+    virtual ~QWorkbookFunctionToolBar() {}
 
 signals:
 
@@ -65,4 +68,8 @@ protected:
 private:
 
 };
+
+
+}
+
 #endif // WORKBOOKFUNCTIONTOOLBAR_H

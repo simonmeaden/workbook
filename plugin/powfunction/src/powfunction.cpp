@@ -1,5 +1,7 @@
 #include "powfunction.h"
 
+namespace QWorkbook {
+
 PowFunction::PowFunction(QObject *parent) : QObject(parent) {
 
     setName("POW");
@@ -24,4 +26,6 @@ QStringList PowFunction::importer() const {
 
 QVariant PowFunction::calculate(qreal x, qreal y) {
     return qPow(x, y);
+}
+
 }

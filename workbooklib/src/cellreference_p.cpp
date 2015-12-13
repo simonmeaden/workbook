@@ -18,23 +18,28 @@
 
     It is also available on request from Simon Meaden info@smelecomp.co.uk.
 */
-#include <QPair>
 
+#include "workbook_global.h"
 #include "cellreference_p.h"
 #include "cellreference.h"
 #include "workbook.h"
-#include "range.h"
 
+namespace QWorkbook {
 
 CellReferencePrivate::CellReferencePrivate() :
     mRow(-1),
-    mColumn(-1) {
+    mColumn(-1),
+    bStaticRow(false),
+    bStaticColumn(false) {
 }
 
 CellReferencePrivate::CellReferencePrivate(CellReference *parent) :
     q_ptr(parent),
     mRow(-1),
-    mColumn(-1) {
+    mColumn(-1),
+    bStaticRow(false),
+    bStaticColumn(false) {
+
 }
 
 bool CellReferencePrivate::isValid() {
@@ -45,51 +50,47 @@ bool CellReferencePrivate::isValid() {
 
 }
 
-/*!
- * /brief Converts a row number to an spreadsheet row value.
- *
- * Note : Spreadsheet offsets start at 1 while most others start at 0. The
- * function increments to allow zero based offsets.
- *
- * Row is easy as it just a number a1 - n
- */
-QString CellReferencePrivate::rowToString(int row) {
-    QString result =  QString::number(row + 1);
-    return result;
-}
+QString CellReferencePrivate::toString() {
 
-/*!
- * \brief Converts a column number to an spreadsheet column value A - Z, AA - ZZ.
- *
- * 0 = A
- * 1 = B
- * ...
- * 26 = AA
- * 27 = AB etc.
- *
- * I'm not going past two columns. If I need to have more than 702 (26 * 26) + 26
- * columns in a spreadsheet I will probably shoot myself to stop me
- * being a danger to society.
- */
-QString CellReferencePrivate::columnToString(int column) {
-    int divisor = 26;
-    int mod = column % divisor;
-    int div = column / divisor;
-    // limit to one extra char
+    QString string =
+            (bStaticRow ? "$" : "") +
+            columnToString(mColumn) +
+            (bStaticColumn ? "$" : "") +
+            rowToString(mRow);
+    return string;
 
-    char c = mod + 'A';
-    QString result(c);
-    if (div > 0 && div <= 26) {
-        c = 'A' + (div - 1);
-        result.prepend(c);
-        c += div;
-    }
-    return result;
-}
-
-QString CellReferencePrivate::cellToString(int column, int row) {
-    QString result =  columnToString(column) + rowToString(row);
-    return result;
 }
 
 
+void CellReferencePrivate::setPosition(int &row, int &column) {
+
+    mRow = row;
+    mColumn = column;
+
+}
+
+void CellReferencePrivate::setPosition(int &row, int &column, bool &rowStatic, bool &colStatic) {
+
+    mRow = row;
+    mColumn = column;
+    bStaticRow = rowStatic;
+    bStaticColumn = colStatic;
+
+}
+
+void CellReferencePrivate::setPosition(QString &reference) {
+
+    SplitCellName split = cellFromString(reference);
+
+    mRow = split.row;
+    mColumn = split.column;
+    bStaticRow = split.rowStatic;
+    bStaticColumn = split.colStatic;
+
+}
+
+
+
+
+
+}

@@ -10,13 +10,15 @@
 #include <interface.h>
 #include <workbook_global.h>
 
+namespace QWorkbook {
+
 class WORKBOOKSHARED_EXPORT SecFunction :
         public QObject,
         public IOneValueFunction<qreal>,
         public IFunction {
         Q_OBJECT
         Q_PLUGIN_METADATA(IID IFunction_iid)
-        Q_INTERFACES(IFunction)
+        Q_INTERFACES(QWorkbook::IFunction)
 public:
     SecFunction();
 
@@ -30,5 +32,7 @@ protected:
 
     void setName(QString name);
 };
+
+}
 
 #endif // SECFUNCTION_H

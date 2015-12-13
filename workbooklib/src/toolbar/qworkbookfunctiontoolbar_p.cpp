@@ -23,6 +23,10 @@
 #include "qworkbookview.h"
 #include "types.h"
 
+#include "workbook_global.h"
+
+namespace QWorkbook {
+
 QWorkbookFunctionToolBarPrivate::QWorkbookFunctionToolBarPrivate(QWorkbookFunctionToolBar *q) :
     q_ptr(q) {
 
@@ -97,5 +101,8 @@ void QWorkbookFunctionToolBarPrivate::function() {
 
 void QWorkbookFunctionToolBarPrivate::setRange(QString value){
     rangeEdit->setText(value);
+}
+
+
 }
 

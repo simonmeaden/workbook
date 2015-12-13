@@ -1,0 +1,80 @@
+int main()
+{
+  void* pParser = ParseAlloc (malloc);
+
+  /* First input: 
+      15 / 5
+                                */
+  Parse (pParser, DOUBLE, 15.0);
+  Parse (pParser, DIVIDE, 0);
+  Parse (pParser, DOUBLE, 5.0);
+  Parse (pParser, 0, 0);
+
+  /*  Second input:
+        50 + 125
+                               */
+
+
+  Parse (pParser, DOUBLE, 50.0);
+  Parse (pParser, PLUS, 0);
+  Parse (pParser, DOUBLE, 125.0);
+  Parse (pParser, 0, 0);
+
+
+  /*  Third input:
+        50 * 125 + 125
+                               */
+
+
+
+  Parse (pParser, DOUBLE, 50.0);
+  Parse (pParser, MULTIPLY, 0);
+  Parse (pParser, DOUBLE, 125.0);
+  Parse (pParser, PLUS, 0);
+  Parse (pParser, DOUBLE, 125.0);
+  Parse (pParser, 0, 0);
+
+
+  ParseFree(pParser, free );
+
+}
+int main()
+{
+  void* pParser = ParseAlloc (malloc);
+
+  /* First input: 
+      15 / 5
+                                */
+  Parse (pParser, DOUBLE, 15.0);
+  Parse (pParser, DIVIDE, 0);
+  Parse (pParser, DOUBLE, 5.0);
+  Parse (pParser, 0, 0);
+
+  /*  Second input:
+        50 + 125
+                               */
+
+
+  Parse (pParser, DOUBLE, 50.0);
+  Parse (pParser, PLUS, 0);
+  Parse (pParser, DOUBLE, 125.0);
+  Parse (pParser, 0, 0);
+
+
+  /*  Third input:
+        50 * 125 + 125
+                               */
+
+
+
+  Parse (pParser, DOUBLE, 50.0);
+  Parse (pParser, MULTIPLY, 0);
+  Parse (pParser, DOUBLE, 125.0);
+  Parse (pParser, PLUS, 0);
+  Parse (pParser, DOUBLE, 125.0);
+  Parse (pParser, 0, 0);
+
+
+  ParseFree(pParser, free );
+
+}

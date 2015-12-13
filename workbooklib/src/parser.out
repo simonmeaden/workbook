@@ -1,0 +1,151 @@
+State 0:
+          main ::= * in
+      (1) in ::= *
+          in ::= * in state NEWLINE
+
+                          main accept
+                            in shift  1
+                     {default} reduce 1
+
+State 1:
+      (0) main ::= in *
+          in ::= in * state NEWLINE
+          state ::= * expr
+          expr ::= * expr MINUS expr
+          expr ::= * expr PLUS expr
+          expr ::= * expr MULTIPLY expr
+          expr ::= * expr DIVIDE expr
+          expr ::= * DOUBLE
+
+                             $ reduce 0
+                        DOUBLE shift  13
+                          expr shift  6
+                         state shift  9
+
+State 2:
+          expr ::= * expr MINUS expr
+          expr ::= expr MINUS * expr
+          expr ::= * expr PLUS expr
+          expr ::= * expr MULTIPLY expr
+          expr ::= * expr DIVIDE expr
+          expr ::= * DOUBLE
+
+                        DOUBLE shift  13
+                          expr shift  7
+
+State 3:
+          expr ::= * expr MINUS expr
+          expr ::= * expr PLUS expr
+          expr ::= expr PLUS * expr
+          expr ::= * expr MULTIPLY expr
+          expr ::= * expr DIVIDE expr
+          expr ::= * DOUBLE
+
+                        DOUBLE shift  13
+                          expr shift  8
+
+State 4:
+          expr ::= * expr MINUS expr
+          expr ::= * expr PLUS expr
+          expr ::= * expr MULTIPLY expr
+          expr ::= expr MULTIPLY * expr
+          expr ::= * expr DIVIDE expr
+          expr ::= * DOUBLE
+
+                        DOUBLE shift  13
+                          expr shift  11
+
+State 5:
+          expr ::= * expr MINUS expr
+          expr ::= * expr PLUS expr
+          expr ::= * expr MULTIPLY expr
+          expr ::= * expr DIVIDE expr
+          expr ::= expr DIVIDE * expr
+          expr ::= * DOUBLE
+
+                        DOUBLE shift  13
+                          expr shift  12
+
+State 6:
+      (3) state ::= expr *
+          expr ::= expr * MINUS expr
+          expr ::= expr * PLUS expr
+          expr ::= expr * MULTIPLY expr
+          expr ::= expr * DIVIDE expr
+
+                          PLUS shift  3
+                         MINUS shift  2
+                        DIVIDE shift  5
+                      MULTIPLY shift  4
+                     {default} reduce 3
+
+State 7:
+          expr ::= expr * MINUS expr
+      (4) expr ::= expr MINUS expr *
+          expr ::= expr * PLUS expr
+          expr ::= expr * MULTIPLY expr
+          expr ::= expr * DIVIDE expr
+
+                        DIVIDE shift  5
+                      MULTIPLY shift  4
+                     {default} reduce 4
+
+State 8:
+          expr ::= expr * MINUS expr
+          expr ::= expr * PLUS expr
+      (5) expr ::= expr PLUS expr *
+          expr ::= expr * MULTIPLY expr
+          expr ::= expr * DIVIDE expr
+
+                        DIVIDE shift  5
+                      MULTIPLY shift  4
+                     {default} reduce 5
+
+State 9:
+          in ::= in state * NEWLINE
+
+                       NEWLINE shift  10
+
+State 10:
+      (2) in ::= in state NEWLINE *
+
+                     {default} reduce 2
+
+State 11:
+          expr ::= expr * MINUS expr
+          expr ::= expr * PLUS expr
+          expr ::= expr * MULTIPLY expr
+      (6) expr ::= expr MULTIPLY expr *
+          expr ::= expr * DIVIDE expr
+
+                     {default} reduce 6
+
+State 12:
+          expr ::= expr * MINUS expr
+          expr ::= expr * PLUS expr
+          expr ::= expr * MULTIPLY expr
+          expr ::= expr * DIVIDE expr
+      (7) expr ::= expr DIVIDE expr *
+
+                     {default} reduce 7
+
+State 13:
+      (8) expr ::= DOUBLE *
+
+                     {default} reduce 8
+
+----------------------------------------------------
+Symbols:
+    0: $:
+    1: VALUE
+    2: PLUS
+    3: MINUS
+    4: DIVIDE
+    5: MULTIPLY
+    6: NEWLINE
+    7: DOUBLE
+    8: error:
+    9: expr: DOUBLE
+   10: main: DOUBLE
+   11: in: <lambda> DOUBLE
+   12: state: DOUBLE

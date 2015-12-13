@@ -22,25 +22,68 @@
 #include "qworkbookfonttoolbar.h"
 #include "types.h"
 #include "qworkbookview.h"
-#include "qstd.h"
+#include "qworksheetview.h"
 
+
+
+#include "workbook_global.h"
+
+namespace QWorkbook {
 
 QWorkbookFontToolBarPrivate::QWorkbookFontToolBarPrivate(QWorkbookFontToolBar *q) :
-    q_ptr(q) {
+    q_ptr(q),
+    pView(NULL) {
 
 }
 
-void QWorkbookFontToolBarPrivate::setWorkbookView(QWorkbookView *view) {
+void QWorkbookFontToolBarPrivate::setView(QObject *view) {
 
-    // view to bar
-    q_ptr->connect(view, SIGNAL(selectionChanged(FormatStatus*)),
-               q_ptr, SLOT(selectionChanged(FormatStatus*)));
+    Q_Q(QWorkbookFontToolBar);
+    QWorkbookView *wb;
+    QWorksheetView *ws;
 
-    // bar to view (sets format in view)
-    q_ptr->connect(q_ptr, SIGNAL(fontChanged(QFont)),
-               view, SLOT(setSelectionFont(QFont)));
-    q_ptr->connect(q_ptr, SIGNAL(fontSizeChanged(int)),
-               view, SLOT(setSelectionFontSize(int)));
+    // remove old connections
+    if (pView) {
+        wb = qobject_cast<QWorkbookView*>(pView);
+        ws = qobject_cast<QWorksheetView*>(pView);
+
+        if (wb) {
+            q->disconnect(wb, SIGNAL(selectionChanged(FormatStatus*)),
+                       q, SLOT(selectionChanged(FormatStatus*)));
+            q->disconnect(q, SIGNAL(fontChanged(QFont)),
+                       wb, SLOT(setSelectionFont(QFont)));
+            q->disconnect(q, SIGNAL(fontSizeChanged(int)),
+                       wb, SLOT(setSelectionFontSize(int)));
+        } else if (ws) {
+            q->disconnect(ws, SIGNAL(selectionChanged(FormatStatus*)),
+                       q, SLOT(selectionChanged(FormatStatus*)));
+            q->disconnect(q, SIGNAL(fontChanged(QFont)),
+                       ws, SLOT(setSelectionFont(QFont)));
+            q->disconnect(q, SIGNAL(fontSizeChanged(int)),
+                       ws, SLOT(setSelectionFontSize(int)));
+        }
+    }
+
+    // make new ones.
+    wb = qobject_cast<QWorkbookView*>(view);
+    ws = qobject_cast<QWorksheetView*>(view);
+    if (wb) {
+        q->connect(wb, SIGNAL(selectionChanged(FormatStatus*)),
+                   q, SLOT(selectionChanged(FormatStatus*)));
+        q->connect(q, SIGNAL(fontChanged(QFont)),
+                   wb, SLOT(setSelectionFont(QFont)));
+        q->connect(q, SIGNAL(fontSizeChanged(int)),
+                   wb, SLOT(setSelectionFontSize(int)));
+    } else if (ws) {
+        q->connect(ws, SIGNAL(selectionChanged(FormatStatus*)),
+                   q, SLOT(selectionChanged(FormatStatus*)));
+        q->connect(q, SIGNAL(fontChanged(QFont)),
+                   ws, SLOT(setSelectionFont(QFont)));
+        q->connect(q, SIGNAL(fontSizeChanged(int)),
+                   ws, SLOT(setSelectionFontSize(int)));
+    }
+
+    pView = view;
 
 }
 
@@ -116,3 +159,6 @@ void QWorkbookFontToolBarPrivate::setFontSizes(QFont font) {
     while (it.hasNext())
         pSizeCombo->addItem(QString::number(it.next()));
 }
+
+}
+

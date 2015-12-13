@@ -27,194 +27,72 @@
 #include <QMap>
 #include <QList>
 #include <QStack>
+#include <QPair>
+#include <QModelIndex>
 
 #include "types.h"
 #include "interface.h"
 #include "reference.h"
 
-class Worksheet;
+#include "workbook_global.h"
+
+namespace QWorkbook {
+
 class PluginStore;
 class WorkbookParser;
-
-class Token : public QObject {
-public:
-    Token() {}
-    Token(int start, int end, QObject *parent) :
-        QObject(parent) {
-
-        mStart = start, mEnd = end;
-
-    }
-
-    int start() {
-        return mStart;
-    }
-    int end() {
-        return mEnd;
-    }
-
-protected:
-    int mStart, mEnd;
-};
-
-class CommaToken : public Token {
-public:
-    CommaToken(int &start, QObject *parent=0) :
-        Token(start, start, parent) {}
-};
-
-class  CloseParenthesisToken : public Token {
-public:
-    CloseParenthesisToken() {}
-    CloseParenthesisToken(int &start, QObject *parent) :
-        Token(start, start, parent) {
-
-    }
-};
-
-class  OpenParenthesisToken : public Token {
-public:
-    OpenParenthesisToken(int &start, QObject *parent) :
-        Token(start, start, parent) {
-        mPartner = NULL;
-    }
-
-    CloseParenthesisToken* partner() {
-        return mPartner;
-    }
-    void setPartner(CloseParenthesisToken *token) {
-        mPartner = token;
-    }
-
-protected:
-    CloseParenthesisToken *mPartner;
-};
-
-class CellReferenceToken : public Token, public Reference {
-public:
-    CellReferenceToken(QString &ref, int &start, int &end, QObject *parent);
-
-    int column() { return mColumn; }
-    int row() { return mRow; }
-
-protected:
-    int mColumn;
-    int mRow;
-
-};
-
-class FunctionToken : public Token {
-public:
-    FunctionToken(QString function, int start, int end, QObject *parent) :
-        Token(start, end, parent) {
-        mFunction = function;
-    }
-
-    QString function() {
-        return mFunction;
-    }
-
-protected:
-    QString mFunction;
-};
-
-class OperatorToken : public Token {
-public:
-    OperatorToken(QString operation, int start, int end, QObject *parent) :
-        Token(start, end, parent) {
-        mOperator = operation;
-    }
-
-    QString getOperator() {
-        return mOperator;
-    }
-
-protected:
-    QString mOperator;
-};
-
-class ConstantToken : public Token {
-public:
-    ConstantToken(QString constant, int start, int end, QObject *parent) :
-        Token(start, end, parent) {
-        mConstant = constant;
-    }
-
-    QString value() {
-        return mConstant;
-    }
-
-protected:
-    QString mConstant;
-};
-
-class NumberToken : public Token {
-public:
-    NumberToken(QObject *parent) : Token(0, 0, parent) {}
-    NumberToken(QString number, int start, int end, QObject *parent) :
-        Token(start, end, parent) {
-        bool ok;
-        if (number.indexOf(".") != -1) {
-            double n = number.toDouble(&ok);
-            if (ok)
-                mNumber = QVariant(n);
-        } else {
-            int n = number.toInt(&ok);
-            if (ok)
-                mNumber = QVariant(n);
-        }
-    }
-
-    void setValue(QVariant value) { mNumber = value; }
-
-    QVariant value() {
-        return mNumber;
-    }
-
-protected:
-    QVariant mNumber;
-};
+class QWorksheetView;
+class QWorkbookView;
 
 class WorkbookParserPrivate {
 public:
-    WorkbookParserPrivate(PluginStore *store, WorkbookParser *parent);
+    WorkbookParserPrivate(QWorkbookView *book, WorkbookParser *parent);
+    WorkbookParserPrivate(QWorksheetView *sheet, WorkbookParser *parent);
+    virtual ~WorkbookParserPrivate() {}
 
-    QVariant parse(Worksheet *sheet, QString expression);
+    void stopProcess();
+
+    QVariant parse();
+    QStringList splitExpression(QString);
+
     ParserErrors error();
-
-    void setFunctions(QStringList list);
-    void setOperations(QStringList list);
-    void setConstants(QStringList list);
     void clearErrors();
+    void defineRules();
 
+    QStringList specials, brackets;
+    int mLeftBrackets, mRightBrackets;
+    bool bBracketsMatch;
 
-protected:
-    QString mFunctionsRegex;
-    QString mOperationsRegex;
-    QString mConstantsRegex;
+    void dataHasChanged(const QModelIndex &topLeft,
+                        const QModelIndex &bottomRight,
+                        const QVector<int> &roles);
+
+//    QList<QPair<int, int> > bracketMatch;
+//    QMap<int, double> values;
+//    QMultiMap<int, IFunction*> funcMatch;
+//    QMultiMap<int, IOperator*> opMatch5;
+//    QMultiMap<int, IOperator*> opMatch6;
+
+    QStringList splitoutCellReference(QString);
+    QStringList splitoutItems(QStringList, QStringList items);
+    QStringList splitoutBrackets(QStringList);
+    void tokenise(QStringList);
+    QPair<int, double> calculateInfix(int, QStringList);
+    QPair<int, double> calculateInfixFunction(IFunction*, int, QStringList);
+
+    QWorkbookView *pWorkbook;
+    QWorksheetView *pWorksheet;
+    QModelIndex mTopLeft, mBottomRight;
+    QVector <int> mChangedRoles;
+    const QSharedPointer<PluginStore> pPluginStore;
     ParserErrors mError;
-    PluginStore *pPluginStore;
-
-    QMap<QString, IFunction*> mFunctions;
-    QMap<QString, IOperator*> mOperators;
-    QMap<QString, IConstant*> mConstants;
-
-    QStack<IOperator*> opStack;
-    QStack<QVariant> valueStack;
-
-    QMap<int, Token*> analyseExpression(QString expression);
-    QVariant parseExpression(Worksheet *sheet, QList<Token*> tokens);
-    QList<Token*> separateFunctionList(int index, QList<Token *> tokens);
-    QVariant parseFunction(Worksheet *sheet, IFunction *iFunction, QList<Token*> tokens);
-
-    QVariant nullVariant() { return QVariant(QVariant::Double); }
-
-    const static QString CellReferenceRegex;
-    const static QString HexNumberRegex;
-//    const static QString MatchedParenthesisRegex;
-    const static QString NumbersRegex;
 
     WorkbookParser *q_ptr;
+
+    static const QString WithDelimiter;
 };
+
+
+
+}
 
 #endif // WORKBOOKPARSERPRIVATE_H

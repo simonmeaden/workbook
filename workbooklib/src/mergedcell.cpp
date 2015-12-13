@@ -22,46 +22,105 @@
 
 
 
+#include "workbook_global.h"
+
+namespace QWorkbook {
+
 MergedCell::MergedCell(QObject *parent) :
     Cell(*new MergedCellPrivate(), parent) {
 }
 
-MergedCell::MergedCell(int row, int column, QObject *parent) :
+MergedCell::MergedCell(int row, int column, int rowSpan, int colSpan, QObject *parent) :
     Cell(*new MergedCellPrivate(), parent) {
 
-    Q_D(Cell);
+    Q_D(MergedCell);
     d->mRow = row;
     d->mColumn = column;
+    d->mRowSpan = rowSpan;
+    d->mColSpan = colSpan;
 }
 
-MergedCell::MergedCell(int row, int column, const QVariant &value, QObject *parent) :
+MergedCell::MergedCell(int row, int column, int rowSpan, int colSpan, const QVariant &value, QObject *parent) :
     Cell(*new MergedCellPrivate(), parent) {
 
-    Q_D(Cell);
+    Q_D(MergedCell);
     d->mRow = row;
     d->mColumn = column;
+    d->mRowSpan = rowSpan;
+    d->mColSpan = colSpan;
     d->mValue = value;
 }
 
-MergedCell::MergedCell(CellReference reference, QObject *parent) :
+MergedCell::MergedCell(CellReference from, int rowSpan, int colSpan, QObject *parent) :
     Cell(*new MergedCellPrivate(), parent) {
 
-    Q_D(Cell);
-    d->mRow = reference.row();
-    d->mColumn = reference.column();
+    Q_D(MergedCell);
+    d->mRow = from.row();
+    d->mColumn = from.column();
+    d->mRowSpan = rowSpan;
+    d->mColSpan = colSpan;
 }
 
-MergedCell::MergedCell(CellReference reference, QVariant &value, QObject *parent) :
+MergedCell::MergedCell(CellReference from, CellReference to, QObject *parent) :
     Cell(*new MergedCellPrivate(), parent) {
 
-    Q_D(Cell);
-    d->mRow = reference.row();
-    d->mColumn = reference.column();
+    Q_D(MergedCell);
+    d->mRow = from.row();
+    d->mColumn = from.column();
+    int f = from.row();
+    int t = to.row();
+    int temp;
+    if (f > t) {
+        temp = f;
+        f = t;
+        t = temp;
+    }
+    d->mRowSpan = t - f + 1;
+    f = from.row();
+    t = to.row();
+    if (f > t) {
+        temp = f;
+        f = t;
+        t = temp;
+    }
+    d->mColSpan = t - f + 1;
+}
+
+MergedCell::MergedCell(CellReference from, int rowSpan, int colSpan, QVariant &value, QObject *parent) :
+    Cell(*new MergedCellPrivate(), parent) {
+
+    Q_D(MergedCell);
+    d->mRow = from.row();
+    d->mColumn = from.column();
+    d->mRowSpan = rowSpan;
+    d->mColSpan = colSpan;
     d->mValue = value;
 }
 
-MergedCell::~MergedCell() {
+MergedCell::MergedCell(CellReference from, CellReference  to, QVariant &value, QObject *parent) :
+    Cell(*new MergedCellPrivate(), parent) {
 
+    Q_D(MergedCell);
+    d->mRow = from.row();
+    d->mColumn = from.column();
+    int f = from.row();
+    int t = to.row();
+    int temp;
+    if (f > t) {
+        temp = f;
+        f = t;
+        t = temp;
+    }
+    d->mRowSpan = t - f + 1;
+    f = from.row();
+    t = to.row();
+    if (f > t) {
+        temp = f;
+        f = t;
+        t = temp;
+    }
+    d->mColSpan = t - f + 1;
+    d->mValue = value;
 }
 
 QList<Cell*> MergedCell::overwritten() {
@@ -73,11 +132,26 @@ void MergedCell::setOverwritten(QList<Cell*> cells) {
     Q_D(MergedCell);
     d->mOverwritten = cells;
 }
+
 void MergedCell::setMergedData() {
     Q_D(MergedCell);
     d->mMergedData = MergedCellPrivate::MergedData;
 }
+
 void MergedCell::setFirstCell() {
     Q_D(MergedCell);
     d->mMergedData = MergedCellPrivate::FirstCellData;
 }
+
+int MergedCell::rowSpan() {
+    Q_D(MergedCell);
+    return d->mRowSpan;
+
+}
+int MergedCell::columnSpan() {
+    Q_D(MergedCell);
+    return d->mColSpan;
+}
+
+}
+

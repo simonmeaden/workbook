@@ -23,58 +23,49 @@
 
 #include "workbook_p.h"
 #include "workbook.h"
-#include "worksheet.h"
+#include "qworkbookview.h"
 #include "toolbar/qworkbooktoolbar.h"
+#include "qworkbookview.h"
+#include "qworksheetview.h"
+#include "workbookparser.h"
+#include "workbook_global.h"
 
-#include <xlsxdocument.h>
-#include <xlsxworkbook.h>
-#include <xlsxworksheet.h>
+#include "xlsxdocument.h"
+#include "xlsxworkbook.h"
+#include "xlsxworksheet.h"
 
-WorkbookPrivate::WorkbookPrivate(Workbook *parent) :
+
+namespace QWorkbook {
+
+WorkbookPrivate::WorkbookPrivate(PWorkbookParser parser,
+                                 QWorkbookView *bookView,
+                                 Workbook *parent) :
+    pBookView(bookView),
+    pCurrentWorksheet(NULL),
+    pParser(parser),
     q_ptr(parent) {
 
-    pPluginStore = NULL;
 }
 
-WorkbookPrivate::~WorkbookPrivate() {
-
-}
 
 void WorkbookPrivate::setToolbar(QWorkbookToolBar *toolbar) {
     pToolbar = toolbar;
 
 }
 
-void WorkbookPrivate::saveWorkbook(QString filename) {
-    if (!filename.isEmpty()) {
-        WorksheetType type;
-        if (filename.toLower().endsWith(".ods"))
-            type = ODS;
-        else if (filename.endsWith(".xls"))
-            type = XLS;
-        else if (filename.endsWith(".xlsx"))
-            type = XLSX;
-        else
-            type = NOT_A_SPREADSHEET;
-
-        saveWorkbook(filename, type);
-    }
-}
-
 void WorkbookPrivate::saveWorkbook(QString filename, WorksheetType type) {
     switch (type) {
     case ODS:
-        saveOds(filename);
         break;
     case XLS:
-        saveXls(filename);
         break;
-    case XLSX: {
+    case XLSX:
         saveXlsx(filename);
         break;
-    }
+    case CSV:
+        saveCSV(filename);
+        break;
     default:
-        // TODO not standard file
         break;
     }
 }
@@ -83,12 +74,21 @@ void WorkbookPrivate::saveOds(QString /*filename*/) {
 
 }
 
+void WorkbookPrivate::saveDif(QString /*filename*/) {
+
+}
+
+void WorkbookPrivate::saveCSV(QString /*filename*/) {
+
+}
+
 void WorkbookPrivate::saveXls(QString /*filename*/) {
 
 }
 
 void WorkbookPrivate::saveXlsx(QString filename) {
-    QXlsx::Document document(filename);
+
+    QXlsx::Document document(filename, q_ptr);
 
 
     document.setDocumentProperty("title", q_ptr->property("title").toString());
@@ -102,13 +102,13 @@ void WorkbookPrivate::saveXlsx(QString filename) {
     document.setDocumentProperty("created", q_ptr->property("created").toDateTime().toString("dd MMMM yyyy, hh:mm"));
 
 
-    QListIterator<Worksheet*> it(mSheets);
+    QListIterator<QWorksheetView*> it(mSheets);
     while (it.hasNext()) {
-        Worksheet *source = it.next();
+        QWorksheetView *source = it.next();
         QString name = source->sheetName();
 
         document.addSheet(name);
-        source->writeXlsx(document.currentWorksheet());
+        source->writeWorksheet(document.currentWorksheet());
 
     }
 
@@ -119,6 +119,7 @@ void WorkbookPrivate::saveXlsx(QString filename) {
 void WorkbookPrivate::loadWorkbook(QString filename) {
     if (!filename.isEmpty()) {
         WorksheetType type;
+
         if (filename.toLower().endsWith(".ods"))
             type = ODS;
         else if (filename.endsWith(".xls"))
@@ -142,11 +143,7 @@ void WorkbookPrivate::loadWorkbook(QString filename) {
             int count = book->sheetCount();
 
             for (int i = 0; i < count; i++) {
-                if (!pPluginStore) {
-                    pPluginStore = new PluginStore(q_ptr);
-                }
                 // TODO read xlsx file
-//                Worksheet *sheet = new Worksheet(pPluginStore, q_ptr);
 
 //                sheet->readXlsx(book, i);
             }
@@ -160,35 +157,58 @@ void WorkbookPrivate::loadWorkbook(QString filename) {
     }
 }
 
-int WorkbookPrivate::indexOf(Worksheet *sheet) {
+QStringList WorkbookPrivate::names() {
+    return mNames.keys();
+}
+
+int WorkbookPrivate::indexOf(QWorksheetView *sheet) {
     return mSheets.indexOf(sheet);
 }
 
-Worksheet* WorkbookPrivate::worksheet(int index) {
+QWorksheetView *WorkbookPrivate::worksheetView(int index) {
     return mSheets.at(index);
 }
 
-Worksheet* WorkbookPrivate::worksheet(QString name) {
+QWorksheetView *WorkbookPrivate::worksheetView(QString name) {
     return mNames.value(name);
 }
 
-Worksheet* WorkbookPrivate::currentWorksheet() {
+QWorksheetView *WorkbookPrivate::currentWorksheetView() {
     return pCurrentWorksheet;
 }
 
-void WorkbookPrivate::setCurrentWorksheet(int index) {
-    pCurrentWorksheet = mSheets.at(index);
-}
-
-void WorkbookPrivate::setCurrentWorksheet(QString name) {
-    pCurrentWorksheet = mNames.value(name);
-}
-
-Worksheet* WorkbookPrivate::addWorksheet() {
-    if (!pPluginStore) {
-        pPluginStore = new PluginStore(q_ptr);
+void WorkbookPrivate::setCurrentWorksheetView(int index) {
+    if (pCurrentWorksheet) {
+        q_ptr->disconnect(pCurrentWorksheet, SIGNAL(cellContentsChanged(QString)),
+                          pBookView, SIGNAL(cellContentsChanged(QString)));
+        pCurrentWorksheet->disconnectSignalsFromParser();
     }
-    Worksheet *sheet = new Worksheet(pPluginStore, q_ptr);
+
+    pCurrentWorksheet = mSheets.at(index);
+    pCurrentWorksheet->connectSignalsToParser();
+    q_ptr->connect(pCurrentWorksheet, SIGNAL(cellContentsChanged(QString)),
+                   pBookView, SIGNAL(cellContentsChanged(QString)));
+//    pCurrentWorksheet->triggerCurrentSelection();
+}
+
+void WorkbookPrivate::setCurrentWorksheetView(QString name) {
+    if (pCurrentWorksheet) {
+        q_ptr->disconnect(pCurrentWorksheet, SIGNAL(cellContentsChanged(QString)),
+                          pBookView, SIGNAL(cellContentsChanged(QString)));
+    }
+
+    pCurrentWorksheet = mNames.value(name);
+    q_ptr->connect(pCurrentWorksheet, SIGNAL(cellContentsChanged(QString)),
+                   pBookView, SIGNAL(cellContentsChanged(QString)));
+//    pCurrentWorksheet->triggerCurrentSelection();
+}
+
+QWorksheetView *WorkbookPrivate::addWorksheet() {
+
+    QWorkbookView *view = qobject_cast<QWorkbookView*>(q_ptr->parent());
+
+
+    QWorksheetView *sheet = new QWorksheetView(pParser, view);
 
     QString name = Workbook::SHEETNAME;
     name = name.arg(mSheets.size());
@@ -197,7 +217,7 @@ Worksheet* WorkbookPrivate::addWorksheet() {
     mSheets.append(sheet);
     mNames.insert(name, sheet);
     mRealnames.insert(sheet, false);
-    setCurrentWorksheet(mSheets.indexOf(sheet));
+    setCurrentWorksheetView(mSheets.indexOf(sheet));
 
     Q_Q(Workbook);
     emit q->sheetAdded(mSheets.indexOf(sheet));
@@ -205,17 +225,34 @@ Worksheet* WorkbookPrivate::addWorksheet() {
     return sheet;
 }
 
-Worksheet *WorkbookPrivate::insertWorksheet(int index) {
+QWorksheetView* WorkbookPrivate::insertWorksheet(int index, QWorksheetView *sheet) {
     int i = index;
     if (i >= mSheets.size())
         return addWorksheet();
     else if (i < 0)
         i = 0;
 
-    if (!pPluginStore) {
-        pPluginStore = new PluginStore(q_ptr);
-    }
-    Worksheet *sheet = new Worksheet(pPluginStore, q_ptr);
+    mSheets.insert(i, sheet);
+    mNames.insert(sheet->sheetName(), sheet);
+    mRealnames.insert(sheet, true);
+    setCurrentWorksheetView(i);
+
+    renameSheets(i);
+
+    Q_Q(Workbook);
+    emit q->sheetAdded(mSheets.indexOf(sheet));
+
+    return sheet;
+}
+
+QWorksheetView *WorkbookPrivate::insertNewWorksheet(int index) {
+    int i = index;
+    if (i >= mSheets.size())
+        return addWorksheet();
+    else if (i < 0)
+        i = 0;
+
+    QWorksheetView *sheet = new QWorksheetView(pParser, qobject_cast<QWorkbookView*>(q_ptr->parent()));
 
     QString name = Workbook::SHEETNAME;
     name = name.arg(mSheets.size());
@@ -224,7 +261,7 @@ Worksheet *WorkbookPrivate::insertWorksheet(int index) {
     mSheets.insert(i, sheet);
     mNames.insert(name, sheet);
     mRealnames.insert(sheet, false);
-    setCurrentWorksheet(i);
+    setCurrentWorksheetView(i);
 
     renameSheets(i);
 
@@ -239,7 +276,7 @@ int WorkbookPrivate::renameSheet(QString oldname, QString newname) {
     QString n = newname.trimmed();
     if (o == n || n.isEmpty()) return -1;
 
-    Worksheet *sheet = mNames.value(o);
+    QWorksheetView *sheet = mNames.value(o);
     if (!sheet) return -1;
 
     sheet->setSheetName(n);
@@ -273,7 +310,7 @@ bool WorkbookPrivate::areNumbers(QString str) {
 }
 
 void WorkbookPrivate::renameSheets(int index) {
-    Worksheet *sheet;
+    QWorksheetView *sheet;
     bool isReal;
 
     for (int i = index + 1; i < mSheets.size(); i++) {
@@ -293,15 +330,15 @@ void WorkbookPrivate::renameSheets(int index) {
 int WorkbookPrivate::removeWorksheet(int index) {
     if (index < 0 || index < mSheets.size()) return -1;
 
-    Worksheet * sheet = mSheets.at(index);
+    QWorksheetView * sheet = mSheets.at(index);
     if (!sheet) return -1;
 
     QString name = sheet->sheetName();
     if (sheet == pCurrentWorksheet) {
         if (index > 0)
-            setCurrentWorksheet(index - 1);
-        else if (index == 0 && count() > 1)
-            setCurrentWorksheet(index + 1);
+            setCurrentWorksheetView(index - 1);
+        else if (index == 0 && size() > 1)
+            setCurrentWorksheetView(index + 1);
         else
             pCurrentWorksheet = NULL;
     }
@@ -320,16 +357,16 @@ int WorkbookPrivate::removeWorksheet(int index) {
 }
 
 int WorkbookPrivate::removeWorksheet(QString name) {
-    Worksheet *sheet = mNames.value(name);
+    QWorksheetView *sheet = mNames.value(name);
     if (!sheet) return -1;
 
     int index = mSheets.indexOf(sheet);
 
     if (sheet == pCurrentWorksheet) {
         if (index > 0)
-            setCurrentWorksheet(index - 1);
-        else if (index == 0 && count() > 1)
-            setCurrentWorksheet(index + 1);
+            setCurrentWorksheetView(index - 1);
+        else if (index == 0 && size() > 1)
+            setCurrentWorksheetView(index + 1);
         else
             pCurrentWorksheet = NULL;
     }
@@ -346,7 +383,7 @@ int WorkbookPrivate::removeWorksheet(QString name) {
     return index;
 }
 
-int WorkbookPrivate::removeWorksheet(Worksheet *sheet) {
+int WorkbookPrivate::removeWorksheet(QWorksheetView *sheet) {
     if (!sheet) return -1;
 
     QString name = sheet->sheetName();
@@ -354,9 +391,9 @@ int WorkbookPrivate::removeWorksheet(Worksheet *sheet) {
 
     if (sheet == pCurrentWorksheet) {
         if (index > 0)
-            setCurrentWorksheet(index - 1);
-        else if (index == 0 && count() > 1)
-            setCurrentWorksheet(index + 1);
+            setCurrentWorksheetView(index - 1);
+        else if (index == 0 && size() > 1)
+            setCurrentWorksheetView(index + 1);
         else
             pCurrentWorksheet = NULL;
     }
@@ -372,3 +409,12 @@ int WorkbookPrivate::removeWorksheet(Worksheet *sheet) {
 
     return index;
 }
+
+void WorkbookPrivate::moveSheet(int oldIndex, int newIndex) {
+
+    mSheets.move(oldIndex, newIndex);
+
+}
+
+}
+

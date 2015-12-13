@@ -21,6 +21,11 @@
 #include "qworkbookfonttoolbar.h"
 #include "qworkbookfonttoolbar_p.h"
 #include "qworkbooktoolbar.h"
+#include "qworksheetview.h"
+
+#include "workbook_global.h"
+
+namespace QWorkbook {
 
 QWorkbookFontToolBar::QWorkbookFontToolBar(QWidget *parent) :
     QToolBar(parent),
@@ -42,13 +47,15 @@ QWorkbookFontToolBar::QWorkbookFontToolBar(QString title, QWidget *parent) :
 
 }
 
-QWorkbookFontToolBar::~QWorkbookFontToolBar() {
+void QWorkbookFontToolBar::setWorkbookView(QWorkbookView *view) {
+
+    d_ptr->setView(view);
 
 }
 
-void QWorkbookFontToolBar::setWorkbookView(QWorkbookView *view) {
+void QWorkbookFontToolBar::setWorksheetView(QWorksheetView *view) {
 
-    d_ptr->setWorkbookView(view);
+    d_ptr->setView(view);
 
 }
 
@@ -73,3 +80,6 @@ void QWorkbookFontToolBar::setFont(QFont font) {
 void QWorkbookFontToolBar::setFont(bool selected, QFont font, int size) {
     d_ptr->setFont(selected, font, size);
 }
+
+}
+

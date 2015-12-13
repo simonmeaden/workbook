@@ -1,5 +1,7 @@
 #include "tanfunction.h"
 
+namespace QWorkbook {
+
 TanFunction::TanFunction(QObject *parent) : QObject(parent) {
 
     setName("TAN");
@@ -27,3 +29,4 @@ QVariant TanFunction::calculate(qreal radians) {
 }
 
 
+}

@@ -1,5 +1,7 @@
 #include "radiansfunction.h"
 
+namespace QWorkbook {
+
 RadiansFunction::RadiansFunction(QObject *parent) :QObject(parent) {
 
     setName("RADIANS");
@@ -24,4 +26,6 @@ QStringList RadiansFunction::importer() const {
 
 QVariant RadiansFunction::calculate(qreal value) {
     return qDegreesToRadians(value);
+}
+
 }

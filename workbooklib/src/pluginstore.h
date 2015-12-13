@@ -29,20 +29,29 @@
 #include <QApplication>
 #include <QScopedPointer>
 
-#include "interface.h"
+#include <interface.h>
 #include "pluginstore_p.h"
 
-class PluginStore : QObject {
+#include "workbook_global.h"
+
+namespace QWorkbook {
+
+class PluginStore : public QObject {
     Q_OBJECT
 public:
     PluginStore();
     PluginStore(QObject *parent=0);
-    ~PluginStore();
+    virtual ~PluginStore() {}
 
     IOperator* getOperator(QString name);
     IFunction* getFunction(QString name);
     IConstant* getConstant(QString name);
     bool isEmpty();
+
+    QStringList functionNames();
+    QStringList operatorNames();
+    QStringList constantNames();
+
 
 public slots:
     void addOperator(IOperator* interface);
@@ -56,15 +65,14 @@ protected:
         d_ptr(&d) {}
     const QScopedPointer<PluginStorePrivate> d_ptr;
 
-    QMap<QString, IOperator*> mOperators;
-    QMap<QString, IFunction*> mFunctions;
-    QMap<QString, IConstant*> mConstants;
-
 private:
     Q_DECLARE_PRIVATE(PluginStore)
 
 };
 
 
+
+
+}
 
 #endif // PLUGINSTORE_H

@@ -26,12 +26,12 @@
 #include "qworksheetview.h"
 #include "format.h"
 
+#include "workbook_global.h"
+
+namespace QWorkbook {
+
 FormatDelegatePrivate::FormatDelegatePrivate(FormatDelegate *parent) :
     q_ptr(parent) {
-
-}
-
-FormatDelegatePrivate::~FormatDelegatePrivate() {
 
 }
 
@@ -75,7 +75,11 @@ QWidget* FormatDelegatePrivate::createEditor(QWidget *parent,
     if (le) {
         q_ptr->connect(le, SIGNAL(textChanged(QString)),
                        q_ptr->pView, SIGNAL(cellContentsChanged(QString)), Qt::UniqueConnection);
+        q_ptr->connect(q_ptr->pView, SIGNAL(contentsChanged(QString)),
+                       le, SIGNAL(textChanged(QString)), Qt::UniqueConnection);
         QPalette p = le->palette();
+        // need to reset the highlight colour as the standard one
+        // is lost in the edit colour.
         QBrush highlightBrush("cornflowerblue");
         QBrush highlightTextBrush(Qt::white);
         p.setBrush(QPalette::Highlight, highlightBrush);
@@ -118,7 +122,7 @@ void FormatDelegatePrivate::paintRightBorder(QPainter *painter, Format *format, 
     QPen pen = painter->pen();
 
     switch (border.style()) {
-    case SINGLE: {// for these the Format::BorderStyle is the same as the Qt::BorderStyle
+    case BS_SINGLE: {// for these the Format::BorderStyle is the same as the Qt::BorderStyle
         pen.setStyle(static_cast<Qt::PenStyle>(border.style()));
         thickness = qRound(border.thickness() * 1.333333333);
         pen.setWidth(thickness);
@@ -136,10 +140,10 @@ void FormatDelegatePrivate::paintRightBorder(QPainter *painter, Format *format, 
         painter->drawLine(tr, br);
         break;
     }
-    case DOTTED:
-    case LARGEDASH:
-    case DASH_DOT:
-    case DASH_DOT_DOT: {
+    case BS_DOTTED:
+    case BS_LARGEDASH:
+    case BS_DASH_DOT:
+    case BS_DASH_DOT_DOT: {
         pen.setStyle(static_cast<Qt::PenStyle>(border.style()));
         thickness = qRound(border.thickness() * 1.333333333);
         pen.setWidth(thickness);
@@ -157,7 +161,7 @@ void FormatDelegatePrivate::paintRightBorder(QPainter *painter, Format *format, 
         painter->drawLine(tr, br);
         break;
     }
-    case DOUBLE: {  // For this it is different so do it myself
+    case BS_DOUBLE: {  // For this it is different so do it myself
 
         pen.setWidth(1); // each individual line is only 1 pixel wide.
 
@@ -168,7 +172,7 @@ void FormatDelegatePrivate::paintRightBorder(QPainter *painter, Format *format, 
         Border borderB = format->bottomBorder();
 
         topI = rect.topRight();
-        if (borderT.isEnabled() && borderT.style() == DOUBLE) {
+        if (borderT.isEnabled() && borderT.style() == BS_DOUBLE) {
             topI.rx() -= offset;
             topI.ry() += offset;
             topO.rx() += offset;
@@ -176,7 +180,7 @@ void FormatDelegatePrivate::paintRightBorder(QPainter *painter, Format *format, 
         }
 
         bottomI = rect.bottomRight();
-        if (borderB.isEnabled() && borderB.style() == DOUBLE) {
+        if (borderB.isEnabled() && borderB.style() == BS_DOUBLE) {
             bottomI.rx() -= offset;
             bottomI.ry() -= offset;
             bottomO.rx() += offset;
@@ -188,7 +192,7 @@ void FormatDelegatePrivate::paintRightBorder(QPainter *painter, Format *format, 
         painter->drawLine(topO, bottomO);
         break;
     }
-    case SMALLDASH: { // For this it is different so do it myself
+    case BS_SMALLDASH: { // For this it is different so do it myself
         QVector<qreal> dashes;
         dashes << 3 << 5;
         pen.setDashPattern(dashes);
@@ -212,7 +216,7 @@ void FormatDelegatePrivate::paintLeftBorder(QPainter *painter, Format *format, Q
     QPen pen = painter->pen();
 
     switch (border.style()) {
-    case SINGLE: {// for these the Format::BorderStyle is the same as the Qt::BorderStyle
+    case BS_SINGLE: {// for these the Format::BorderStyle is the same as the Qt::BorderStyle
         pen.setStyle(static_cast<Qt::PenStyle>(border.style()));
         thickness = /*qRound(*/border.thickness() * 1.333333333/*)*/;
         pen.setWidth(thickness);
@@ -230,10 +234,10 @@ void FormatDelegatePrivate::paintLeftBorder(QPainter *painter, Format *format, Q
         painter->drawLine(tl, bl);
         break;
     }
-    case DOTTED:
-    case LARGEDASH:
-    case DASH_DOT:
-    case DASH_DOT_DOT: {
+    case BS_DOTTED:
+    case BS_LARGEDASH:
+    case BS_DASH_DOT:
+    case BS_DASH_DOT_DOT: {
         pen.setStyle(static_cast<Qt::PenStyle>(border.style()));
         thickness = /*qRound(*/border.thickness() * 1.333333333/*)*/;
         pen.setWidth(thickness);
@@ -251,7 +255,7 @@ void FormatDelegatePrivate::paintLeftBorder(QPainter *painter, Format *format, Q
         painter->drawLine(tl, bl);
         break;
     }
-    case DOUBLE: {  // For this it is different so do it myself
+    case BS_DOUBLE: {  // For this it is different so do it myself
 
         // basically the thickness in this case is the gap between the lines.
         float offset = ((border.thickness() * 1.333333333) + 1) / 2.0;
@@ -260,7 +264,7 @@ void FormatDelegatePrivate::paintLeftBorder(QPainter *painter, Format *format, Q
         Border borderB = format->bottomBorder();
 
         topI = rect.topLeft();
-        if (borderT.isEnabled() && borderT.style() == DOUBLE) {
+        if (borderT.isEnabled() && borderT.style() == BS_DOUBLE) {
             topI.rx() += offset;
             topI.ry() += offset;
             topO.rx() -= offset;
@@ -268,7 +272,7 @@ void FormatDelegatePrivate::paintLeftBorder(QPainter *painter, Format *format, Q
         }
 
         bottomI = rect.bottomLeft();
-        if (borderB.isEnabled() && borderB.style() == DOUBLE) {
+        if (borderB.isEnabled() && borderB.style() == BS_DOUBLE) {
             bottomI.rx() += offset;
             bottomI.ry() -= offset;
             bottomO.rx() -= offset;
@@ -280,7 +284,7 @@ void FormatDelegatePrivate::paintLeftBorder(QPainter *painter, Format *format, Q
         painter->drawLine(topO, bottomO);
         break;
     }
-    case SMALLDASH: { // For this it is different so do it myself
+    case BS_SMALLDASH: { // For this it is different so do it myself
         QVector<qreal> dashes;
         dashes << 3 << 5;
         pen.setDashPattern(dashes);
@@ -304,7 +308,7 @@ void FormatDelegatePrivate::paintBottomBorder(QPainter *painter, Format *format,
     QPen pen = painter->pen();
 
     switch (border.style()) {
-    case SINGLE: {// for these the Format::BorderStyle is the same as the Qt::BorderStyle
+    case BS_SINGLE: {// for these the Format::BorderStyle is the same as the Qt::BorderStyle
         pen.setStyle(static_cast<Qt::PenStyle>(border.style()));
         thickness = qRound(border.thickness() * 1.333333333);
         pen.setWidth(thickness);
@@ -322,9 +326,9 @@ void FormatDelegatePrivate::paintBottomBorder(QPainter *painter, Format *format,
         painter->drawLine(bl, br);
         break;
     }
-    case DOTTED:
-    case LARGEDASH:
-    case DASH_DOT: {
+    case BS_DOTTED:
+    case BS_LARGEDASH:
+    case BS_DASH_DOT: {
         pen.setStyle(static_cast<Qt::PenStyle>(border.style()));
         thickness = qRound(border.thickness() * 1.333333333);
         pen.setWidth(thickness);
@@ -342,7 +346,7 @@ void FormatDelegatePrivate::paintBottomBorder(QPainter *painter, Format *format,
         painter->drawLine(bl, br);
         break;
     }
-    case DOUBLE: {  // For this it is different so do it myself
+    case BS_DOUBLE: {  // For this it is different so do it myself
 
         pen.setWidth(1); // each individual line is only 1 pixel wide.
 
@@ -352,7 +356,7 @@ void FormatDelegatePrivate::paintBottomBorder(QPainter *painter, Format *format,
         Border borderR = format->rightBorder();
 
         topI = rect.topLeft();
-        if (borderL.isEnabled() && borderL.style() == DOUBLE) {
+        if (borderL.isEnabled() && borderL.style() == BS_DOUBLE) {
             topI.rx() += offset;
             topI.ry() += offset;
             topO.rx() -= offset;
@@ -360,7 +364,7 @@ void FormatDelegatePrivate::paintBottomBorder(QPainter *painter, Format *format,
         }
 
         bottomI = rect.bottomLeft();
-        if (borderR.isEnabled() && borderR.style() == DOUBLE) {
+        if (borderR.isEnabled() && borderR.style() == BS_DOUBLE) {
             bottomI.rx() += offset;
             bottomI.ry() -= offset;
             bottomO.rx() -= offset;
@@ -372,7 +376,7 @@ void FormatDelegatePrivate::paintBottomBorder(QPainter *painter, Format *format,
         painter->drawLine(topO, bottomO);
         break;
     }
-    case SMALLDASH: { // For this it is different so do it myself
+    case BS_SMALLDASH: { // For this it is different so do it myself
         QVector<qreal> dashes;
         dashes << 3 << 5;
         pen.setDashPattern(dashes);
@@ -395,7 +399,7 @@ void FormatDelegatePrivate::paintTopBorder(QPainter *painter, Format *format, QR
     QPen pen = painter->pen();
 
     switch (border.style()) {
-    case SINGLE: {// for these the Format::BorderStyle is the same as the Qt::BorderStyle
+    case BS_SINGLE: {// for these the Format::BorderStyle is the same as the Qt::BorderStyle
         pen.setStyle(static_cast<Qt::PenStyle>(border.style()));
         thickness = qRound(border.thickness() * 1.333333333);
         pen.setWidth(thickness);
@@ -413,10 +417,10 @@ void FormatDelegatePrivate::paintTopBorder(QPainter *painter, Format *format, QR
         painter->drawLine(tl, tr);
         break;
     }
-    case DOTTED:
-    case LARGEDASH:
-    case DASH_DOT:
-    case DASH_DOT_DOT: {
+    case BS_DOTTED:
+    case BS_LARGEDASH:
+    case BS_DASH_DOT:
+    case BS_DASH_DOT_DOT: {
         pen.setStyle(static_cast<Qt::PenStyle>(border.style()));
         thickness = qRound(border.thickness() * 1.333333333);
         pen.setWidth(thickness);
@@ -435,7 +439,7 @@ void FormatDelegatePrivate::paintTopBorder(QPainter *painter, Format *format, QR
 //        painter->drawLine(rect.topLeft(), rect.topRight());
         break;
     }
-    case DOUBLE: {  // For this it is different so do it myself
+    case BS_DOUBLE: {  // For this it is different so do it myself
 
         pen.setStyle(Qt::SolidLine);
         pen.setWidth(1); // each individual line is only 1 pixel wide.
@@ -449,7 +453,7 @@ void FormatDelegatePrivate::paintTopBorder(QPainter *painter, Format *format, QR
 
         leftO = rect.topLeft();
         leftI = leftO;
-        if (borderL.isEnabled() && borderL.style() == DOUBLE) {
+        if (borderL.isEnabled() && borderL.style() == BS_DOUBLE) {
             leftO.rx() -= offset;
             leftO.ry() -= offset;
             leftI.rx() += offset;
@@ -458,7 +462,7 @@ void FormatDelegatePrivate::paintTopBorder(QPainter *painter, Format *format, QR
 
         rightO = rect.topRight();
         rightI = rightO;
-        if (borderR.isEnabled() && borderR.style() == DOUBLE) {
+        if (borderR.isEnabled() && borderR.style() == BS_DOUBLE) {
             rightO.rx() += offset;
             rightO.ry() -= offset;
             rightI.rx() -= offset;
@@ -470,7 +474,7 @@ void FormatDelegatePrivate::paintTopBorder(QPainter *painter, Format *format, QR
         painter->drawLine(leftI, rightI);
         break;
     }
-    case SMALLDASH: { // For this it is different so do it myself
+    case BS_SMALLDASH: { // For this it is different so do it myself
         QVector<qreal> dashes;
         dashes << 3 << 5;
         pen.setDashPattern(dashes);
@@ -485,3 +489,6 @@ void FormatDelegatePrivate::paintTopBorder(QPainter *painter, Format *format, QR
         break;
     }
 }
+
+}
+

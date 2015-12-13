@@ -23,102 +23,202 @@
 
 #include <QString>
 #include <QRegularExpression>
+#include <QtMath>
 
 #include <qquad.h>
+#include "regex.h"
 #include "types.h"
 
+#include "workbook_global.h"
+
+namespace QWorkbook {
+
+struct SplitCellName {
+
+    int row, column;
+    bool isGood, rowStatic, colStatic;
+
+    bool isValid() {
+        return (row >= 0 && column >= 0);
+    }
+};
+struct SplitRangeName {
+
+    SplitCellName from, to;
+
+    bool isValid() {
+        return (from.isValid() && to.isValid());
+    }
+
+};
+
+/*!
+    \brief The Reference class is the base class for several different classes.
+
+    Mainly supplies static conversion methods for use converting cell reference
+    names to row & column positions.
+*/
 class Reference {
 public:
     Reference() {}
-    ~Reference() {}
+    virtual ~Reference() {}
 
 protected:
-    static int columnFromString(QString &columnRef) {
 
-        char c;
-        int mult = 1;
-        int column = 0;
-        for (int i = columnRef.length() - 1; i >= 0 ; i--) {
-            c = columnRef[i].toLatin1();
-            if (c < 'A' || c > 'Z') {
-                return -1; // invalid character.
-            }
-            column += (c - 'A') * mult;
-            mult *= 10;
-        }
 
-        return column;
+    static QString cellToString(int column, int row) {
+        QString result =  columnToString(column) + rowToString(row);
+        return result;
     }
 
-    static int rowFromString(QString &rowRef) {
+    /*!
+        /brief Converts a table row value to an spreadsheet row value.
 
-        char c;
-        int mult = 1;
-        int row = 0;
-        for (int i = rowRef.length() - 1; i >= 0 ; i--) {
-            c = rowRef[i].toLatin1();
-            if (c < '0' || c > '9') {
-                return -1; // invalid character.
-            }
-            row += (c - '0') * mult;
-            mult *= 10;
-        }
+        Note : Spreadsheet offsets start at 1 while most others start at 0. The
+        function increments to allow zero based offsets.
 
-        return row;
+        Row is easy as it just a number a1 - n
+    */
+    static QString rowToString(int row) {
+        QString result =  QString::number(row + 1);
+        return result;
+    }
+    /*!
+        \brief Converts a spreadsheet numerical row string to it's table row number.
+
+        Static method that converts a numerical one based row number to it's
+        zero based row number or -1 if the number is invalid.
+    */
+    static int rowFromString(QString rowRef) {
+
+        bool test;
+        int row = rowRef.toInt(&test);
+
+        if (test) // rows are 1 based, indexes to the table are 0 based.
+            return row - 1;
+        return -1;
     }
 
-    static QPair<int, int> cellFromString(QString &cellRef) {
+    /*!
+        \brief Converts a cell reference to it's row/column numerical values.
+    */
+    static SplitCellName cellFromString(QString cellRef) {
 
-        QQuad<QString, QString, QString, QString> m_quad = init(cellRef);
+        SplitRangeName range = init(cellRef);
 
-        QPair<int, int> result = qMakePair<int, int>(0, 0);
-        if (!m_quad.first.isEmpty() && !m_quad.second.isEmpty()) {
-            result.first = columnFromString(m_quad.first);
-            result.second = rowFromString(m_quad.second);
+        return range.from;
+
+    }
+
+    /*!
+        \brief Converts a range reference to it's row/column numerical values.
+    */
+    static SplitRangeName rangeFromString(QString cellRef) {
+
+        SplitRangeName range = init(cellRef);
+
+        return range;
+
+    }
+
+    static SplitRangeName init(QString ref) {
+
+        SplitRangeName range;
+
+        QRegularExpression re = QRegularExpression(REGEX_ROW);
+        QRegularExpressionMatch match = re.match(ref);
+        if (re.captureCount() == 1) {
+            if (match.hasMatch()) {
+                range.from.row = match.captured(0).toInt();
+                range.to.row = -1;
+            }
+        } else if (re.captureCount() == 2) {
+            if (match.hasMatch()) {
+                range.from.row = match.captured(0).toInt();
+                range.to.row = match.captured(2).toInt();
+            }
         }
+
+        re = QRegularExpression(REGEX_COLUMN);
+        match = re.match(ref);
+        if (re.captureCount() == 1) {
+            if (match.hasMatch()) {
+                range.from.column = columnFromString(match.captured(0));
+                range.from.column = -1;
+            }
+        } else if (re.captureCount() == 2) {
+            if (match.hasMatch()) {
+                range.from.column = columnFromString(match.captured(0));
+                range.from.column = columnFromString(match.captured(2));
+            }
+        }
+
+        return range;
+
+    }
+
+protected:
+    /*!
+        \brief Converts a spreadsheet numerical column string to it's table column number.
+
+        A = 0, B = 1, AA = 27 etc.
+
+    */
+    static int columnFromString(QString columnRef) {
+        int result = colFromString(columnRef) - 1;
+        return result;
+    }
+
+private:
+    static int colFromString(QString column) {
+        char c = column.right(1).toLatin1().at(0);
+        QString rest = column.left(column.length() - 1);
+        int result = (c - 'A' + 1);
+
+        if (rest.length() > 0)
+            result += (colFromString(rest) * 26);
 
         return result;
-
     }
 
-    static QQuad<QString, QString, QString, QString> init(QString& ref) {
+protected:
+    /*!
+        \brief Converts a table column value to an spreadsheet column value A - Z, AA - ZZ.
 
-        QQuad<QString, QString, QString, QString> m_quad;
+        Note : Spreadsheet offsets start at 1 while tables start at 0. The
+        function increments to allow zero based offsets.
 
-        QRegularExpression m_re = QRegularExpression(REGEXSTRING_ROW);
-        QRegularExpressionMatch match = m_re.match(ref);
-        if (m_re.captureCount() == 1) {
-            if (match.hasMatch()) {
-                m_quad.second = match.captured(0);
-                m_quad.fourth = QString();
-            }
-        } else if (m_re.captureCount() == 2) {
-            if (match.hasMatch()) {
-                m_quad.second = match.captured(0);
-                m_quad.fourth = match.captured(2);
-            }
-        }
+        0 = A
+        1 = B
+        ...
+        26 = AA
+        27 = AB etc.
+    */
+    static QString columnToString(int column) {
 
-        m_re = QRegularExpression(REGEXSTRING_COLUMN);
-        match = m_re.match(ref);
-        if (m_re.captureCount() == 1) {
-            if (match.hasMatch()) {
-                m_quad.first = match.captured(0);
-                m_quad.third = QString();
-            }
-        } else if (m_re.captureCount() == 2) {
-            if (match.hasMatch()) {
-                m_quad.first = match.captured(0);
-                m_quad.third = match.captured(2);
-            }
-        }
 
-        return m_quad;
+        QString result = colToString(column);
 
+        return result;
     }
 
+private:
+    static QString colToString(int column) {
+        int divisor = 26;
+        int mod = column % divisor;
+        int div = column / divisor;
 
+        QString result(mod + 'A');
+
+        if (div > 0)
+            result.prepend(colToString(div - 1));
+
+        return result;
+    }
 
 };
+
+
+}
 
 #endif // REFERENCE_H

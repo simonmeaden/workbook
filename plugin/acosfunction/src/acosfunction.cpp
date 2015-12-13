@@ -1,5 +1,7 @@
 #include "acosfunction.h"
 
+namespace QWorkbook {
+
 AcosFunction::AcosFunction(QObject *parent) :QObject(parent) {
 
     setName("ACOS");
@@ -26,3 +28,4 @@ QVariant AcosFunction::calculate(qreal radians) {
     return qAcos(radians);
 }
 
+}

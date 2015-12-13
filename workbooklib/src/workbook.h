@@ -28,28 +28,36 @@
 
 #include "types.h"
 #include "workbook_global.h"
+#include "workbook_p.h"
 
-class WorkbookPrivate;
-class Worksheet;
+namespace QWorkbook {
+
+
 class QWorksheetView;
+class QWorkbookView;
 
 
 class WORKBOOKSHARED_EXPORT Workbook : public QObject {
     Q_OBJECT
 public:
-    explicit Workbook(QObject *parent = 0);
-    ~Workbook();
+    explicit Workbook(PWorkbookParser parser,
+                      QWorkbookView *parent = 0);
+    virtual ~Workbook() {}
 
-    int indexOf(Worksheet*sheet);
-    int count();
-    void setCurrentWorksheet(int index);
-    void setCurrentWorksheet(QString name);
-    Worksheet *addWorksheet();
-    Worksheet *insertWorksheet(int index);
+    int indexOf(QWorksheetView*sheet);
+    int size();
+    void setCurrentWorksheetView(int index);
+    void setCurrentWorksheetView(QString name);
+    QWorksheetView *addWorksheet();
+    QWorksheetView *insertWorksheet(int index, QWorksheetView *view);
+    QWorksheetView *insertNewWorksheet(int index);
     int removeWorksheet(int index);
     int removeWorksheet(QString name);
-    int removeWorksheet(Worksheet *sheet);
+    int removeWorksheet(QWorksheetView *sheet);
     int renameSheet(QString oldname, QString newname);
+    void moveSheet(int, int);
+
+    QStringList names();
 
     static const QString SHEET; // base name for unnamed sheets
     static const QString SHEETNAME; // base name for unnamed sheets
@@ -60,7 +68,6 @@ signals:
     void sheetAdded(int at);
 
 public slots:
-    void saveWorkbook(QString filename);
     void saveWorkbook(QString filename, WorksheetType type);
 
 protected slots:
@@ -68,12 +75,15 @@ protected slots:
 protected:
     QScopedPointer<WorkbookPrivate> d_ptr;
 
-    Worksheet* worksheet(int index);
-    Worksheet* worksheet(QString name);
-    Worksheet* currentWorksheet();
+    QWorksheetView* worksheetView(int index);
+    QWorksheetView* worksheetView(QString name);
+    QWorksheetView* currentWorksheetView();
 
     friend class QWorkbookViewPrivate;
 
 };
+
+
+}
 
 #endif // WORKBOOK_H

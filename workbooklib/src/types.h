@@ -27,30 +27,29 @@
 
 #include <limits>
 
+#include "workbook_global.h"
+
+namespace QWorkbook {
+
+
 enum WorksheetType {
     NOT_A_SPREADSHEET, // Not one of the allowed files;
     ODS, // ODF format spreadsheet - default.
     XLS, // Windoze Excel spreadsheet format
-    XLSX, // Windoze Excel XML spreadsheet format
+    XLSX,// Windoze Excel XML spreadsheet format
+    CSV, // standard comma separated text
+    DIF, // Document Interchange Format
 };
 
 enum BorderStyle {
-    NONE,
-    SINGLE = Qt::SolidLine,
-    DOUBLE = 0x10,
-    DOTTED = Qt::DotLine,
-    LARGEDASH = Qt::DashLine,
-    SMALLDASH = 0x11,
-    DASH_DOT = Qt::DashDotLine,
-    DASH_DOT_DOT = Qt::DashDotDotLine,
-};
-
-enum CellType {
-    TextType,
-    NumberType,
-    BooleanType,
-    FormulaType,
-    ErrorType,
+    BS_NONE,
+    BS_SINGLE = Qt::SolidLine,
+    BS_DOUBLE = 0x10,
+    BS_DOTTED = Qt::DotLine,
+    BS_LARGEDASH = Qt::DashLine,
+    BS_SMALLDASH = 0x11,
+    BS_DASH_DOT = Qt::DashDotLine,
+    BS_DASH_DOT_DOT = Qt::DashDotDotLine,
 };
 
 enum UnderlineStyle {
@@ -104,6 +103,7 @@ struct FormatStatus {
     FormatStatus() {
         clear();
     }
+    virtual ~FormatStatus() {}
 
     void clear() {
         bAllBold = true;
@@ -140,10 +140,11 @@ public:
     Border() :
         bEnabled(false),
         mColor(QColor("black")),
-        mStyle(BorderStyle::NONE),
+        mStyle(BorderStyle::BS_NONE),
         mThickness(0) {
 
     }
+    virtual ~Border() {}
 
     bool isEnabled() {
         return bEnabled;
@@ -227,14 +228,17 @@ enum ParserError {
     BrokenExpression=0x80,
     NoFunctionAvailable=0x100,
 };
-Q_DECLARE_FLAGS(ParserErrors, ParserError)
-Q_DECLARE_OPERATORS_FOR_FLAGS(ParserErrors)
-Q_DECLARE_METATYPE(ParserError)
-
 
 // Static variables and constants
-const QString REGEXSTRING_ROW = "\\$?(\\d+)";
-const QString REGEXSTRING_COLUMN = "\\$?([A-Z]{1,3})";
+Q_DECLARE_FLAGS(ParserErrors, ParserError)
+Q_DECLARE_OPERATORS_FOR_FLAGS(ParserErrors)
+
+}
+
+Q_DECLARE_METATYPE(QWorkbook::ParserError)
+
+
+
 
 
 #endif // TYPES

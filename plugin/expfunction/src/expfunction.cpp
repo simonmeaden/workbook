@@ -1,5 +1,7 @@
 #include "expfunction.h"
 
+namespace QWorkbook {
+
 ExpFunction::ExpFunction(QObject *parent) :QObject(parent) {
 
     setName("EXP");
@@ -24,4 +26,6 @@ QStringList ExpFunction::importer() const {
 
 QVariant ExpFunction::calculate(qreal value) {
     return qExp(value);
+}
+
 }

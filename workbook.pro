@@ -13,3 +13,4 @@ workbooklib.depends += plugin
 
 examples.subdir = examples
 examples.depends += workbooklib
+

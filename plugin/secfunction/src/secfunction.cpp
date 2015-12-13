@@ -1,5 +1,7 @@
 #include "secfunction.h"
 
+namespace QWorkbook {
+
 SecFunction::SecFunction() {
 
     setName("SEC");
@@ -24,4 +26,6 @@ QStringList SecFunction::importer() const {
 
 QVariant SecFunction::calculate(qreal radians) {
     return (1.0 / qCos(radians));
+}
+
 }

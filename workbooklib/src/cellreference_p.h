@@ -28,19 +28,17 @@
 #include <qquad.h>
 #include "reference.h"
 
+#include "workbook_global.h"
+
+namespace QWorkbook {
+
 class CellReference;
 
 class CellReferencePrivate : public Reference {
 public:
     explicit CellReferencePrivate();
     explicit CellReferencePrivate(CellReference *parent);
-
-    static QString columnToString(int column);
-    static QString rowToString(int row);
-    static QString cellToString(int column, int row);
-    static QPair<int, int> cellFromString(QString&);
-    static int columnFromString(QString&columnRef);
-    static int rowFromString(QString&rowRef);
+    virtual ~CellReferencePrivate() {}
 
     bool isValid();
     int row() const {
@@ -49,12 +47,19 @@ public:
     int column() const {
         return mColumn;
     }
+    void setPosition(int&, int&);
+    void setPosition(int&, int&, bool&, bool&);
+    void setPosition(QString &reference);
+    QString toString();
+
 
     Q_DECLARE_PUBLIC(CellReference)
     CellReference *q_ptr;
     int mRow, mColumn;
+    bool bStaticRow, bStaticColumn;
 };
 
 
+}
 
 #endif // CELLREFERENCE_P_H

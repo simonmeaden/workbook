@@ -30,9 +30,11 @@
 #include "workbook_global.h"
 #include "qworkbookfonteffectstoolbar_p.h"
 
+namespace QWorkbook {
+
 class QWorkbookView;
+class QWorksheetView;
 class FormatStatus;
-//class QWorkbookFontEffectsToolBarPrivate;
 
 class WORKBOOKSHARED_EXPORT QWorkbookFontEffectsToolBar : public QToolBar {
     Q_OBJECT
@@ -52,6 +54,7 @@ public slots:
     void setItalic(bool);
     void setUnderline(bool);
     void setWorkbookView(QWorkbookView *);
+    void setWorksheetView(QWorksheetView *);
     void selectionChanged(FormatStatus*);
 
 protected slots:
@@ -74,4 +77,8 @@ protected:
 private:
 
 };
+
+
+}
+
 #endif // WORKBOOKFONTEFFECTSTOOLBAR_H

@@ -1,5 +1,7 @@
 #include "acotfunction.h"
 
+namespace QWorkbook {
+
 AcotFunction::AcotFunction(QObject *parent) : QObject(parent) {
 
     setName("ACOT");
@@ -24,4 +26,6 @@ QStringList AcotFunction::importer() const {
 
 QVariant AcotFunction::calculate(qreal radians) {
     return atan(1.0 / radians);
+}
+
 }

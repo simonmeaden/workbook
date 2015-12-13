@@ -27,15 +27,27 @@
 #include <QVariant>
 #include <QVariantList>
 #include <QScopedPointer>
-
-#include <workbook_global.h>
+#include <QAction>
+#include <QMenu>
 
 #include "qworkbookview.h"
 #include "cellreference.h"
 #include "range.h"
 #include "format.h"
+#include "workbook_global.h"
+#include "workbook_p.h"
+#include "qworksheetview_p.h"
 
-class QWorksheetViewPrivate;
+namespace QXlsx {
+    class Worksheet;
+}
+
+namespace ods {
+    class Sheet;
+}
+
+namespace QWorkbook {
+
 class WorksheetModel;
 class PluginStore;
 class WorkbookParser;
@@ -45,7 +57,7 @@ class WORKBOOKSHARED_EXPORT QWorksheetView : public QTableView {
     Q_OBJECT
 public:
     QWorksheetView(QWidget *parent);
-    ~QWorksheetView();
+    virtual ~QWorksheetView() {}
 
 
     QVariant read(int row, int column);
@@ -56,25 +68,46 @@ public:
     QMap<QModelIndex, Format*> selectedFormats();
 
     QString sheetName();
+    bool isLocked(int row, int column);
+    bool isLocked(CellReference &ref);
 
 signals:
     void selectionChanged(FormatStatus*);
     void cellChanged(QVariant); // called by current worksheet view when cell changes
+    void contentsChanged(QString); // called by current worksheet view when cell changes
     void cellContentsChanged(QString); // called by cell editor when cell contents change before commit.
 
 public slots:
     void setSheetName(QString);
+//    void parse();
+
+    void saveWorksheet();
+    void saveWorksheet(QString filename);
+    void saveWorksheet(QString filename, WorksheetType type);
 
     void write(int, int, QVariant);
     void write(const CellReference&, QVariant);
     void write(Range &, QVariant);
+
+    void lockCell(int row, int column);
+    void lockCell(CellReference &ref);
+    void lockRow(int &row);
+    void lockColumn(int &column);
+    void lockRange(Range &range);
+    void lockSheet();
+    void unlockCell(int row, int column);
+    void unlockCell(CellReference &ref);
+    void unlockRow(int &row);
+    void unlockColumn(int &column);
+    void unlockRange(Range &range);
+    void unlockSheet();
 
     void setFormat(int, int, Format*);
     void setFormat(const CellReference&, Format*);
     void setFormat(Range &, Format*);
     void setSelectedFormat(Format*);
 
-    void setCellContents(QString);
+    void changeCellContents(QString);
 
     void setSelectionBold(bool);
     void setSelectionItalic(bool);
@@ -82,29 +115,74 @@ public slots:
     void setSelectionFont(QFont);
     void setSelectionFontSize(int);
     void setSelectionAlignment(Qt::Alignment);
-    void setSelectionMerge(bool);
+    void setSelectionMerge();
 
     virtual void setSpan(int, int, int, int);
 
     void selectionHasChanged(const QItemSelection, const QItemSelection);
     void cellHasChanged(QModelIndex, QModelIndex);
 
+    void fileNotNamedMesssage();
 
-private slots:
-    void setModel(QAbstractItemModel *model);
-    void setModel(WorksheetModel *model);
+    void triggerInitialSelection();
+    void triggerCurrentSelection();
 
 protected slots:
     virtual bool eventFilter(QObject *obj, QEvent *event);
+    void writeWorksheet(QXlsx::Worksheet *sheet);
+    void writeWorksheet(ods::Sheet *sheet);
+
+    void setModel(QAbstractItemModel *model);
+    void setModel(WorksheetModel *model);
+
+    void connectSignalsToParser();
+    void disconnectSignalsFromParser();
+
+    void createActions();
+    void customCellMenuRequested(QPoint pos);
+    void customRowHeaderMenuRequested(QPoint pos);
+    void customColumnHeaderMenuRequested(QPoint pos);
+    void cut();
+    void copy();
+    void paste();
+    void pasteSpecial();
+    void text();
+    void number();
+    void formula();
+    void hide();
+    void show();
+    void formatCells();
+    void insertCells();
+    void deleteCells();
+    void deleteContents();
+    void deleteRowContents();
+    void deleteColumnContents();
+    void rowHeight();
+    void columnWidth();
+    void optimalRowHeight();
+    void optimalColumnWidth();
+    void insertRowAbove();
+    void insertColumnLeft();
+    void deleteSelectedRows();
+    void deleteSelectedColumns();
+    void clearDirectFormatting();
 
 protected:
-    QWorksheetView(WorkbookParser *parser, PluginStore *store, QWidget *parent);
+    QWorksheetView(const PWorkbookParser &parser,
+                   QWidget *parent);
 
     QModelIndexList selectedIndexes();
     WorksheetModel* model();
-    WorkbookParser *pParser;
-    PluginStore *pPluginStore;
 
+    QWorksheetView* clone();
+
+    QAction *pCutActn, *pCopyActn, *pPasteActn, *pPasteSpecialActn, *pHideActn, *pShowActn;
+    QAction *pTextActn, *pNumberActn, *pFormulaActn;
+    QAction *pFormatCellsActn, *pInsertActn, *pDeleteActn;
+    QAction *pDeleteContentsActn, *pDeleteRowContentsActn, *pDeleteColumnContentsActn;
+    QAction *pRowHeightActn, *pColumnWidthActn, *pOptimalRowHeightActn, *pOptimalColumnWidthActn;
+    QAction *pInsertRowAboveActn, *pInsertColumnLeftActn, *pDeleteSelectedRowsActn, *pDeleteSelectedColumnsActn;
+    QAction *pClearDirectFormattingActn;
 
 private:
     QScopedPointer<QWorksheetViewPrivate> d_ptr;
@@ -112,7 +190,12 @@ private:
 
     friend class QWorkbookViewPrivate;
     friend class QWorkbookView;
+    friend class WorkbookPrivate;
+    friend class WorkbookParserPrivate;
 
 };
+
+
+}
 
 #endif // WORKSHEETVIEW_H

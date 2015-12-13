@@ -23,56 +23,379 @@
 #include "formatdelegate.h"
 #include "worksheetmodel.h"
 
+#include "workbook_global.h"
 #include "pluginstore.h"
 #include "workbookparser.h"
 #include "cell.h"
 #include "mergedcell.h"
-#include "qstd.h"
+
+#include "workbookparser.h"
+
+#include "xlsxworksheet.h"
+
+#include <Sheet.hpp>
+
+namespace QWorkbook {
 
 QWorksheetViewPrivate::QWorksheetViewPrivate(QWorksheetView *parent) :
+    pParser(PWorkbookParser(new WorkbookParser(parent))),
     q_ptr(parent) {
 
-    pPluginStore = new PluginStore(q_ptr);
-    pParser = new WorkbookParser(pPluginStore, q_ptr);
-
     init();
+    connectSignalsToParser();
+
+    pParser->start();
 
 }
 
-QWorksheetViewPrivate::QWorksheetViewPrivate(WorkbookParser *parser, PluginStore *store, QWorksheetView *parent) :
+QWorksheetViewPrivate::QWorksheetViewPrivate(const PWorkbookParser parser,
+        QWorksheetView *parent) :
     pParser(parser),
-    pPluginStore(store),
     q_ptr(parent) {
 
     init();
 
+    pParser->start();
+
 }
 
-QWorksheetViewPrivate::~QWorksheetViewPrivate() {
 
+void QWorksheetViewPrivate::saveWorksheet() {
+    if (mFilename.isEmpty()) {
+        fileNotNamedMesssage();
+    } else {
+        mFileType = ODS;
+        saveWorksheet(mFilename);
+    }
+}
+
+void QWorksheetViewPrivate::saveWorksheet(QString filename) {
+    mFilename = filename;
+    saveWorksheet(mFilename, mFileType);
+}
+
+void QWorksheetViewPrivate::saveWorksheet(QString filename, WorksheetType type) {
+    q_ptr->model()->saveWorksheet(filename, type);
+}
+
+void QWorksheetViewPrivate::saveWorksheet(QXlsx::Worksheet *sheet) {
+    q_ptr->model()->saveWorksheet(sheet);
+}
+
+void QWorksheetViewPrivate::saveWorksheet(ods::Sheet *sheet) {
+    q_ptr->model()->saveWorksheet(sheet);
+}
+
+QWorksheetView* QWorksheetViewPrivate::clone() {
+    QWorksheetView *view = new QWorksheetView(pParser, qobject_cast<QWidget*>(q_ptr->parent()));
+    view->setModel(q_ptr->model()->clone());
+    return view;
 }
 
 void QWorksheetViewPrivate::init() {
 
-    q_ptr->setModel(new WorksheetModel(pPluginStore, q_ptr));
+    WorksheetModel *model = new WorksheetModel(q_ptr);
+    q_ptr->setModel(model);
     q_ptr->setItemDelegate(new FormatDelegate(q_ptr));
+
+    q_ptr->connect(model, SIGNAL(fileHasNotBeenNamedMessage()),
+                   q_ptr, SLOT(fileNotNamedMesssage()));
+
+    q_ptr->setContextMenuPolicy(Qt::CustomContextMenu);
+//    q_ptr->connect(q_ptr, SIGNAL(customContextMenuRequested(QPoint)),
+//                   q_ptr, SLOT(customCellMenuRequested(QPoint)));
+//    q_ptr->connect(q_ptr->horizontalHeader(), SIGNAL(customContextMenuRequested(QPoint)),
+//                   q_ptr, SLOT(customRowHeaderMenuRequested(QPoint)));
+//    q_ptr->connect(q_ptr->verticalHeader(), SIGNAL(customContextMenuRequested(QPoint)),
+//                   q_ptr, SLOT(customColumnHeaderMenuRequested(QPoint)));
 
     bContiguous = true;
 
     q_ptr->setSelectionMode(QTableView::ExtendedSelection);
 
-    QItemSelectionModel *sm = q_ptr->selectionModel();
-    q_ptr->connect(sm,
+    QItemSelectionModel *sModel = q_ptr->selectionModel();
+    q_ptr->connect(sModel,
                    SIGNAL(selectionChanged(QItemSelection, QItemSelection)),
                    q_ptr,
                    SLOT(selectionHasChanged(QItemSelection, QItemSelection)));
-    q_ptr->connect(sm, SIGNAL(currentChanged(QModelIndex,QModelIndex)),
+    q_ptr->connect(sModel, SIGNAL(currentChanged(QModelIndex,QModelIndex)),
                    q_ptr, SLOT(cellHasChanged(QModelIndex,QModelIndex)));
 
 
     // catches all events, and passes on whatever it doesn't want
     q_ptr->installEventFilter(q_ptr);
 
+//    createActions();
+
+}
+
+//void QWorksheetViewPrivate::createActions() {
+
+//    pCutActn = new QAction(q_ptr->tr("Cu&t"), q_ptr);
+//    q_ptr->connect(pCutActn, SIGNAL(triggered(bool)), q_ptr, SLOT(cut()));
+
+//    pCopyActn = new QAction(q_ptr->tr("&Copy"), q_ptr);
+//    q_ptr->connect(pCopyActn, SIGNAL(triggered(bool)), q_ptr, SLOT(copy()));
+
+//    pPasteActn = new QAction(q_ptr->tr("&Paste"), q_ptr);
+//    q_ptr->connect(pPasteActn, SIGNAL(triggered(bool)), q_ptr, SLOT(paste()));
+
+//    pPasteSpecialActn = new QAction(q_ptr->tr("P&aste Special"), q_ptr);
+//    q_ptr->connect(pPasteSpecialActn, SIGNAL(triggered(bool)), q_ptr, SLOT(pasteSpecial()));
+
+//    pTextActn = new QAction(q_ptr->tr("&Text"), q_ptr);
+//    q_ptr->connect(pTextActn, SIGNAL(triggered(bool)), q_ptr, SLOT(text()));
+
+//    pNumberActn = new QAction(q_ptr->tr("&Text"), q_ptr);
+//    q_ptr->connect(pNumberActn, SIGNAL(triggered(bool)), q_ptr, SLOT(number()));
+
+//    pFormulaActn = new QAction(q_ptr->tr("&Text"), q_ptr);
+//    q_ptr->connect(pFormulaActn, SIGNAL(triggered(bool)), q_ptr, SLOT(formula()));
+
+//    pHideActn = new QAction(q_ptr->tr("&Hide"), q_ptr);
+//    q_ptr->connect(pHideActn, SIGNAL(triggered(bool)), q_ptr, SLOT(hide()));
+
+//    pShowActn = new QAction(q_ptr->tr("&Show"), q_ptr);
+//    q_ptr->connect(pShowActn, SIGNAL(triggered(bool)), q_ptr, SLOT(show()));
+
+//    pFormatCellsActn = new QAction(q_ptr->tr("&Format Cells"), q_ptr);
+//    q_ptr->connect(pFormatCellsActn, SIGNAL(triggered(bool)), q_ptr, SLOT(formatCells()));
+
+//    pInsertActn = new QAction(q_ptr->tr("&Insert"), q_ptr);
+//    q_ptr->connect(pInsertActn, SIGNAL(triggered(bool)), q_ptr, SLOT(insertCells()));
+
+//    pDeleteActn = new QAction(q_ptr->tr("De&lete"), q_ptr);
+//    q_ptr->connect(pDeleteActn, SIGNAL(triggered(bool)), q_ptr, SLOT(deleteCells()));
+
+//    pDeleteContentsActn = new QAction(q_ptr->tr("Delete C&ontents"), q_ptr);
+//    q_ptr->connect(pDeleteContentsActn, SIGNAL(triggered(bool)), q_ptr, SLOT(deleteContents()));
+
+//    pDeleteRowContentsActn = new QAction(q_ptr->tr("De&lete Row Contents"), q_ptr);
+//    q_ptr->connect(pDeleteRowContentsActn, SIGNAL(triggered(bool)), q_ptr, SLOT(deleteRowContents()));
+
+//    pDeleteColumnContentsActn = new QAction(q_ptr->tr("Delete C&olumn Contents"), q_ptr);
+//    q_ptr->connect(pDeleteColumnContentsActn, SIGNAL(triggered(bool)), q_ptr, SLOT(deleteColumnContents()));
+
+//    pRowHeightActn = new QAction(q_ptr->tr("Row Hei&ght"), q_ptr);
+//    q_ptr->connect(pRowHeightActn, SIGNAL(triggered(bool)), q_ptr, SLOT(rowHeight()));
+
+//    pColumnWidthActn = new QAction(q_ptr->tr("Col&umn Width"), q_ptr);
+//    q_ptr->connect(pColumnWidthActn, SIGNAL(triggered(bool)), q_ptr, SLOT(columnWidth()));
+
+//    pOptimalRowHeightActn = new QAction(q_ptr->tr("Optimal &Row Height"), q_ptr);
+//    q_ptr->connect(pOptimalRowHeightActn, SIGNAL(triggered(bool)), q_ptr, SLOT(optimalRowHeight()));
+
+//    pOptimalColumnWidthActn = new QAction(q_ptr->tr("O&ptimal Column Width"), q_ptr);
+//    q_ptr->connect(pOptimalColumnWidthActn, SIGNAL(triggered(bool)), q_ptr, SLOT(optimalColumnWidth()));
+
+//    pInsertRowAboveActn = new QAction(q_ptr->tr("&Insert Row Above"), q_ptr);
+//    q_ptr->connect(pInsertRowAboveActn, SIGNAL(triggered(bool)), q_ptr, SLOT(insertRowAbove()));
+
+//    pInsertColumnLeftActn = new QAction(q_ptr->tr("&Insert Column Left"), q_ptr);
+//    q_ptr->connect(pInsertColumnLeftActn, SIGNAL(triggered(bool)), q_ptr, SLOT(insertColumnLeft()));
+
+//    pDeleteSelectedRowsActn = new QAction(q_ptr->tr("&Delete Selected Rows"), q_ptr);
+//    q_ptr->connect(pDeleteSelectedRowsActn, SIGNAL(triggered(bool)), q_ptr, SLOT(deleteSelectedRows()));
+
+//    pDeleteSelectedColumnsActn = new QAction(q_ptr->tr("&Delete Selected Columns"), q_ptr);
+//    q_ptr->connect(pDeleteSelectedColumnsActn, SIGNAL(triggered(bool)), q_ptr, SLOT(deleteSelectedColumns()));
+
+//    pClearDirectFormattingActn = new QAction(q_ptr->tr("&Clear &Direct Formatting"), q_ptr);
+//    q_ptr->connect(pClearDirectFormattingActn, SIGNAL(triggered(bool)), q_ptr, SLOT(clearDirectFormatting()));
+
+//}
+
+//void QWorksheetViewPrivate::customCellMenuRequested(QPoint pos) {
+//    QMenu *menu = new QMenu(q_ptr);
+//    QMenu *pasteOnlyMenu = new QMenu(q_ptr->tr("Paste Only"), q_ptr);
+
+//    pasteOnlyMenu->addAction(pTextActn);
+//    pasteOnlyMenu->addAction(pNumberActn);
+//    pasteOnlyMenu->addAction(pFormulaActn);
+
+//    menu->addAction(pCutActn);
+//    menu->addAction(pCopyActn);
+//    menu->addAction(pPasteActn);
+//    menu->addAction(pPasteSpecialActn);
+//    menu->addMenu(pasteOnlyMenu);
+//    menu->addSeparator();
+//    menu->addAction(pClearDirectFormattingActn);
+//    menu->addSeparator();
+//    menu->addAction(pFormatCellsActn);
+//    menu->addSeparator();
+//    menu->addAction(pInsertActn);
+//    menu->addAction(pDeleteActn);
+//    menu->addAction(pDeleteContentsActn);
+
+//    menu->popup(q_ptr->viewport()->mapToGlobal(pos));
+//}
+
+//void QWorksheetViewPrivate::customRowHeaderMenuRequested(QPoint pos) {
+//    QMenu *menu = new QMenu(q_ptr);
+
+//    menu->addAction(pFormatCellsActn);
+//    menu->addSeparator();
+//    menu->addAction(pRowHeightActn);
+//    menu->addAction(pOptimalRowHeightActn);
+//    menu->addSeparator();
+//    menu->addAction(pInsertRowAboveActn);
+//    menu->addAction(pDeleteSelectedRowsActn);
+//    menu->addAction(pDeleteRowContentsActn);
+//    menu->addSeparator();
+//    menu->addAction(pHideActn);
+//    menu->addAction(pShowActn);
+//    menu->addSeparator();
+//    menu->addAction(pCutActn);
+//    menu->addAction(pCopyActn);
+//    menu->addAction(pPasteActn);
+//    menu->addAction(pPasteSpecialActn);
+
+//    menu->popup(q_ptr->viewport()->mapToGlobal(pos));
+//}
+
+//void QWorksheetViewPrivate::customColumnHeaderMenuRequested(QPoint pos) {
+//    QMenu *menu = new QMenu(q_ptr);
+
+//    menu->addAction(pFormatCellsActn);
+//    menu->addSeparator();
+//    menu->addAction(pColumnWidthActn);
+//    menu->addAction(pOptimalColumnWidthActn);
+//    menu->addSeparator();
+//    menu->addAction(pInsertColumnLeftActn);
+//    menu->addAction(pDeleteSelectedColumnsActn);
+//    menu->addAction(pDeleteColumnContentsActn);
+//    menu->addSeparator();
+//    menu->addAction(pHideActn);
+//    menu->addAction(pShowActn);
+//    menu->addSeparator();
+//    menu->addAction(pCutActn);
+//    menu->addAction(pCopyActn);
+//    menu->addAction(pPasteActn);
+//    menu->addAction(pPasteSpecialActn);
+
+//    menu->popup(q_ptr->viewport()->mapToGlobal(pos));
+//}
+
+void QWorksheetViewPrivate::cut() {
+    // TODO
+}
+
+void QWorksheetViewPrivate::copy() {
+    // TODO
+}
+
+void QWorksheetViewPrivate::paste() {
+    // TODO
+}
+
+void QWorksheetViewPrivate::pasteSpecial() {
+    // TODO
+}
+
+void QWorksheetViewPrivate::text() {
+    // TODO
+}
+
+void QWorksheetViewPrivate::number() {
+    // TODO
+}
+
+void QWorksheetViewPrivate::formula() {
+    // TODO
+}
+
+void QWorksheetViewPrivate::hide() {
+    // TODO
+}
+
+void QWorksheetViewPrivate::show() {
+    // TODO
+}
+
+void QWorksheetViewPrivate::formatCells() {
+    // TODO
+}
+
+void QWorksheetViewPrivate::insertCells() {
+    // TODO
+}
+
+void QWorksheetViewPrivate::deleteCells() {
+    // TODO
+}
+
+void QWorksheetViewPrivate::deleteContents() {
+    // TODO
+}
+
+void QWorksheetViewPrivate::deleteRowContents() {
+    // TODO
+}
+
+void QWorksheetViewPrivate::deleteColumnContents() {
+    // TODO
+}
+
+void QWorksheetViewPrivate::rowHeight() {
+    // TODO
+}
+
+void QWorksheetViewPrivate::columnWidth() {
+    // TODO
+}
+
+void QWorksheetViewPrivate::optimalRowHeight() {
+    // TODO
+}
+
+void QWorksheetViewPrivate::optimalColumnWidth() {
+    // TODO
+}
+
+void QWorksheetViewPrivate::insertRowAbove() {
+    // TODO
+}
+
+void QWorksheetViewPrivate::insertColumnLeft() {
+    // TODO
+}
+
+void QWorksheetViewPrivate::deleteSelectedRows() {
+    // TODO
+}
+
+void QWorksheetViewPrivate::deleteSelectedColumns() {
+    // TODO
+}
+
+void QWorksheetViewPrivate::clearDirectFormatting() {
+    // TODO
+}
+
+
+void QWorksheetViewPrivate::connectSignalsToParser() {
+    q_ptr->connect(q_ptr->model(), SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)),
+                   pParser.data(), SLOT(dataHasChanged(QModelIndex,QModelIndex,QVector<int>)));
+}
+
+void QWorksheetViewPrivate::disconnectSignalsFromParser() {
+    q_ptr->disconnect(q_ptr->model(), SIGNAL(fileHasNotBeenNamedMessage()),
+                      q_ptr, SLOT(fileNotNamedMesssage()));
+    q_ptr->disconnect(q_ptr->model(), SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)),
+                      pParser.data(), SLOT(dataHasChanged(QModelIndex,QModelIndex,QVector<int>)));
+
+}
+
+void QWorksheetViewPrivate::triggerInitialSelection() {
+    QModelIndex index = q_ptr->model()->index(0, 0);
+    QItemSelection selection(index, index);
+    selectionHasChanged(selection, selection);
+}
+
+void QWorksheetViewPrivate::triggerCurrentSelection() {
+    QModelIndex index = q_ptr->currentIndex();
+    QItemSelection selection(index, index);
+    selectionHasChanged(selection, selection);
 }
 
 void QWorksheetViewPrivate:: commitAndMove(QModelIndex &currentIndex, int &newRow, int &newColumn) {
@@ -175,6 +498,7 @@ void QWorksheetViewPrivate::cellHasChanged(QModelIndex current, QModelIndex /*pr
 
     QVariant value = q_ptr->model()->data(current);
     emit q->cellChanged(value);
+    emit q->contentsChanged(value.toString());
 }
 
 void QWorksheetViewPrivate::selectionHasChanged(QItemSelection /*selected*/, QItemSelection /*deselected*/) {
@@ -192,6 +516,11 @@ void QWorksheetViewPrivate::selectionHasChanged(QItemSelection /*selected*/, QIt
     QList<Format*> formats;
     Format* format;
     int row, col;
+
+    if (mItems.size() == 1) {
+        QString v = q_ptr->model()->data(mItems.at(0)).toString();
+        // TODO emit change to cell editor bar
+    }
 
     foreach (QModelIndex index, mItems) {
         row = index.row();
@@ -219,7 +548,7 @@ void QWorksheetViewPrivate::selectionHasChanged(QItemSelection /*selected*/, QIt
 
     bContiguous = mFormatStatus.bContiguous;
 
-    cout << (bContiguous ? "contiguous" : "non-contiguous") << endl << flush;
+//    qDebug() << (bContiguous ? "contiguous" : "non-contiguous");
 
     if (formats.size() == 0) {
         emit q->selectionChanged(NULL);
@@ -304,7 +633,7 @@ void QWorksheetViewPrivate::selectionHasChanged(QItemSelection /*selected*/, QIt
 
 }
 
-void QWorksheetViewPrivate::setCellContents(QString value) {
+void QWorksheetViewPrivate::changeCellContents(QString value) {
     QModelIndex index = q_ptr->selectionModel()->currentIndex();
     if (index.isValid()) {
         q_ptr->model()->setData(index, value, Qt::EditRole);
@@ -381,7 +710,7 @@ void QWorksheetViewPrivate::setSelectionFont(QFont font) {
 
             format = q_ptr->model()->format(index);
             format->setFont(font);
-            cout << font.family() << " : " << font.pointSize() << endl << flush;
+//            qDebug() << font.family() << " : " << font.pointSize();
             q_ptr->setFormat(row, col, format);
         }
 
@@ -425,7 +754,8 @@ void QWorksheetViewPrivate::setSelectionAlignment(Qt::Alignment alignment) {
 
     }
 }
-void QWorksheetViewPrivate::setSelectionMerge(bool merge) {
+
+void QWorksheetViewPrivate::setSelectionMerge(/*bool merge*/) {
     if (bContiguous) {
         int row = mFormatStatus.mMinRow;
         int col = mFormatStatus.mMinCol;
@@ -490,7 +820,7 @@ void QWorksheetViewPrivate::merge(int row, int column, int rowSpan, int colSpan)
 
 }
 
-void QWorksheetViewPrivate::demerge(int row, int column, int rowSpan, int colSpan) {
+void QWorksheetViewPrivate::demerge(int row, int column, int /*rowSpan*/, int /*colSpan*/) {
 
     /*
         Convert the first cell from a merged cell to a normal cell with the same data.
@@ -595,7 +925,7 @@ void QWorksheetViewPrivate::mergeDataToFirstCell(int row, int column, int rowSpa
 
     // add first mergedcell into first cell.
     // others saved empty cells and new empty merged cell stored in table.
-    topLeft = new MergedCell(row, column, q_ptr);
+    topLeft = new MergedCell(row, column, rowSpan, colSpan, q_ptr);
     for (int r = row; r < row + rowSpan; r++) {
         for (int c = column; c < column + colSpan; c++) {
             if (r == row && c == column) { // first cell
@@ -619,7 +949,7 @@ void QWorksheetViewPrivate::firstCellRetainedRestStored(int row, int column, int
     Cell *cell;
     QList<Cell*> list;
 
-    topLeft = new MergedCell(row, column, q_ptr);
+    topLeft = new MergedCell(row, column, rowSpan, colSpan, q_ptr);
     for (int r = row; r < row + rowSpan; r++) {
         for (int c = column; c < column + colSpan; c++) {
             cell = q_ptr->model()->cellAsCell(r, c);
@@ -661,9 +991,7 @@ QVariant QWorksheetViewPrivate::read(const CellReference& reference) {
 }
 
 void QWorksheetViewPrivate::write(int row, int column, QVariant item) {
-    QModelIndex index = q_ptr->model()->index(row, column);
-    if (index.isValid())
-        q_ptr->model()->setData(index, item, Qt::EditRole);
+    q_ptr->model()->setData(row, column, item, Qt::EditRole);
 }
 
 void QWorksheetViewPrivate::write(const CellReference& reference, QVariant item) {
@@ -741,3 +1069,72 @@ void QWorksheetViewPrivate::setFormat(Range& range, Format *format) {
         }
     }
 }
+
+void QWorksheetViewPrivate::fileNotNamedMesssage() {
+    QMessageBox::warning(
+        q_ptr,
+        q_ptr->tr("QWorksheet Error!"),
+        q_ptr->tr("The file has not been named!"),
+        QMessageBox::Ok,
+        QMessageBox::Ok);
+}
+
+bool QWorksheetViewPrivate::isLocked(CellReference &ref) {
+    return q_ptr->model()->isLocked(ref.row(), ref.column());
+}
+
+bool QWorksheetViewPrivate::isLocked(int row, int column) {
+    return q_ptr->model()->isLocked(row, column);
+}
+
+void QWorksheetViewPrivate::lockSheet() {
+    q_ptr->model()->lockSheet();
+}
+
+void QWorksheetViewPrivate::unlockSheet() {
+    q_ptr->model()->unlockSheet();
+}
+
+void QWorksheetViewPrivate::lockCell(int row, int column) {
+    q_ptr->model()->lockCell(row, column);
+}
+
+void QWorksheetViewPrivate::lockCell(CellReference &ref) {
+    q_ptr->model()->lockCell(ref.row(), ref.column());
+}
+
+void QWorksheetViewPrivate::lockRow(int &row) {
+    q_ptr->model()->lockRow(row);
+}
+
+void QWorksheetViewPrivate::lockColumn(int &column) {
+    q_ptr->model()->lockColumn(column);
+}
+
+void QWorksheetViewPrivate::lockRange(Range &range) {
+    q_ptr->model()->lockRange(range);
+}
+
+void QWorksheetViewPrivate::unlockCell(int row, int column) {
+    q_ptr->model()->unlockCell(row, column);
+}
+
+void QWorksheetViewPrivate::unlockCell(CellReference &ref) {
+    q_ptr->model()->unlockCell(ref.row(), ref.column());
+}
+
+void QWorksheetViewPrivate::unlockRow(int &row) {
+    q_ptr->model()->unlockRow(row);
+}
+
+void QWorksheetViewPrivate::unlockColumn(int &column) {
+    q_ptr->model()->unlockColumn(column);
+}
+
+void QWorksheetViewPrivate::unlockRange(Range &range) {
+    q_ptr->model()->unlockRange(range);
+}
+
+
+}
+

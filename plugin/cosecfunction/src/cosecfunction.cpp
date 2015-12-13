@@ -1,5 +1,7 @@
 #include "cosecfunction.h"
 
+namespace QWorkbook {
+
 CoSecFunction::CoSecFunction(QObject *parent) : QObject(parent) {
 
     setName("COSEC");
@@ -24,4 +26,6 @@ QStringList CoSecFunction::importer() const {
 
 QVariant CoSecFunction::calculate(qreal radians) {
     return (1.0 / qSin(radians));
+}
+
 }

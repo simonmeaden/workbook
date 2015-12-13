@@ -23,6 +23,10 @@
 #include "qworkbookview.h"
 #include "types.h"
 
+#include "workbook_global.h"
+
+namespace QWorkbook {
+
 QWorkbookIndentToolBarPrivate::QWorkbookIndentToolBarPrivate(QWorkbookIndentToolBar *q) :
     q_ptr(q) {
 
@@ -57,3 +61,6 @@ void QWorkbookIndentToolBarPrivate::undent() {
     Q_Q(QWorkbookIndentToolBar);
     emit q->undentCells();
 }
+
+}
+

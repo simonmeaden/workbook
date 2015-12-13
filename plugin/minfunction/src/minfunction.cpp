@@ -1,5 +1,7 @@
 #include "minfunction.h"
 
+namespace QWorkbook {
+
 MinFunction::MinFunction(QObject *parent) :QObject(parent) {
 
     setName("MIN");
@@ -40,3 +42,4 @@ QVariant MinFunction::calculate(QList<qreal> list) {
     return min;
 }
 
+}

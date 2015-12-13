@@ -1,5 +1,7 @@
 #include "cotfunction.h"
 
+namespace QWorkbook {
+
 CotFunction::CotFunction(QObject *parent) : QObject(parent) {
 
     setName("COT");
@@ -24,4 +26,6 @@ QStringList CotFunction::importer() const {
 
 QVariant CotFunction::calculate(qreal radians) {
     return (1.0 / qTan(radians));
+}
+
 }

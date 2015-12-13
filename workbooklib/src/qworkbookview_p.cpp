@@ -27,20 +27,29 @@
 #include "toolbar/qcelledittoolbar.h"
 #include "qworkbookview.h"
 #include "workbook.h"
-#include "worksheet.h"
 #include "qworksheetview.h"
 #include "worksheetmodel.h"
 #include "pluginstore.h"
 #include "workbookparser.h"
+#include "movecopydialog.h"
+
+#include "workbook_global.h"
+
+namespace QWorkbook {
 
 quint8 QWorkbookViewPrivate::sheetNumber = 1;
 
 QWorkbookViewPrivate::QWorkbookViewPrivate(QWorkbookView *parent) : q_ptr(parent) {
 
     pTabBar = q_ptr->tabBar();
+    pTabBar->setMovable(false); // disallows tab dragging
+    pTabBar->setUsesScrollButtons(true); // show scroll buttons if too many tabs
+//    pTabBar->setDocumentMode(true);
     pTabBar->setContextMenuPolicy(Qt::CustomContextMenu);
     q_ptr->connect(pTabBar, SIGNAL(customContextMenuRequested(const QPoint &)),
                    SLOT(showContextMenu(const QPoint &)));
+
+    q_ptr->connect(pTabBar, SIGNAL(currentChanged(int)), q_ptr, SLOT(setCurrentWorksheetView(int)));
 
     q_ptr->setContentsMargins(0, 0, 0, 0);
     q_ptr->setTabShape(QTabWidget::Triangular);
@@ -48,12 +57,15 @@ QWorkbookViewPrivate::QWorkbookViewPrivate(QWorkbookView *parent) : q_ptr(parent
 
     createActions();
 
-    pBook = new Workbook(q_ptr);
+    WorkbookParser *parser = new WorkbookParser(q_ptr);
+    parser->start();
+    pParser = PWorkbookParser(parser);
 
-    pPluginStore = new PluginStore(q_ptr);
-    pParser = new WorkbookParser(pPluginStore, q_ptr);
+    pBook = new Workbook(pParser, q_ptr);
 
-    pCurrentView = addWorksheet();
+    bEnableContextMenu = false;
+    bEnableTabMenu = false;
+
 }
 
 QWorkbookViewPrivate::~QWorkbookViewPrivate() {
@@ -62,77 +74,46 @@ QWorkbookViewPrivate::~QWorkbookViewPrivate() {
 
 QCellEditToolBar* QWorkbookViewPrivate::editBar() {
 
-    QCellEditToolBar* cellEditor = new QCellEditToolBar("celleditor", q_ptr);
+    QCellEditToolBar* cellEditorBar = new QCellEditToolBar("celleditor", q_ptr);
+    cellEditorBar->setWorkbookView(q_ptr);
 
-    q_ptr->connect(q_ptr, SIGNAL(cellChanged(QVariant)),
-                   cellEditor, SLOT(setValueWithoutSignal(QVariant)));
-    q_ptr->connect(q_ptr, SIGNAL(cellContentsChanged(QString)),
-                   cellEditor, SLOT(setTextWithoutSignal(QString)));
-
-                   return cellEditor;
+    return cellEditorBar;
 
 }
 
 QWorkbookToolBar* QWorkbookViewPrivate::toolBar() {
 
     QWorkbookToolBar* toolBar = new QWorkbookToolBar("workbook", q_ptr);
+    toolBar->setWorkbookView(q_ptr);
 
-    // bar to view
-    q_ptr->connect(toolBar, SIGNAL(boldChanged(bool)), q_ptr, SLOT(setSelectionBold(bool)));
-    q_ptr->connect(toolBar, SIGNAL(italicChanged(bool)), q_ptr, SLOT(setSelectionItalic(bool)));
-    q_ptr->connect(toolBar, SIGNAL(underlineChanged(bool)), q_ptr, SLOT(setSelectionUnderline(bool)));
-    q_ptr->connect(toolBar, SIGNAL(fontChanged(QFont)), q_ptr, SLOT(setSelectionFont(QFont)));
-    q_ptr->connect(toolBar, SIGNAL(fontSizeChanged(int)), q_ptr, SLOT(setSelectionFontSize(int)));
-    q_ptr->connect(toolBar, SIGNAL(alignmentChanged(Qt::Alignment)), q_ptr, SLOT(setSelectionAlignment(Qt::Alignment)));
-
-    // view to bar
-    q_ptr->connect(q_ptr, SIGNAL(boldSelection(bool)), toolBar, SLOT(setSelectionBold(bool)));
-    q_ptr->connect(q_ptr, SIGNAL(italicSelection(bool)), toolBar, SLOT(setSelectionUnderline(bool)));
-    q_ptr->connect(q_ptr, SIGNAL(underlineSelection(bool)), toolBar, SLOT(setSelectionUnderline(bool)));
-    // TODO connect the rest
-//    q_ptr->connect(toolBar, SIGNAL(alignmentChanged(Qt::Alignment)),
-//            q_ptr, SLOT(alignmentHasChanged(Qt::Alignment)));
-//    q_ptr->connect(toolBar, SIGNAL(indentCells()), q_ptr, SLOT(indentCells()));
-//    q_ptr->connect(toolBar, SIGNAL(undentCells()), q_ptr, SLOT(undentCells()));
-//    q_ptr->connect(toolBar, SIGNAL(fontChanged(QFont)), q_ptr, SLOT(setFont(QFont)));
-
-    q_ptr->connect(q_ptr, SIGNAL(selectionChanged(FormatStatus*)),
-                   toolBar, SLOT(selectionChanged(FormatStatus*)));
     triggerInitialSelection();
 
     return toolBar;
 }
 
+QStringList QWorkbookViewPrivate::names() {
+    return pBook->names();
+}
+
 void QWorkbookViewPrivate::triggerInitialSelection() {
-    QModelIndex index = pCurrentView->model()->index(0, 0);
-    QItemSelection selection(index, index);
-    pCurrentView->selectionHasChanged(selection, selection);
+    currentWorksheetView()->triggerInitialSelection();
 }
 
 bool QWorkbookViewPrivate::showGrid(int index) {
-    Worksheet* sheet = pBook->worksheet(index);
-    if (sheet)
-        sheet->showGrid();
-    QWorksheetView* view = worksheetview(index);
+    QWorksheetView* view = worksheetView(index);
     if (view)
         return view->showGrid();
     return false;
 }
 
 bool QWorkbookViewPrivate::showGrid(QString name) {
-    Worksheet* sheet = pBook->worksheet(name);
-    if (sheet)
-        sheet->showGrid();
-    QWorksheetView* view = worksheetview(name);
+    QWorksheetView* view = worksheetView(name);
     if (view)
         return view->showGrid();
     return false;
 }
 
 bool QWorkbookViewPrivate::showGrid() {
-    Worksheet* sheet = currentWorksheet();
-    if (sheet)
-        sheet->showGrid();
     QWorksheetView* view = currentWorksheetView();
     if (view)
         return view->showGrid();
@@ -140,209 +121,178 @@ bool QWorkbookViewPrivate::showGrid() {
 }
 
 void QWorkbookViewPrivate::setShowGrid(int index, bool showGrid) {
-    Worksheet* sheet = pBook->worksheet(index);
-    if (sheet)
-        sheet->setShowGrid(showGrid);
-    QWorksheetView* view = worksheetview(index);
+    QWorksheetView* view = worksheetView(index);
     if (view)
         view->setShowGrid(showGrid);
 }
 
 void QWorkbookViewPrivate::setShowGrid(QString name, bool showGrid) {
-    Worksheet* sheet = pBook->worksheet(name);
-    if (sheet)
-        sheet->setShowGrid(showGrid);
-    QWorksheetView* view = worksheetview(name);
+    QWorksheetView* view = worksheetView(name);
     if (view)
         view->setShowGrid(showGrid);
 }
 
 void QWorkbookViewPrivate::setShowGrid(bool showGrid) {
-    Worksheet* sheet = currentWorksheet();
-    if (sheet)
-        sheet->setShowGrid(showGrid);
     QWorksheetView* view = currentWorksheetView();
     if (view)
         return view->setShowGrid(showGrid);
 }
 
 void QWorkbookViewPrivate::lockCell(int row, int column) {
-    currentWorksheet()->lockCell(row, column);
+    currentWorksheetView()->lockCell(row, column);
 }
 
 void QWorkbookViewPrivate::lockRow(int &row) {
-    currentWorksheet()->lockRow(row);
+    currentWorksheetView()->lockRow(row);
 }
 
 void QWorkbookViewPrivate::lockColumn(int &column) {
-    currentWorksheet()->lockColumn(column);
+    currentWorksheetView()->lockColumn(column);
 }
 
 void QWorkbookViewPrivate::lockRange(Range &range) {
-    currentWorksheet()->lockRange(range);
+    currentWorksheetView()->lockRange(range);
 }
 
 void QWorkbookViewPrivate::lockSheet() {
-    currentWorksheet()->lockSheet();
+    currentWorksheetView()->lockSheet();
 }
 
 void QWorkbookViewPrivate::unlockCell(int row, int column) {
-    currentWorksheet()->unlockCell(row, column);
+    currentWorksheetView()->unlockCell(row, column);
 }
 
 void QWorkbookViewPrivate::unlockRow(int &row) {
-    currentWorksheet()->unlockRow(row);
+    currentWorksheetView()->unlockRow(row);
 }
 
 void QWorkbookViewPrivate::unlockColumn(int &column) {
-    currentWorksheet()->unlockColumn(column);
+    currentWorksheetView()->unlockColumn(column);
 }
 
 void QWorkbookViewPrivate::unlockRange(Range &range) {
-    currentWorksheet()->unlockRange(range);
+    currentWorksheetView()->unlockRange(range);
 }
 
 void QWorkbookViewPrivate::unlockSheet() {
-    currentWorksheet()->unlockSheet();
+    currentWorksheetView()->unlockSheet();
 }
 
 void QWorkbookViewPrivate::lockCell(int index, int row, int column) {
-    Worksheet* sheet = pBook->worksheet(index);
-    if (sheet)
-        return sheet->lockCell(row, column);
+    QWorksheetView *view =  worksheetView(index);
+    view->lockCell(row, column);
 }
 
 void QWorkbookViewPrivate::lockRow(int index, int &row) {
-    Worksheet* sheet = pBook->worksheet(index);
-    if (sheet)
-        return sheet->lockRow(row);
+    QWorksheetView *view =  worksheetView(index);
+    view->lockRow(row);
 }
 
 void QWorkbookViewPrivate::lockColumn(int index, int &column) {
-    Worksheet* sheet = pBook->worksheet(index);
-    if (sheet)
-        return sheet->lockColumn(column);
+    QWorksheetView *view =  worksheetView(index);
+    view->lockColumn(column);
 }
 
 void QWorkbookViewPrivate::lockRange(int index, Range &range) {
-    Worksheet* sheet = pBook->worksheet(index);
-    if (sheet)
-        return sheet->lockRange(range);
+    QWorksheetView *view =  worksheetView(index);
+    view->lockRange(range);
 }
 
 void QWorkbookViewPrivate::lockSheet(int index) {
-    Worksheet* sheet = pBook->worksheet(index);
-    if (sheet)
-        return sheet->lockSheet();
+    QWorksheetView *view =  worksheetView(index);
+    view->lockSheet();
 }
 
 void QWorkbookViewPrivate::unlockCell(int index, int row, int column) {
-    Worksheet* sheet = pBook->worksheet(index);
-    if (sheet)
-        return sheet->unlockCell(row, column);
+    QWorksheetView *view =  worksheetView(index);
+    view->unlockCell(row, column);
 }
 
 void QWorkbookViewPrivate::unlockRow(int index, int &row) {
-    Worksheet* sheet = pBook->worksheet(index);
-    if (sheet)
-        return sheet->unlockRow(row);
+    QWorksheetView *view =  worksheetView(index);
+    view->unlockRow(row);
 }
 
 void QWorkbookViewPrivate::unlockColumn(int index, int &column) {
-    Worksheet* sheet = pBook->worksheet(index);
-    if (sheet)
-        return sheet->unlockColumn(column);
+    QWorksheetView *view =  worksheetView(index);
+    view->unlockColumn(column);
 }
 
 void QWorkbookViewPrivate::unlockRange(int index, Range &range) {
-    Worksheet* sheet = pBook->worksheet(index);
-    if (sheet)
-        return sheet->unlockRange(range);
+    QWorksheetView *view =  worksheetView(index);
+    view->unlockRange(range);
 }
 
 
 void QWorkbookViewPrivate::unlockSheet(int index) {
-    Worksheet* sheet = pBook->worksheet(index);
-    if (sheet)
-        return sheet->unlockSheet();
+    QWorksheetView *view =  worksheetView(index);
+    view->unlockSheet();
 }
 
 void QWorkbookViewPrivate::lockCell(QString name, int row, int column) {
-    Worksheet* sheet = pBook->worksheet(name);
-    if (sheet)
-        return sheet->lockCell(row, column);
+    QWorksheetView *view =  worksheetView(name);
+    view->lockCell(row, column);
 }
 
 void QWorkbookViewPrivate::lockRow(QString name, int &row) {
-    Worksheet* sheet = pBook->worksheet(name);
-    if (sheet)
-        return sheet->lockRow(row);
+    QWorksheetView *view =  worksheetView(name);
+    view->lockRow(row);
 }
 
 void QWorkbookViewPrivate::lockColumn(QString name, int &column) {
-    Worksheet* sheet = pBook->worksheet(name);
-    if (sheet)
-        return sheet->lockColumn(column);
+    QWorksheetView *view =  worksheetView(name);
+    view->lockColumn(column);
 }
 
 void QWorkbookViewPrivate::lockRange(QString name, Range &range) {
-    Worksheet* sheet = pBook->worksheet(name);
-    if (sheet)
-        return sheet->lockRange(range);
+    QWorksheetView *view =  worksheetView(name);
+    view->lockRange(range);
 }
 
 void QWorkbookViewPrivate::lockSheet(QString name) {
-    Worksheet* sheet = pBook->worksheet(name);
-    if (sheet)
-        return sheet->lockSheet();
+    QWorksheetView *view =  worksheetView(name);
+    view->lockSheet();
 }
 
 void QWorkbookViewPrivate::unlockCell(QString name, int row, int column) {
-    Worksheet* sheet = pBook->worksheet(name);
-    if (sheet)
-        return sheet->unlockCell(row, column);
+    QWorksheetView *view =  worksheetView(name);
+    view->unlockCell(row, column);
 }
 
 void QWorkbookViewPrivate::unlockRow(QString name, int &row) {
-    Worksheet* sheet = pBook->worksheet(name);
-    if (sheet)
-        return sheet->unlockRow(row);
+    QWorksheetView *view =  worksheetView(name);
+    view->unlockRow(row);
 }
 
 void QWorkbookViewPrivate::unlockColumn(QString name, int &column) {
-    Worksheet* sheet = pBook->worksheet(name);
-    if (sheet)
-        return sheet->unlockColumn(column);
+    QWorksheetView *view =  worksheetView(name);
+    view->unlockColumn(column);
 }
 
 void QWorkbookViewPrivate::unlockRange(QString name, Range &range) {
-    Worksheet* sheet = pBook->worksheet(name);
-    if (sheet)
-        return sheet->unlockRange(range);
+    QWorksheetView *view =  worksheetView(name);
+    view->unlockRange(range);
 }
 
 
 void QWorkbookViewPrivate::unlockSheet(QString name) {
-    Worksheet* sheet = pBook->worksheet(name);
-    if (sheet)
-        return sheet->unlockSheet();
+    QWorksheetView *view =  worksheetView(name);
+    view->unlockSheet();
 }
-
-
 
 QVariant QWorkbookViewPrivate::read(int row, int column) {
     return currentWorksheetView()->read(row, column);
 }
 
 QVariant QWorkbookViewPrivate::read(int index, int row, int column) {
-    QWorksheetView* sheet = worksheetview(index);
+    QWorksheetView* sheet = worksheetView(index);
     if (sheet)
         return sheet->read(row, column);
     return QVariant();
 }
 
 QVariant QWorkbookViewPrivate::read(QString name, int row, int column) {
-    QWorksheetView* sheet = worksheetview(name);
+    QWorksheetView* sheet = worksheetView(name);
     if (sheet)
         return sheet->read(row, column);
     return QVariant();
@@ -359,7 +309,7 @@ void QWorkbookViewPrivate::write(int index, int row, int column, QVariant item) 
     if (item.type() == QVariant::Image)
         writeImage(index, row, column, item.value<QImage>());
     else {
-        QWorksheetView* sheet = worksheetview(index);
+        QWorksheetView* sheet = worksheetView(index);
         if (sheet)
             sheet->write(row, column, item);
     }
@@ -369,7 +319,7 @@ void QWorkbookViewPrivate::write(QString name, int row, int column, QVariant ite
     if (item.type() == QVariant::Image)
         writeImage(name, row, column, item.value<QImage>());
     else {
-        QWorksheetView* sheet = worksheetview(name);
+        QWorksheetView* sheet = worksheetView(name);
         if (sheet)
             sheet->write(row, column, item);
     }
@@ -427,7 +377,7 @@ void QWorkbookViewPrivate::writeImage(int row, int column, QImage image) {
 void QWorkbookViewPrivate::writeImage(int index, int row, int column, QImage image) {
     if (!image.isNull()) {
         QPixmap pixmap = QPixmap::fromImage(image);
-        QWorksheetView* sheet = worksheetview(index);
+        QWorksheetView* sheet = worksheetView(index);
         if (sheet)
             sheet->write(row, column, QVariant(pixmap));
     }
@@ -436,7 +386,7 @@ void QWorkbookViewPrivate::writeImage(int index, int row, int column, QImage ima
 void QWorkbookViewPrivate::writeImage(QString name, int row, int column, QImage image) {
     if (!image.isNull()) {
         QPixmap pixmap = QPixmap::fromImage(image);
-        QWorksheetView* sheet = worksheetview(name);
+        QWorksheetView* sheet = worksheetView(name);
         if (sheet)
             sheet->write(row, column, QVariant(pixmap));
     }
@@ -460,14 +410,14 @@ Format* QWorkbookViewPrivate::format(int row, int column) {
 }
 
 Format*  QWorkbookViewPrivate::format(int index, int row, int column) {
-    QWorksheetView* sheet = worksheetview(index);
+    QWorksheetView* sheet = worksheetView(index);
     if (sheet)
         return sheet->format(row, column);
     return NULL;
 }
 
 Format*  QWorkbookViewPrivate::format(QString name, int row, int column) {
-    QWorksheetView* sheet = worksheetview(name);
+    QWorksheetView* sheet = worksheetView(name);
     if (sheet)
         return sheet->format(row, column);
     return NULL;
@@ -478,13 +428,13 @@ void QWorkbookViewPrivate::setFormat(int row, int column, Format* format) {
 }
 
 void QWorkbookViewPrivate::setFormat(int index, int row, int column, Format* format) {
-    QWorksheetView* sheet = worksheetview(index);
+    QWorksheetView* sheet = worksheetView(index);
     if (sheet)
         sheet->setFormat(row, column, format);
 }
 
 void QWorkbookViewPrivate::setFormat(QString name, int row, int column, Format* format) {
-    QWorksheetView* sheet = worksheetview(name);
+    QWorksheetView* sheet = worksheetView(name);
     if (sheet)
         sheet->setFormat(row, column, format);
 }
@@ -528,7 +478,7 @@ void QWorkbookViewPrivate::setSelectedFormat(Format *format) {
 }
 
 void QWorkbookViewPrivate::setSelectedFormat(int index, Format *format) {
-    QWorksheetView *sheet = worksheetview(index);
+    QWorksheetView *sheet = worksheetView(index);
 
     if (sheet) {
         QModelIndexList list = sheet->selectedIndexes();
@@ -542,7 +492,7 @@ void QWorkbookViewPrivate::setSelectedFormat(int index, Format *format) {
 }
 
 void QWorkbookViewPrivate::setSelectedFormat(QString name, Format *format) {
-    QWorksheetView *sheet = worksheetview(name);
+    QWorksheetView *sheet = worksheetView(name);
 
     if (sheet) {
         QModelIndexList list = sheet->selectedIndexes();
@@ -574,7 +524,7 @@ QMap<QModelIndex, Format*> QWorkbookViewPrivate::selectedFormats() {
 QMap<QModelIndex, Format*> QWorkbookViewPrivate::selectedFormats(int index) {
     QMap<QModelIndex, Format*> formats;
 
-    QWorksheetView* sheet = worksheetview(index);
+    QWorksheetView* sheet = worksheetView(index);
     if (sheet) {
         QModelIndexList list = sheet->selectedIndexes();
         QListIterator<QModelIndex> it(list);
@@ -590,7 +540,7 @@ QMap<QModelIndex, Format*> QWorkbookViewPrivate::selectedFormats(int index) {
 QMap<QModelIndex, Format*> QWorkbookViewPrivate::selectedFormats(QString name) {
     QMap<QModelIndex, Format*> formats;
 
-    QWorksheetView* sheet = worksheetview(name);
+    QWorksheetView* sheet = worksheetView(name);
     if (sheet) {
         QModelIndexList list = sheet->selectedIndexes();
         QListIterator<QModelIndex> it(list);
@@ -618,35 +568,35 @@ void QWorkbookViewPrivate::alignmentHasChanged(Qt::Alignment alignment) {
 }
 
 void QWorkbookViewPrivate::changeCellContents(QString text) {
-    pCurrentView->setCellContents(text);
+    currentWorksheetView()->changeCellContents(text);
 }
 
 void QWorkbookViewPrivate::setSelectionBold(bool value) {
-    pCurrentView->setSelectionBold(value);
+    currentWorksheetView()->setSelectionBold(value);
 }
 
 void QWorkbookViewPrivate::setSelectionItalic(bool value) {
-    pCurrentView->setSelectionItalic(value);
+    currentWorksheetView()->setSelectionItalic(value);
 }
 
 void QWorkbookViewPrivate::setSelectionUnderline(bool value) {
-    pCurrentView->setSelectionUnderline(value);
+    currentWorksheetView()->setSelectionUnderline(value);
 }
 
 void QWorkbookViewPrivate::setSelectionFont(QFont font) {
-    pCurrentView->setSelectionFont(font);
+    currentWorksheetView()->setSelectionFont(font);
 }
 
 void QWorkbookViewPrivate::setSelectionFontSize(int size) {
-    pCurrentView->setSelectionFontSize(size);
+    currentWorksheetView()->setSelectionFontSize(size);
 }
 
 void QWorkbookViewPrivate::setSelectionAlignment(Qt::Alignment alignment) {
-    pCurrentView->setSelectionAlignment(alignment);
+    currentWorksheetView()->setSelectionAlignment(alignment);
 }
 
-void QWorkbookViewPrivate::setSelectionMerge(bool merge) {
-    pCurrentView->setSelectionMerge(merge);
+void QWorkbookViewPrivate::setSelectionMerge(/*bool merge*/) {
+    currentWorksheetView()->setSelectionMerge(/*merge*/);
 }
 
 void QWorkbookViewPrivate::setFont(QFont font) {
@@ -691,121 +641,190 @@ void QWorkbookViewPrivate::undentCells() {
     }
 }
 
+/*!
+    \brief Sets whether the tabs are draggable within the QWorkbookView.
+
+    By default the tabs are not draggable. Set this value to true if you want draggable
+    tabs, otherwise set it to false.
+
+*/
+void QWorkbookViewPrivate::enableMovableTabs(bool movable) {
+    pTabBar->setMovable(movable);
+}
+
 void QWorkbookViewPrivate::enableContextMenu(bool value) {
     bEnableContextMenu = value;
 }
 
 void QWorkbookViewPrivate::enableTabMenu(bool value) {
-    pEnableTabMenu = value;
+    bEnableTabMenu = value;
 }
 
 void QWorkbookViewPrivate::createActions() {
     Q_Q(QWorkbookView);
-    pInsertSheetAction = new QAction(q_ptr->tr("Insert Sheet"), q_ptr);
-    q->connect(pInsertSheetAction, SIGNAL(triggered()),
-               q_ptr, SLOT(insertSheet()));
 
-    pRenameSheetAction = new QAction(q_ptr->tr("Rename Sheet"), q_ptr);
+    // tab menu actions
+    pInsertSheetBeforeAction = new QAction(q_ptr->tr("Insert New Sheet &Before"), q_ptr);
+    q->connect(pInsertSheetBeforeAction, SIGNAL(triggered()),
+               q_ptr, SLOT(insertSheetBefore()));
+
+    pInsertSheetAfterAction = new QAction(q_ptr->tr("Insert New Sheet &After"), q_ptr);
+    q->connect(pInsertSheetAfterAction, SIGNAL(triggered()),
+               q_ptr, SLOT(insertSheetAfter()));
+
+    pDeleteSheetAction = new QAction(q_ptr->tr("&Delete Sheet"), q_ptr);
+    q->connect(pDeleteSheetAction, SIGNAL(triggered()),
+               q_ptr, SLOT(deleteSheet()));
+
+    pRenameSheetAction = new QAction(q_ptr->tr("&Rename Sheet"), q_ptr);
     q->connect(pRenameSheetAction, SIGNAL(triggered()),
                q_ptr, SLOT(renameSheet()));
 
-    pMoveCopySheetAction = new QAction(q_ptr->tr("Move/Copy Sheet"), q_ptr);
+    pMoveCopySheetAction = new QAction(q_ptr->tr("&Move/Copy Sheet"), q_ptr);
     q->connect(pMoveCopySheetAction, SIGNAL(triggered()),
                q_ptr, SLOT(moveCopySheet()));
 
-    pProtectSheetAction = new QAction(q_ptr->tr("Protect Sheet"), q_ptr);
+    pProtectSheetAction = new QAction(q_ptr->tr("&Protect Sheet"), q_ptr);
     q->connect(pProtectSheetAction, SIGNAL(triggered()),
                q_ptr, SLOT(protectSheet()));
 
-    pTabColorAction = new QAction(q_ptr->tr("Tab Color"), q_ptr);
+    pTabColorAction = new QAction(q_ptr->tr("&Tab Color"), q_ptr);
     q->connect(pTabColorAction, SIGNAL(triggered()),
                q_ptr, SLOT(tabColor()));
 }
 
-void QWorkbookViewPrivate::insertSheet() {
-    // TODO insertSheet()
+void QWorkbookViewPrivate::showContextMenu(const QPoint &point) {
+
+    mTabIndex = pTabBar->tabAt(point);
+
+    if (bEnableTabMenu && mTabIndex >= 0) {
+        if (point.isNull())
+            return;
+
+        QMenu *insertMenu = new QMenu(q_ptr->tr("&Insert Sheet"), q_ptr);
+        insertMenu->addAction(pInsertSheetBeforeAction);
+        insertMenu->addAction(pInsertSheetAfterAction);
+
+
+        QMenu *menu = new QMenu(q_ptr);
+        menu->addMenu(insertMenu);
+        menu->addAction(pDeleteSheetAction);
+        menu->addAction(pRenameSheetAction);
+        menu->addAction(pMoveCopySheetAction);
+        menu->addAction(pProtectSheetAction);
+        menu->addAction(pTabColorAction);
+
+
+        menu->popup(pTabBar->mapToGlobal(point));
+    }
+
+    if (bEnableContextMenu && mTabIndex < 0) {
+        // TODO context menu for main workbook sheet
+    }
+}
+
+
+void QWorkbookViewPrivate::insertSheetBefore() {
+    q_ptr->insertWorksheet(mTabIndex);
+}
+
+void QWorkbookViewPrivate::insertSheetAfter() {
+    q_ptr->insertWorksheet(mTabIndex + 1);
+}
+
+void QWorkbookViewPrivate::deleteSheet() {
+    q_ptr->removeWorksheet(mTabIndex);
 }
 
 void QWorkbookViewPrivate::renameSheet() {
-    // TODO renameSheet()
+    QString oldName = q_ptr->currentWorksheetView()->sheetName();
+    bool ok;
+
+    QString newName = QInputDialog::getText(q_ptr,
+                                            q_ptr->tr("Set Tab Name"),
+                                            q_ptr->tr("Enter Tab Name"),
+                                            QLineEdit::Normal,
+                                            oldName,
+                                            &ok);
+    if (ok) {
+        q_ptr->renameSheet(oldName, newName);
+    }
+
 }
 
 void QWorkbookViewPrivate::moveCopySheet() {
-    // TODO moveCopySheet()
+    QWorksheetView *view = worksheetView(mTabIndex);
+    QString sheetName = view->sheetName();
+
+    MoveCopyDialog *dlg = new MoveCopyDialog(sheetName, q_ptr);
+
+    if (dlg->exec() == QDialog::Accepted) {
+        QString newSheetName = dlg->name();
+        int newTabIndex = dlg->tabIndex(); // Move before tab
+        MoveCopyDialog::Type type = dlg->type();
+
+        switch (type) {
+        case MoveCopyDialog::Move: {
+            if (newTabIndex >= pBook->size()) // moves to end.
+                newTabIndex = pBook->size() - 1;
+            pBook->moveSheet(mTabIndex, newTabIndex);
+            pTabBar->moveTab(mTabIndex, newTabIndex);
+            if (sheetName != newSheetName)
+                renameSheet(sheetName, newSheetName);
+            break;
+        }
+        case MoveCopyDialog::Copy: {
+            QWorksheetView *view = pBook->worksheetView(mTabIndex)->clone();
+            view->setSheetName(newSheetName);
+            pBook->insertWorksheet(newTabIndex, view);
+            q_ptr->insertTab(newTabIndex, view, view->sheetName());
+            break;
+        }
+        }
+    }
+
 }
 
 void QWorkbookViewPrivate::protectSheet() {
-    // TODO protectSheet()
+    // TODO no protectSheet in qworksheetview.
+//    q_ptr->currentWorksheetView()->protectSheet();
 }
 
 void QWorkbookViewPrivate::tabColor() {
     // TODO tabColor()
 }
 
-void QWorkbookViewPrivate::showContextMenu(const QPoint &/*point*/) {
-//    Q_Q(QWorkbookView);
-
-//    int tabIndex = q->p_tabBar->tabAt(point);
-
-//    if (m_enableTabMenu && tabIndex >= 0) {
-//        if (point.isNull())
-//            return;
-
-
-//        QMenu *menu = new QMenu(this);
-//        menu->addAction(insertSheetAction);
-//        menu->addAction(renameSheetAction);
-//        menu->addAction(moveCopySheetAction);
-//        menu->addAction(protectSheetAction);
-//        menu->addAction(tabColorAction);
-
-
-//        menu->popup(q->p_tabBar->mapToGlobal(point));
-//    }
-
-//    if (m_enableContextMenu && tabIndex < 0) {
-//        // TODO context menu for main workbook sheet
-//    }
-}
-
-void QWorkbookViewPrivate::saveWorkbook(QString filename) {
-    pBook->saveWorkbook(filename);
-}
-
 void QWorkbookViewPrivate::saveWorkbook(QString filename, WorksheetType type) {
     pBook->saveWorkbook(filename, type);
 }
 
-int QWorkbookViewPrivate::indexOf(Worksheet* sheet) {
+int QWorkbookViewPrivate::indexOf(QWorksheetView* sheet) {
     return pBook->indexOf(sheet);
 }
 
 QWorksheetView* QWorkbookViewPrivate::currentWorksheetView() {
-    return pCurrentView;
+    return pBook->currentWorksheetView();
 }
 
-Worksheet* QWorkbookViewPrivate::currentWorksheet() {
-    return pBook->currentWorksheet();
-}
-
-void QWorkbookViewPrivate::setCurrentWorksheet(int index) {
-    pBook->setCurrentWorksheet(index);
+void QWorkbookViewPrivate::setCurrentWorksheetView(int index) {
+    pBook->setCurrentWorksheetView(index);
     q_ptr->setCurrentIndex(index);
-    pCurrentView = qobject_cast<QWorksheetView*>(q_ptr->currentWidget());
 }
 
-void QWorkbookViewPrivate::setCurrentWorksheet(QString name) {
-    pBook->setCurrentWorksheet(name);
-    q_ptr->setCurrentIndex(pBook->indexOf(currentWorksheet()));
-    pCurrentView = qobject_cast<QWorksheetView*>(q_ptr->currentWidget());
+void QWorkbookViewPrivate::setCurrentWorksheetView(QString name) {
+    pBook->setCurrentWorksheetView(name);
+    q_ptr->setCurrentIndex(pBook->indexOf(currentWorksheetView()));
 }
 
+void QWorkbookViewPrivate::triggerCurrentSelection() {
+    currentWorksheetView()->triggerCurrentSelection();
+}
 
 void QWorkbookViewPrivate::setWorkbook(Workbook *book) {
     QList<QWorksheetView*> views;
     QList<QString> names;
     pBook = book;
-    int count = pBook->count();
+    int count = pBook->size();
     QWorksheetView *view;
 
     // remove the old stuff.
@@ -816,18 +835,18 @@ void QWorkbookViewPrivate::setWorkbook(Workbook *book) {
 
     // set up the new stuff.
     for (int i = 0; i < count; i++) {
-        view = new QWorksheetView(pParser, pPluginStore, q_ptr);
+        view = new QWorksheetView(pParser, q_ptr);
         views.append(view);
         names.append(view->sheetName());
         q_ptr->addTab(view, view->sheetName());
     }
 }
 
-QWorksheetView* QWorkbookViewPrivate::worksheetview(int index) {
+QWorksheetView* QWorkbookViewPrivate::worksheetView(int index) {
     return qobject_cast<QWorksheetView*>(q_ptr->widget(index));
 }
 
-QWorksheetView* QWorkbookViewPrivate::worksheetview(QString name) {
+QWorksheetView* QWorkbookViewPrivate::worksheetView(QString name) {
     for (int i = 0; i < q_ptr->tabBar()->count(); i++) {
         QString tabText = q_ptr->tabBar()->tabText(i);
         if (tabText == name) {
@@ -863,7 +882,7 @@ QWorksheetView* QWorkbookViewPrivate::addWorksheet(QString name) {
 
 QWorksheetView* QWorkbookViewPrivate::initWorksheet() {
     // create new view
-    QWorksheetView *sheetView = new QWorksheetView(pParser, pPluginStore, q_ptr);
+    QWorksheetView *sheetView = pBook->addWorksheet();
 
     // link selectionChanged to internal modifier slot.
     q_ptr->connect(sheetView->selectionModel(),
@@ -875,10 +894,10 @@ QWorksheetView* QWorkbookViewPrivate::initWorksheet() {
                    q_ptr, SIGNAL(selectionChanged(FormatStatus*)));
     q_ptr->connect(sheetView, SIGNAL(cellChanged(QVariant)),
                    q_ptr, SIGNAL(cellChanged(QVariant)));
-    q_ptr->connect(sheetView, SIGNAL(cellContentsChanged(QString)),
-                   q_ptr, SIGNAL(cellContentsChanged(QString)));
+//    q_ptr->connect(sheetView, SIGNAL(cellContentsChanged(QString)),
+//                   q_ptr, SIGNAL(cellContentsChanged(QString)));
 
-                   return sheetView;
+    return sheetView;
 }
 
 QWorksheetView* QWorkbookViewPrivate::insertWorksheet(int index) {
@@ -928,7 +947,7 @@ void QWorkbookViewPrivate::setTabText(int index, QString text) {
     QString oldName = pTabBar->tabText(index);
     pTabBar->setTabText(index, text);
 
-    Worksheet *sheet = pBook->worksheet(oldName);
+    QWorksheetView *sheet = pBook->worksheetView(oldName);
     sheet->setSheetName(text);
 
 }
@@ -973,7 +992,7 @@ void QWorkbookViewPrivate::removeWorksheet(QString name) {
 
 }
 
-void QWorkbookViewPrivate::removeWorksheet(Worksheet *sheet) {
+void QWorkbookViewPrivate::removeWorksheet(QWorksheetView *sheet) {
 
     int index = pBook->removeWorksheet(sheet);
     if (index >= 0) {
@@ -985,5 +1004,8 @@ void QWorkbookViewPrivate::removeWorksheet(Worksheet *sheet) {
         q_ptr->removeTab(index);
         view->deleteLater();
     }
+}
+
+
 }
 

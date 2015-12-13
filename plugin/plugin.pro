@@ -7,7 +7,11 @@ SUBDIRS += \
     minusoperator \
     multiplyoperator \
     divideoperator \
+    concatenateoperator \
+    modulusoperator \
+    \
     piconstant \
+    \
     sinfunction \
     cosfunction \
     tanfunction \

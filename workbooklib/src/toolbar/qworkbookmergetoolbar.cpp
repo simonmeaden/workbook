@@ -21,6 +21,11 @@
 #include "qworkbookmergetoolbar.h"
 #include "qworkbookmergetoolbar_p.h"
 #include "qworkbookview.h"
+#include "qworksheetview.h"
+
+#include "workbook_global.h"
+
+namespace QWorkbook {
 
 QWorkbookMergeToolbar::QWorkbookMergeToolbar(QWidget *parent) :
     QToolBar(parent),
@@ -44,7 +49,14 @@ QWorkbookMergeToolbar::QWorkbookMergeToolbar(QString title,QWidget *parent) :
 void QWorkbookMergeToolbar::setWorkbookView(QWorkbookView *view) {
 
     Q_D(QWorkbookMergeToolbar);
-    d->setWorkbookView(view);
+    d->setView(view);
+
+}
+
+void QWorkbookMergeToolbar::setWorksheetView(QWorksheetView *view) {
+
+    Q_D(QWorkbookMergeToolbar);
+    d->setView(view);
 
 }
 
@@ -66,6 +78,9 @@ void QWorkbookMergeToolbar::setMerge(bool merge) {
 
     Q_D(QWorkbookMergeToolbar);
     d->setMerge(merge);
+
+}
+
 
 }
 

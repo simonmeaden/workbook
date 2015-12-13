@@ -21,10 +21,16 @@
 #include "qworkbookfonteffectstoolbar_p.h"
 #include "qworkbookfonteffectstoolbar.h"
 #include "qworkbookview.h"
+#include "qworksheetview.h"
 #include "types.h"
 
+#include "workbook_global.h"
+
+namespace QWorkbook {
+
 QWorkbookFontEffectsToolBarPrivate::QWorkbookFontEffectsToolBarPrivate(QWorkbookFontEffectsToolBar *q) :
-    q_ptr(q) {
+    q_ptr(q),
+    pView(NULL) {
 
 }
 
@@ -58,15 +64,61 @@ void QWorkbookFontEffectsToolBarPrivate::init()  {
 
 }
 
-void QWorkbookFontEffectsToolBarPrivate::setWorkbookView(QWorkbookView *view) {
+void QWorkbookFontEffectsToolBarPrivate::setView(QObject *view) {
     Q_Q(QWorkbookFontEffectsToolBar);
+    QWorkbookView *wb;
+    QWorksheetView *ws;
 
-    q->connect(view, SIGNAL(selectionChanged(FormatStatus*)),
-               q, SLOT(selectionChanged(FormatStatus*)));
+    // remove old connections
+    if (pView) {
+        wb = qobject_cast<QWorkbookView*>(pView);
+        ws = qobject_cast<QWorksheetView*>(pView);
 
-    q->connect(q, SIGNAL(boldChanged(bool)), view, SLOT(setSelectionBold(bool)));
-    q->connect(q, SIGNAL(italicChanged(bool)), view, SLOT(setSelectionItalic(bool)));
-    q->connect(q, SIGNAL(underlineChanged(bool)), view, SLOT(setSelectionUnderline(bool)));
+        if (wb) {
+            q->disconnect(wb, SIGNAL(selectionChanged(FormatStatus*)),
+                       q, SLOT(selectionChanged(FormatStatus*)));
+            q->disconnect(q, SIGNAL(boldChanged(bool)),
+                       wb, SLOT(setSelectionBold(bool)));
+            q->disconnect(q, SIGNAL(italicChanged(bool)),
+                       wb, SLOT(setSelectionItalic(bool)));
+            q->disconnect(q, SIGNAL(underlineChanged(bool)),
+                       wb, SLOT(setSelectionUnderline(bool)));
+        } else if (ws) {
+            q->disconnect(ws, SIGNAL(selectionChanged(FormatStatus*)),
+                       q, SLOT(selectionChanged(FormatStatus*)));
+            q->disconnect(q, SIGNAL(boldChanged(bool)),
+                       ws, SLOT(setSelectionBold(bool)));
+            q->disconnect(q, SIGNAL(italicChanged(bool)),
+                       ws, SLOT(setSelectionItalic(bool)));
+            q->disconnect(q, SIGNAL(underlineChanged(bool)),
+                       ws, SLOT(setSelectionUnderline(bool)));
+        }
+    }
+
+    // make new ones.
+    wb = qobject_cast<QWorkbookView*>(view);
+    ws = qobject_cast<QWorksheetView*>(view);
+    if (wb) {
+        q->connect(wb, SIGNAL(selectionChanged(FormatStatus*)),
+                   q, SLOT(selectionChanged(FormatStatus*)));
+        q->connect(q, SIGNAL(boldChanged(bool)),
+                   wb, SLOT(setSelectionBold(bool)));
+        q->connect(q, SIGNAL(italicChanged(bool)),
+                   wb, SLOT(setSelectionItalic(bool)));
+        q->connect(q, SIGNAL(underlineChanged(bool)),
+                   wb, SLOT(setSelectionUnderline(bool)));
+    } else if (ws) {
+        q->connect(ws, SIGNAL(selectionChanged(FormatStatus*)),
+                   q, SLOT(selectionChanged(FormatStatus*)));
+        q->connect(q, SIGNAL(boldChanged(bool)),
+                   ws, SLOT(setSelectionBold(bool)));
+        q->connect(q, SIGNAL(italicChanged(bool)),
+                   ws, SLOT(setSelectionItalic(bool)));
+        q->connect(q, SIGNAL(underlineChanged(bool)),
+                   ws, SLOT(setSelectionUnderline(bool)));
+    }
+
+    pView = view;
 }
 
 void QWorkbookFontEffectsToolBarPrivate::selectionChanged(FormatStatus* status) {
@@ -110,5 +162,8 @@ void QWorkbookFontEffectsToolBarPrivate::setItalic(bool value) {
 
 void QWorkbookFontEffectsToolBarPrivate::setUnderline(bool value) {
     pUnderlineBtn->setChecked(value);
+}
+
+
 }
 

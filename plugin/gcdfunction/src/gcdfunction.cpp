@@ -1,5 +1,7 @@
 #include "gcdfunction.h"
 
+namespace QWorkbook {
+
 GcdFunction::GcdFunction(QObject *parent) : QObject(parent) {
 
     setName("GCD");
@@ -53,4 +55,6 @@ quint32 GcdFunction::gcd(quint32 a, quint32 b ) {
         b = c;
     }
     return b;
+}
+
 }

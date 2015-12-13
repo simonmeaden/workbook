@@ -20,12 +20,16 @@
 */
 #include "format.h"
 #include "format_p.h"
-#include <workbook_global.h>
-#include "worksheet.h"
+#include "workbook_global.h"
 #include "worksheetmodel.h"
 #include "types.h"
 
 #include <xlsxformat.h>
+#include <Style.hpp>
+
+#include "workbook_global.h"
+
+namespace QWorkbook {
 
 /*!
  * \enum DefaultNumberFormats::Types
@@ -117,10 +121,8 @@ Format::Format(Format &format) :
     setStrikeout(format.strikeout());
     setUnderlineStyle(format.underlineStyle());
     setUnderlineColor(format.underlineColor());
-}
-
-Format::~Format() {
-
+    setFont(format.font());
+    setAlignment(format.alignment());
 }
 
 void Format::indent() {
@@ -141,12 +143,20 @@ int Format::column() {
     return d->mColumn;
 }
 
-QXlsx::Format Format::toXlsx() {
+QXlsx::Format* Format::toXlsx() {
     return d_ptr->toXlsx();
 }
 
-void Format::fromXlsx(QXlsx::Format format) {
+void Format::fromXlsx(QXlsx::Format *format) {
     d_ptr->fromXlsx(format);
+}
+
+ods::Style* Format::toOds() {
+    return d_ptr->toOds();
+}
+
+void Format::fromOds(ods::Style *style) {
+    d_ptr->fromOds(style);
 }
 
 void Format::setCell(int row, int column) {
@@ -391,5 +401,8 @@ Border Format::leftborder() {
 
 Border Format::rightBorder() {
     return d_ptr->rightBorder();
+}
+
+
 }
 

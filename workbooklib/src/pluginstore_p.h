@@ -22,8 +22,13 @@
 #define PLUGINSTOREPRIVATE
 
 #include <QMap>
+#include <QDebug>
 
 #include "interface.h"
+
+#include "workbook_global.h"
+
+namespace QWorkbook {
 
 class PluginStore;
 
@@ -32,7 +37,7 @@ class PluginStorePrivate {
 public:
     PluginStorePrivate(PluginStore *parent) ;
 
-    ~PluginStorePrivate() {}
+    virtual ~PluginStorePrivate() {}
 
     IOperator* getOperator(QString name);
     IFunction* getFunction(QString name);
@@ -44,12 +49,14 @@ public:
     void addConstant(IConstant* interface);
     void loadPlugins();
 
-protected:
+    QStringList mOperatorNames, mFunctionNames, mConstantNames;
+    QStringList functionNames();
+    QStringList operatorNames();
+    QStringList constantNames();
+
     QMap<QString, IOperator*> mOperators;
     QMap<QString, IFunction*> mFunctions;
     QMap<QString, IConstant*> mConstants;
-
-    static bool pluginsAreLoaded;
 
     PluginStore *q_ptr;
 
@@ -58,6 +65,9 @@ private:
 
 
 };
+
+
+}
 
 #endif // PLUGINSTOREPRIVATE
 

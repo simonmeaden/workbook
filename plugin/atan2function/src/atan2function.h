@@ -10,13 +10,16 @@
 #include <workbook_global.h>
 #include <interface.h>
 
+namespace QWorkbook {
+
+
 class WORKBOOKSHARED_EXPORT Atan2Function :
     public QObject,
     public ITwoValueFunction<qreal, qreal>,
     public IFunction {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID IFunction_iid)
-    Q_INTERFACES(IFunction)
+    Q_INTERFACES(QWorkbook::IFunction)
 public:
     Atan2Function(QObject *parent=0);
 
@@ -30,5 +33,7 @@ protected:
 
     void setName(QString name);
 };
+
+}
 
 #endif // ATAN2FUNCTION_H

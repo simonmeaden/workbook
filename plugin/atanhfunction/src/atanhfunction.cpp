@@ -1,5 +1,7 @@
 #include "atanhfunction.h"
 
+namespace QWorkbook {
+
 AtanhFunction::AtanhFunction(QObject *parent) : QObject(parent) {
 
     setName("ATANH");
@@ -24,4 +26,6 @@ QStringList AtanhFunction::importer() const {
 
 QVariant AtanhFunction::calculate(qreal radians) {
     return atanh(radians);
+}
+
 }

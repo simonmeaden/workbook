@@ -22,15 +22,24 @@
 #define FORMULACELLPRIVATE_H
 
 #include "types.h"
-#include "cell.h"
-#include "cell_p.h"
+#include "mergedcell.h"
+#include "mergedcell_p.h"
+
+#include "workbook_global.h"
+
+namespace QWorkbook {
 
 class FormulaCell;
 
-class FormulaCellPrivate : public CellPrivate {
+class FormulaCellPrivate : public MergedCellPrivate {
 
 public:
 
+    virtual ~FormulaCellPrivate() {}
+
 };
+
+
+}
 
 #endif // FORMULACELLPRIVATE_H

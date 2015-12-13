@@ -6,8 +6,10 @@
 #include <QStringList>
 #include <QVariant>
 
-#include "interface.h"
+#include <interface.h>
 #include <workbook_global.h>
+
+namespace QWorkbook {
 
 class WORKBOOKSHARED_EXPORT LcmFunction :
         public QObject,
@@ -16,7 +18,7 @@ class WORKBOOKSHARED_EXPORT LcmFunction :
         public IFunction {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID IFunction_iid )
-    Q_INTERFACES(IFunction)
+    Q_INTERFACES(QWorkbook::IFunction)
 public:
     explicit LcmFunction(QObject *parent = 0);
 
@@ -34,5 +36,7 @@ protected:
     quint32 lcm(quint32 a, quint32 b);
 
  };
+
+}
 
 #endif // LCMFUNCTION_H

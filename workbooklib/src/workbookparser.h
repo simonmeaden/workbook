@@ -30,43 +30,63 @@
 #include <QMap>
 #include <QStack>
 #include <QScopedPointer>
+#include <QThread>
+#include <QMutex>
 
-#include "qquad.h"
+#include <assert.h>
 
+#include "workbook_global.h"
 #include "reference.h"
 #include "workbook_global.h"
-#include "worksheet.h"
 #include "workbookparser_p.h"
-#include <types.h>
+#include "types.h"
+
+
+namespace QWorkbook {
 
 class PluginStore;
+class QWorksheetView;
+class QWorkbookView;
 //class WorkbookParserPrivate;
 
-class WORKBOOKSHARED_EXPORT WorkbookParser : public QObject {
+class WORKBOOKSHARED_EXPORT WorkbookParser : public QThread {
     Q_OBJECT
     Q_ENUMS(ParserError)
     Q_FLAGS(ParserErrors)
+    Q_DECLARE_PRIVATE(WorkbookParser)
 public:
 
-    WorkbookParser(PluginStore *store, QObject *parent=0);
+    WorkbookParser();
+    WorkbookParser(QWorkbookView *parent);
+    WorkbookParser(QWorksheetView *parent);
+    WorkbookParser(const WorkbookParser& other) : QThread(other.parent())  { Q_ASSERT(false); }
 
-    QVariant parse(Worksheet *sheet, QString expression);
+    virtual ~WorkbookParser();
+
     ParserErrors error();
 
 public slots:
-    void setFunctions(QStringList list);
-    void setOperations(QStringList list);
-    void setConstants(QStringList list);
-    void clearErrors();
+    void stopProcess();
+    void dataHasChanged(const QModelIndex &topLeft,
+                        const QModelIndex &bottomRight,
+                        const QVector<int> &roles);
 
 
 protected:
     QScopedPointer<WorkbookParserPrivate> d_ptr;
 
+    QMutex mMutex;
+    bool bAbort, bDataHasChanged;
+
+    void run();
+
 private:
-    Q_DECLARE_PRIVATE(WorkbookParser)
 
 };
 
+} // end of namespace QWorkbook
+
+Q_DECLARE_METATYPE(QWorkbook::WorkbookParser)
+typedef QSharedPointer<QWorkbook::WorkbookParser> PWorkbookParser;
 
 #endif // WORKBOOKPARSER_H

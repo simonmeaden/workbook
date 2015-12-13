@@ -7,8 +7,10 @@
 #include <QVariant>
 #include <qmath.h>
 
-#include "interface.h"
+#include <interface.h>
 #include <workbook_global.h>
+
+namespace QWorkbook {
 
 class WORKBOOKSHARED_EXPORT MaxFunction  :
         public QObject,
@@ -17,7 +19,7 @@ class WORKBOOKSHARED_EXPORT MaxFunction  :
         public IFunction  {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID IFunction_iid )
-    Q_INTERFACES(IFunction)
+    Q_INTERFACES(QWorkbook::IFunction)
 public:
     MaxFunction(QObject *parent=0);
 
@@ -32,5 +34,7 @@ protected:
 
     void setName(QString name);
 };
+
+}
 
 #endif // MAXFUNCTION_H

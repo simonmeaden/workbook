@@ -1,5 +1,7 @@
 #include "acothfunction.h"
 
+namespace QWorkbook {
+
 AcothFunction::AcothFunction(QObject *parent) : QObject(parent) {
 
     setName("ACOTH");
@@ -24,4 +26,6 @@ QStringList AcothFunction::importer() const {
 
 QVariant AcothFunction::calculate(qreal radians) {
     return atanh(1.0 / radians);
+}
+
 }

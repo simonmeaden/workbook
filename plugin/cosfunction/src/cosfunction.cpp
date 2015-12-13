@@ -1,5 +1,7 @@
 #include "cosfunction.h"
 
+namespace QWorkbook {
+
 CosFunction::CosFunction(QObject *parent) : QObject(parent) {
 
     setName("COS");
@@ -26,3 +28,4 @@ QVariant CosFunction::calculate(qreal radians) {
     return qCos(radians);
 }
 
+}

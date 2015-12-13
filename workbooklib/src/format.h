@@ -26,18 +26,28 @@
 #include <QBrush>
 #include <QScopedPointer>
 
-#include "xlsxformat.h"
-
-#include <workbook_global.h>
+#include "workbook_global.h"
 #include "format_p.h"
 #include "types.h"
 
+namespace QXlsx {
+    class Format;
+}
+
+namespace ods {
+    class Style;
+}
+
+namespace QWorkbook {
+
 class WorksheetModel;
+//class FormatPrivate;
 
 class NumberFormat {
 public:
     NumberFormat() : mType(General), sFormat("General") { }
     NumberFormat(NumberFormatType t, QString f) : mType(t), sFormat(f) { }
+    virtual ~NumberFormat() {}
 
     NumberFormatType type() { return mType; }
     QString format() { return sFormat; }
@@ -50,6 +60,7 @@ class DefaultNumberFormats {
 public:
 
     DefaultNumberFormats();
+    virtual ~DefaultNumberFormats() {}
 
 
     QList<int> styleIds() {
@@ -75,7 +86,7 @@ public:
 
     explicit Format(int row, int column, QObject *parent);
     explicit Format(Format &format);
-    ~Format();
+    virtual ~Format() {}
 
     int row();
     int column();
@@ -94,7 +105,10 @@ public:
     QBrush backgroundColor();
     int indentSize();
 
-    QXlsx::Format toXlsx();    
+    Format* clone();
+
+    QXlsx::Format *toXlsx();
+    ods::Style *toOds();
 
 signals:
     void formatChanged(Format* format);
@@ -104,7 +118,8 @@ signals:
     void rightBorderChanged(Format* format);
 
 public slots:
-    void fromXlsx(QXlsx::Format format);
+    void fromXlsx(QXlsx::Format *format);
+    void fromOds(ods::Style *style);
 
     void setFont(QFont font);
     void setPointSize(int size);
@@ -127,15 +142,15 @@ public slots:
     Border bottomBorder();
     Border leftborder();
     Border rightBorder();
-    void setBorder(bool enabled, QColor color=QColor("black"), BorderStyle style=SINGLE, double thickness = 0.75);
-    void setTopBorder(bool enabled, QColor color=QColor("black"), BorderStyle style=SINGLE, double thickness = 0.75);
-    void setBottomBorder(bool enabled, QColor color=QColor("black"), BorderStyle style=SINGLE, double thickness = 0.75);
-    void setLeftBorder(bool enabled, QColor color=QColor("black"), BorderStyle style=SINGLE, double thickness = 0.75);
-    void setRightBorder(bool enabled, QColor color=QColor("black"), BorderStyle style=SINGLE, double thickness = 0.75);
-    void updateTopBorder(bool enabled, QColor color=QColor("black"), BorderStyle style=SINGLE, double thickness = 0.75);
-    void updateBottomBorder(bool enabled, QColor color=QColor("black"), BorderStyle style=SINGLE, double thickness = 0.75);
-    void updateLeftBorder(bool enabled, QColor color=QColor("black"), BorderStyle style=SINGLE, double thickness = 0.75);
-    void updateRightBorder(bool enabled, QColor color=QColor("black"), BorderStyle style=SINGLE, double thickness = 0.75);
+    void setBorder(bool enabled, QColor color=QColor("black"), BorderStyle style=BS_SINGLE, double thickness = 0.75);
+    void setTopBorder(bool enabled, QColor color=QColor("black"), BorderStyle style=BS_SINGLE, double thickness = 0.75);
+    void setBottomBorder(bool enabled, QColor color=QColor("black"), BorderStyle style=BS_SINGLE, double thickness = 0.75);
+    void setLeftBorder(bool enabled, QColor color=QColor("black"), BorderStyle style=BS_SINGLE, double thickness = 0.75);
+    void setRightBorder(bool enabled, QColor color=QColor("black"), BorderStyle style=BS_SINGLE, double thickness = 0.75);
+    void updateTopBorder(bool enabled, QColor color=QColor("black"), BorderStyle style=BS_SINGLE, double thickness = 0.75);
+    void updateBottomBorder(bool enabled, QColor color=QColor("black"), BorderStyle style=BS_SINGLE, double thickness = 0.75);
+    void updateLeftBorder(bool enabled, QColor color=QColor("black"), BorderStyle style=BS_SINGLE, double thickness = 0.75);
+    void updateRightBorder(bool enabled, QColor color=QColor("black"), BorderStyle style=BS_SINGLE, double thickness = 0.75);
 
 //    bool operator== (Format f) {
 
@@ -146,5 +161,8 @@ protected:
     const QScopedPointer<FormatPrivate> d_ptr;
 
 };
+
+
+}
 
 #endif // FORMAT_H

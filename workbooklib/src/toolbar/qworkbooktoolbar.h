@@ -29,7 +29,7 @@
 #include <QIcon>
 #include <QMenu>
 
-#include <workbook_global.h>
+#include "workbook_global.h"
 #include "range.h"
 #include "qworkbookview.h"
 #include "qworkbookfonttoolbar.h"
@@ -37,50 +37,31 @@
 #include "qworkbookaligntoolbar.h"
 #include "qworkbookmergetoolbar.h"
 #include "qworkbookindenttoolbar.h"
-//#include "qworkbooktoolbar_p.h"
+#include "qworkbooktoolbar_p.h"
 
 
-class QWorkbookToolBarPrivate;
+namespace QWorkbook {
+
 
 class WORKBOOKSHARED_EXPORT QWorkbookToolBar : public QToolBar {
     Q_OBJECT
 public:
     QWorkbookToolBar(QWidget *parent);
     QWorkbookToolBar(QString title, QWidget *parent);
-    ~QWorkbookToolBar();
+    ~QWorkbookToolBar() {}
 
 signals:
-    void boldSelection(bool);
-    void italicSelection(bool);
-    void underlineSelection(bool);
-//    void alignSelection(bool, Qt::Alignment);
-    void fontSelection(bool, QFont, int);
-    void mergeSelection(bool);
-
-    void boldChanged(bool);
-    void italicChanged(bool);
-    void underlineChanged(bool);
-    void fontChanged(QFont);
-    void fontSizeChanged(int);
-    void alignmentChanged(Qt::Alignment);
-    void mergeChanged(bool);
-    void indentCells();
-    void undentCells();
 
 public slots:
     void selectionChanged(FormatStatus*);
     void setWorkbookView(QWorkbookView *);
+    void setWorksheetView(QWorksheetView *);
 
     void showFontBar(bool);
     void showFontEffectsBar(bool);
-    void showIndentBar(bool);
+//    void showIndentBar(bool);
     void showAlignBar(bool);
-
-    void setBold(bool);
-    void setItalic(bool);
-    void setUnderline(bool);
-    void setFont(QFont);
-    void setAlign(Qt::Alignment);
+    void showMergeBar(bool);
 
 protected slots:
     void showContextMenu(const QPoint&);
@@ -92,5 +73,8 @@ private:
     Q_DECLARE_PRIVATE(QWorkbookToolBar)
 
 };
+
+
+}
 
 #endif // WORKSHEETTOOLBAR_H

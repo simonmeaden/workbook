@@ -22,16 +22,24 @@
 #include "range_p.h"
 
 
-Range::Range() :
+#include "workbook_global.h"
+
+namespace QWorkbook {
+
+Range::Range(QObject *parent) :
+    QObject(parent),
     d_ptr(new RangePrivate(this)) {
 
 }
 
-Range::Range(int &row1, int &column1, int &row2, int &column2) :
+Range::Range(int &row1, int &column1, int &row2, int &column2, QObject *parent) :
+    QObject(parent),
     d_ptr(new RangePrivate(row1, column1, row2, column2, this)) {
+    Q_ASSERT(row1 > 0 && column1 > 0 && row2 > 0 && column2 > 0);
 }
 
-Range::Range(CellReference topLeft, CellReference bottomRight) :
+Range::Range(CellReference topLeft, CellReference bottomRight, QObject *parent) :
+    QObject(parent),
     d_ptr(new RangePrivate(topLeft, bottomRight, this)) {
 }
 
@@ -52,6 +60,7 @@ bool Range::isNull() {
 }
 
 void Range::setRange(int &row1, int &column1, int &row2, int &column2) {
+    Q_ASSERT(row1 > 0 && column1 > 0 && row2 > 0 && column2 > 0);
     d_ptr->setRange(row1, column1, row2, column2);
 }
 
@@ -59,24 +68,30 @@ Range* Range::removeOverlap(Range *range) {
     return d_ptr->removeOverlap(range);
 }
 
-QQuad<int, int, int, int> Range::rangeFromString(QString &value) {
+SplitRangeName Range::rangeFromString(const QString &value) {
     return RangePrivate::rangeFromString(value);
 }
 
 QString Range::rangeToString(int column, int row, int width, int height) {
+    Q_ASSERT(row > 0 && column > 0 && width > 0 && height > 0);
     return RangePrivate::rangeToString(column, row, width, height);
+}
+
+QString Range::rangeToString(int &row1, int &column1, bool rowStatic1, bool colStatic1,
+                             int &row2, int &column2, bool rowStatic2, bool colStatic2) {
+    Q_ASSERT(row1 > 0 && column1 > 0 && row2 > 0 && column2 > 0);
+    return RangePrivate::rangeToString(row1, column1, rowStatic1, colStatic1,
+                                       row2, column2, rowStatic2, colStatic2);
 }
 
 /*!
  * \brief Returns the range of selected cells.
  *
- * Returns a QQuad containing the four values.
- * The values returned are in \c first the leftmost column, in the \c second
- * the topmost row, in the \c third the width and in the fourth the height.
- *
- * \return a QQuad containing the range.
+ * Returns a RangeValue struct containing the four values.
+ * The values returned are the leftmost \c column, in the
+ * topmost \c row, the \c width and the \c height.
  */
-QQuad<int, int, int, int> Range::range() {
+RangeValue Range::range() {
     return d_ptr->range();
 }
 
@@ -95,3 +110,6 @@ int Range::left() {
 int Range::right() {
     return d_ptr->right();
 }
+
+}
+

@@ -10,19 +10,17 @@
 #include <interface.h>
 #include <workbook_global.h>
 
-class WORKBOOKSHARED_EXPORT PlusOperator :
-        public QObject, public OperatorInterface<QVariant> {
+namespace QWorkbook {
+
+class WORKBOOKSHARED_EXPORT ConcatenateOperator :
+        public QObject, public OperatorBase<qreal> {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID IOperator_iid)
-    Q_INTERFACES(IOperator)
+    Q_INTERFACES(QWorkbook::IOperator)
 public:
-    explicit PlusOperator(QObject *parent = 0);
+    explicit ConcatenateOperator(QObject *parent = 0);
 
-    QStringList importer() const;
-
-    QString name();
-    QVariant calculate(QVariant left, QVariant right);
-    int level();
+    qreal calculate(qreal left, qreal right);
 
 
 signals:
@@ -30,15 +28,10 @@ signals:
 public slots:
 
 protected:
-    QString sName;
-    int mLevel;
-
-    void setName(QString name);
-    void setlevel(int level);
-
-    bool additionIsSafe(long long a, long long b);
-    size_t highestOneBitPosition(long long a);
+//    bool additionIsSafe(long long a, long long b);
+//    size_t highestOneBitPosition(long long a);
 };
 
+}
 
 #endif // PLUSOPERATOR_H

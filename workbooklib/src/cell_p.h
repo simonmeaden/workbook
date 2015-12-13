@@ -24,8 +24,6 @@
 #include <QObject>
 #include <QVariant>
 
-#include <qquad.h>
-
 #include "types.h"
 
 namespace QXlsx {
@@ -33,14 +31,20 @@ namespace QXlsx {
     class Worksheet;
 }
 
+#include "workbook_global.h"
+#include "reference.h"
+
+namespace QWorkbook {
+
 class Cell;
 class Format;
 
-class CellPrivate {
+class CellPrivate : public Reference {
     Q_DECLARE_PUBLIC(Cell)
 public:
     CellPrivate();
     CellPrivate(Cell *q);
+    virtual ~CellPrivate() {}
 
     int mRow;
     inline int row() const {
@@ -62,9 +66,6 @@ public:
     inline bool locked() { return bLocked; }
     void setLocked(bool locked);
 
-    CellType mType;
-    CellType type();
-
     QString toString();
 
     QString mName;
@@ -76,5 +77,8 @@ protected:
 
 
 };
+
+}
+
 
 #endif // CELL_P_H

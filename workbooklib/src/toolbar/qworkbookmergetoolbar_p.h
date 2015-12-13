@@ -23,6 +23,10 @@
 
 #include <QPushButton>
 
+#include "workbook_global.h"
+
+namespace QWorkbook {
+
 class QWorkbookMergeToolbar;
 class QWorkbookView;
 class FormatStatus;
@@ -35,15 +39,19 @@ public:
 
     void setMerge(bool);
     void merge();
-    void setWorkbookView(QWorkbookView *);
+    void setView(QObject *);
     void selectionChanged(FormatStatus*);
 
 protected:
     QPushButton *pMergeBtn;
     QWorkbookMergeToolbar *q_ptr;
+    QObject *pView;
 
     void init();
 
 };
+
+
+}
 
 #endif // QWORKBOOKMERGETOOLBARPRIVATE_H

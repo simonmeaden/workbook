@@ -25,10 +25,14 @@
 #include <QScopedPointer>
 #include <QToolBar>
 
-#include "workbook_global.h"
 #include "qworkbookmergetoolbar_p.h"
 
+#include "workbook_global.h"
+
+namespace QWorkbook {
+
 class QWorkbookView;
+class QWorksheetView;
 class FormatStatus;
 
 class WORKBOOKSHARED_EXPORT QWorkbookMergeToolbar : public QToolBar {
@@ -40,11 +44,12 @@ public:
     virtual ~QWorkbookMergeToolbar() {}
 
 signals:
-    void mergeChanged(bool);
+    void mergeChanged();
 
 public slots:
     void setMerge(bool);
     void setWorkbookView(QWorkbookView *);
+    void setWorksheetView(QWorksheetView *);
     void selectionChanged(FormatStatus*);
 
 protected slots:
@@ -62,5 +67,8 @@ protected:
 private:
 
 };
+
+
+}
 
 #endif // WORKBOOKMERGETOOLBAR_H

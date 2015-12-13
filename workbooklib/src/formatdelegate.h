@@ -26,14 +26,18 @@
 #include <QStyledItemDelegate>
 #include <QScopedPointer>
 
-class FormatDelegatePrivate;
+#include "workbook_global.h"
+#include "formatdelegate_p.h"
+
+namespace QWorkbook {
+
 class QWorksheetView;
 
 class FormatDelegate : public QStyledItemDelegate {
     Q_DECLARE_PRIVATE(FormatDelegate)
 public:
     FormatDelegate(QWorksheetView *parent);
-    ~FormatDelegate();
+    virtual ~FormatDelegate() {}
 
     void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const;
     QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const;
@@ -45,5 +49,8 @@ protected:
     const QScopedPointer<FormatDelegatePrivate> d_ptr;
 
 };
+
+
+}
 
 #endif // FORMATDELEGATE_H

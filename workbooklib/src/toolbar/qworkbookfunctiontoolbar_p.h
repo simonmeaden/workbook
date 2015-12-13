@@ -27,6 +27,10 @@
 #include <QLineEdit>
 
 
+#include "workbook_global.h"
+
+namespace QWorkbook {
+
 class QWorkbookFunctionToolBar;
 class QWorkbookView;
 class FormatStatus;
@@ -55,5 +59,8 @@ protected:
     void init();
 
 };
+
+
+}
 
 #endif // QWORKBOOKFUNCTIONTOOLBARPRIVATE_H

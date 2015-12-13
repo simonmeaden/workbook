@@ -23,6 +23,10 @@
 #include "workbook.h"
 #include "cellreference.h"
 
+#include "workbook_global.h"
+
+namespace QWorkbook {
+
 /*!
  * \brief Creates an invalid CellReference.
  * \param parent parent object
@@ -37,14 +41,30 @@ CellReference::CellReference(QObject *parent) :
     d_ptr(new CellReferencePrivate(this)) {
 }
 
-CellReference::CellReference(int row, int column, QObject *parent) : QObject(parent), d_ptr(new CellReferencePrivate(this)) {
-    Q_D(CellReference);
-    d->mRow = row;
-    d->mColumn = column;
+CellReference::CellReference(int row, int column, QObject *parent) :
+    QObject(parent),
+    d_ptr(new CellReferencePrivate(this)) {
+    Q_ASSERT(row > 0 && column > 0);
+
+    d_ptr->setPosition(row, column);
+
 }
 
-CellReference::CellReference(QString reference, QObject *parent) : QObject(parent), d_ptr(new CellReferencePrivate(this)) {
-    setPosition(reference);
+CellReference::CellReference(int row, int column, bool rowStatic, bool colStatic, QObject *parent) :
+    QObject(parent),
+    d_ptr(new CellReferencePrivate(this)) {
+    Q_ASSERT(row > 0 && column > 0);
+
+    d_ptr->setPosition(row, column, rowStatic, colStatic);
+
+}
+
+CellReference::CellReference(QString reference, QObject *parent) :
+    QObject(parent),
+    d_ptr(new CellReferencePrivate(this)) {
+
+    d_ptr->setPosition(reference);
+
 }
 
 bool CellReference::isValid() {
@@ -61,76 +81,27 @@ int CellReference::column() const {
 }
 
 void CellReference::setRow(int &row) {
+    Q_ASSERT(row > 0);
+
     Q_D(CellReference);
     d->mRow = row;
+
  }
 
 void CellReference::setColumn(int &column) {
+    Q_ASSERT(column > 0);
+
     Q_D(CellReference);
     d->mColumn = column;
+
 }
 
-void CellReference::setPosition(int &row, int &column) {
-    Q_D(CellReference);
-    d->mRow = row;
-    d->mColumn = column;
-}
-
-void CellReference::setPosition(QString &reference) {
-    Q_D(CellReference);
-    QPair<int, int> pair = cellFromString(reference);
-
-    d->mRow = pair.first;
-    d->mColumn = pair.second;
-}
 
 QString CellReference::toString() {
-    QString string = columnToString(d_ptr->column()) + rowToString(d_ptr->row());
-    return string;
+
+    return d_ptr->toString();
+
 }
 
-/*!
- * /brief Converts a row number to an spreadsheet row value.
- *
- * Note : Spreadsheet offsets start at 1 while most others start at 0. The
- * function increments to allow zero based offsets.
- *
- * Row is easy as it just a number a1 - n
- */
-QString CellReference::rowToString(int row) {
-    return CellReferencePrivate::rowToString(row);
-}
 
-/*!
- * \brief Converts a column number to an spreadsheet column value A - Z, AA - ZZ.
- *
- * 0 = A
- * 1 = B
- * ...
- * 26 = AA
- * 27 = AB etc.
- *
- * I'm not going past two columns. If I need to have more than 702 (26 * 26) + 26
- * columns in a spreadsheet I should probably shoot myself to stop me
- * being a danger to society.
- */
-QString CellReference::columnToString(int column) {
-    return CellReferencePrivate::columnToString(column);
 }
-
-QString CellReference::cellToString(int column, int row) {
-    return CellReferencePrivate::cellToString(column, row);
-}
-
-QPair<int, int> CellReference::cellFromString(QString &value) {
-    return Reference::cellFromString(value);
-}
-
-int CellReference::columnFromString(QString &value) {
-    return Reference::columnFromString(value);
-}
-
-int CellReference::rowFromString(QString &value) {
-    return Reference::rowFromString(value);
-}
-

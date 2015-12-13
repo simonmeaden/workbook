@@ -23,6 +23,10 @@
 
 #include <QPushButton>
 
+#include "workbook_global.h"
+
+namespace QWorkbook {
+
 class QWorkbookFontEffectsToolBar;
 class QWorkbookView;
 class FormatStatus;
@@ -36,12 +40,13 @@ public:
     void setBold(bool);
     void setItalic(bool);
     void setUnderline(bool);
-    void setWorkbookView(QWorkbookView *);
+    void setView(QObject *);
     void selectionChanged(FormatStatus*);
 
 protected:
     QPushButton *pBoldBtn, *pItalicBtn, *pUnderlineBtn;
     QWorkbookFontEffectsToolBar *q_ptr;
+    QObject *pView;
 
     void init();
     void boldHasClicked();
@@ -49,5 +54,8 @@ protected:
     void underlineHasClicked();
 
 };
+
+
+}
 
 #endif // QWORKBOOKFONTEFFECTSTOOLBARPRIVATE_H

@@ -25,20 +25,26 @@
 #include <QString>
 #include <QScopedPointer>
 
-#include <workbook_global.h>
+#include "workbook_global.h"
 #include "cellreference_p.h"
+#include "reference.h"
 
-class WORKBOOKSHARED_EXPORT CellReference : public QObject {
+namespace QWorkbook {
+
+class WORKBOOKSHARED_EXPORT CellReference : public QObject, public Reference {
     Q_OBJECT
+    Q_DECLARE_PRIVATE(CellReference)
 public:
     explicit CellReference();
     explicit CellReference(QObject *parent);
     explicit CellReference(int row, int column, QObject *parent);
+    explicit CellReference(int row, int column, bool rowStatic, bool colStatic, QObject *parent);
     explicit CellReference(QString reference, QObject *parent);
     CellReference(CellReference &d) :
         QObject(d.parent()),
         d_ptr(new CellReferencePrivate(&d)) {
     }
+    virtual ~CellReference() {}
 
     bool operator==(const CellReference& comp) {
         return ((this->row() == comp.row()) && (this->column() == comp.column()));
@@ -59,20 +65,11 @@ public:
         return !((this->row() == comp.row()) && (this->column() == comp.column()));
     }
 
-    static QString columnToString(int column);
-    static QString rowToString(int row);
-    static QString cellToString(int column, int row);
-    static QPair<int, int> cellFromString(QString&);
-    static int columnFromString(QString&);
-    static int rowFromString(QString&);
-
     bool isValid();
     int row() const;
     int column() const;
     void setRow(int&);
     void setColumn(int &);
-    void setPosition(int&, int&);
-    void setPosition(QString &reference);
     QString toString();
 
 signals:
@@ -80,17 +77,17 @@ signals:
 public slots:
 
 protected:
-    const QScopedPointer<CellReferencePrivate> d_ptr;
     CellReference(CellReferencePrivate &d, QObject *parent) :
         QObject(parent),
         d_ptr(&d) {
     }
+    const QScopedPointer<CellReferencePrivate> d_ptr;
 
 private:
-    Q_DECLARE_PRIVATE(CellReference)
 
 };
 
 
+}
 
 #endif // CELLREFERENCE_H

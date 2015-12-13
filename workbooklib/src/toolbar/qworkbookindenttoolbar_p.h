@@ -24,6 +24,10 @@
 #include <QPushButton>
 
 
+#include "workbook_global.h"
+
+namespace QWorkbook {
+
 class QWorkbookIndentToolBar;
 class QWorkbookView;
 class FormatStatus;
@@ -40,9 +44,13 @@ public:
 protected:
     QPushButton *pIndentBtn, *pUndentBtn;
     QWorkbookIndentToolBar *q_ptr;
+    void *pView;
 
     void init();
 
 };
+
+
+}
 
 #endif // QWORKBOOKINDENTTOOLBARPRIVATE_H

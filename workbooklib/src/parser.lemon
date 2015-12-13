@@ -1,0 +1,62 @@
+%token_type {ParseToken*}
+%default_type {ParseToken*}
+%type expr {ParseToken*}
+%type VALUE {ParseToken*}
+
+%left PLUS MINUS.
+%left DIVIDE MULTIPLY.
+
+%include {
+#include <QVariant>
+#include <iostream>
+#include <cstdlib>
+#include <cassert>
+#include "parser.h"
+#include "tokdef.h"
+}
+
+%parse_accept {
+    printf("parsing complete!\n\n\n");
+}
+   
+%syntax_error {
+    std::cout << "Syntax error!" << std::endl;  
+}
+
+/*  This is to terminate with a new line */
+main ::= in.
+in ::= .
+in ::= in state NEWLINE.
+
+state ::= expr(A). {
+    A->mResult = A->dValue;
+}
+
+expr(A) ::= expr(B) MINUS expr(C). {
+    if (B->type == Double && C->type == Double) {
+        A->mResult = B->dValue - C->dValue;
+    }
+} // end of MINUS
+
+expr(A) ::= expr(B) PLUS expr(C). {
+    if (B->type == Double && C->type == Double) {
+        A->mResult = B->dValue + C->dValue;
+        A->error = QWorkbook::NoError;
+    }
+} // end of PLUS
+
+expr(A) ::= expr(B) MULTIPLY expr(C). {
+    if (B->type == Double && C->type == Double) {
+        A->mResult = B->dValue * C->dValue;
+    }
+} // end of MULTIPLY
+
+expr(A) ::= expr(B) DIVIDE  expr(C). {
+    if(B->type == Double && C->type == Double && C != 0) {
+        A->mResult  = B->dValue  / C->dValue ;
+    }
+}  /* end of DIVIDE */
+
+// input values in
+expr(A) ::= DOUBLE(B). { A = B; }
+

@@ -21,6 +21,11 @@
 #include "qworkbookfonteffectstoolbar.h"
 #include "qworkbookfonteffectstoolbar_p.h"
 #include "qworkbookview.h"
+#include "qworksheetview.h"
+
+#include "workbook_global.h"
+
+namespace QWorkbook {
 
 QWorkbookFontEffectsToolBar::QWorkbookFontEffectsToolBar(QWidget *parent) :
     QToolBar(parent),
@@ -42,15 +47,17 @@ QWorkbookFontEffectsToolBar::QWorkbookFontEffectsToolBar(QString title, QWidget 
 
 }
 
-/*!
- * \brief QWorkbookToolBar::setWorkbookView(QWorkbookView *view)
- *
- * \param view
- */
 void QWorkbookFontEffectsToolBar::setWorkbookView(QWorkbookView *view) {
 
     Q_D(QWorkbookFontEffectsToolBar);
-    d->setWorkbookView(view);
+    d->setView(view);
+
+}
+
+void QWorkbookFontEffectsToolBar::setWorksheetView(QWorksheetView *view) {
+
+    Q_D(QWorkbookFontEffectsToolBar);
+    d->setView(view);
 
 }
 
@@ -89,5 +96,8 @@ void QWorkbookFontEffectsToolBar::setItalic(bool value) {
 void QWorkbookFontEffectsToolBar::setUnderline(bool value) {
     Q_D(QWorkbookFontEffectsToolBar);
     d->setUnderline(value);
+}
+
+
 }
 

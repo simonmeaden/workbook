@@ -25,30 +25,41 @@
 #include <QList>
 #include <QRegularExpression>
 
-#include <qquad.h>
-
 #include "reference.h"
 #include "cellreference.h"
 
+#include "workbook_global.h"
+
+namespace QWorkbook {
+
 class Range;
 
-class RangePrivate : public Reference {
+struct RangeValue {
+    int row, column, width, height;
+};
 
+class RangePrivate : public Reference {
+    Q_DECLARE_PUBLIC(Range)
 public:
     RangePrivate(Range *parent);
     RangePrivate(int &row1, int &column1, int &row2, int &column2, Range *parent);
+    RangePrivate(int &row1, int &column1, bool rowStatic1, bool colStatic1,
+                 int &row2, int &column2, bool rowStatic2, bool colStatic2, Range *parent);
     RangePrivate(CellReference topLeft, CellReference bottomRight, Range *parent);
+    virtual ~RangePrivate() {}
 
     static bool isEqual(Range *a, Range *b);
 
     // static functions
     static QString rangeToString(int column, int row, int width, int height);
-    static QQuad<int, int, int, int> rangeFromString(QString&);
+    static QString rangeToString(int &row1, int &column1, bool rowStatic1, bool colStatic1,
+                                 int &row2, int &column2, bool rowStatic2, bool colStatic2);
+    static SplitRangeName rangeFromString(const QString);
 
 
     // Publicish methods.
     void setRange(int &row1, int &column1, int &row2, int &column2);
-    QQuad<int, int, int, int> range();
+    RangeValue range();
     QList<Range *> intersections(Range *range);
     bool intersects(Range *range);
     bool isNull();
@@ -57,16 +68,19 @@ public:
     void normalise();
     Range *removeOverlap(Range *range);
 
-    inline int top() { return mTop; }
-    inline int bottom() { return mBottom; }
-    inline int left() { return mLeft; }
-    inline int right() { return mRight; }
+    int top() { return mTop; }
+    int bottom() { return mBottom; }
+    int left() { return mLeft; }
+    int right() { return mRight; }
 
-    Q_DECLARE_PUBLIC(Range)
     Range *q_ptr;
 
     int mTop, mBottom, mLeft, mRight;
+    bool bRowStatic1, bRowStatic2, bColStatic1, bColStatic2;
 
 };
+
+
+}
 
 #endif // RANGEPRIVATE_H

@@ -29,7 +29,10 @@
 #include "workbook_global.h"
 #include "qworkbookaligntoolbar_p.h"
 
+namespace QWorkbook {
+
 class QWorkbookView;
+class QWorksheetView;
 class FormatStatus;
 
 class WORKBOOKSHARED_EXPORT QWorkbookAlignToolBar : public QToolBar {
@@ -38,19 +41,19 @@ class WORKBOOKSHARED_EXPORT QWorkbookAlignToolBar : public QToolBar {
 public:
     QWorkbookAlignToolBar(QWidget*);
     QWorkbookAlignToolBar(QString, QWidget*);
-    virtual ~QWorkbookAlignToolBar();
+    virtual ~QWorkbookAlignToolBar() {}
 
 signals:
     void alignmentChanged(Qt::Alignment);
-    void alignSelection(bool, Qt::Alignment);
 
 public slots:
     void setAlign(bool, Qt::Alignment);
     void setWorkbookView(QWorkbookView *);
-    void selectionChanged(FormatStatus*);
+    void setWorksheetView(QWorksheetView *);
 
 protected slots:
     void alignHasClicked();
+    void selectionChanged(FormatStatus*);
 
 protected:
     QWorkbookAlignToolBar(QWorkbookAlignToolBarPrivate &d, QWidget *parent) :
@@ -63,6 +66,47 @@ protected:
 
 private:
 
+    friend class QWorkbookViewPrivate;
+
 };
+
+class WORKBOOKSHARED_EXPORT QWorkbookVerticalAlignToolBar : public QToolBar {
+    Q_OBJECT
+    Q_DECLARE_PRIVATE(QWorkbookVerticalAlignToolBar)
+public:
+    QWorkbookVerticalAlignToolBar(QWidget*);
+    QWorkbookVerticalAlignToolBar(QString, QWidget*);
+    virtual ~QWorkbookVerticalAlignToolBar() {}
+
+signals:
+    void alignmentChanged(Qt::Alignment);
+
+public slots:
+    void setAlign(bool, Qt::Alignment);
+    void setWorkbookView(QWorkbookView *);
+    void setWorksheetView(QWorksheetView *);
+
+protected slots:
+    void alignHasClicked();
+    void selectionChanged(FormatStatus*);
+
+protected:
+    QWorkbookVerticalAlignToolBar(QWorkbookVerticalAlignToolBarPrivate &d, QWidget *parent) :
+        QToolBar(parent),
+        d_ptr(&d) {}
+    QWorkbookVerticalAlignToolBar(QWorkbookVerticalAlignToolBarPrivate &d, QString title, QWidget *parent) :
+        QToolBar(title, parent),
+        d_ptr(&d) {}
+    const QScopedPointer<QWorkbookVerticalAlignToolBarPrivate> d_ptr;
+
+private:
+
+    friend class QWorkbookViewPrivate;
+
+};
+
+
+
+}
 
 #endif // WORKBOOKALIGNTOOLBAR_H

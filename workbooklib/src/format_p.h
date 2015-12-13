@@ -26,11 +26,18 @@
 #include <QBrush>
 #include <QMap>
 
+#include "workbook_global.h"
 #include "types.h"
 
 namespace QXlsx {
     class Format;
 }
+
+namespace ods {
+    class Style;
+}
+
+namespace QWorkbook {
 
 class WorksheetModel;
 class Format;
@@ -38,7 +45,7 @@ class Format;
 class FormatPrivate {
 public:
     FormatPrivate(int row, int column, Format *parent);
-    ~FormatPrivate();
+    virtual ~FormatPrivate() {}
 
     void setFont(QFont font);
     void setPointSize(int size);
@@ -66,8 +73,10 @@ public:
     void indent();
     void undent();
 
-    QXlsx::Format toXlsx();
-    void fromXlsx(QXlsx::Format format);
+    QXlsx::Format* toXlsx();
+    ods::Style* toOds();
+    void fromXlsx(QXlsx::Format *format);
+    void fromOds(ods::Style *style);
 
     WorksheetModel *pModel;
     int mRow, mColumn;
@@ -96,20 +105,23 @@ public:
     Border bottomBorder() { return mBottomBorder; }
     Border leftBorder() { return mLeftBorder; }
     Border rightBorder() { return mRightBorder; }
-    void setBorder(bool enabled, QColor color=QColor("black"), BorderStyle style=SINGLE, double thickness = 0.75);
-    void setTopBorder(bool enabled, QColor color=QColor("black"), BorderStyle style=SINGLE, double thickness = 0.75);
-    void setBottomBorder(bool enabled, QColor color=QColor("black"), BorderStyle style=SINGLE, double thickness = 0.75);
-    void setLeftBorder(bool enabled, QColor color=QColor("black"), BorderStyle style=SINGLE, double thickness = 0.75);
-    void setRightBorder(bool enabled, QColor color=QColor("black"), BorderStyle style=SINGLE, double thickness = 0.75);
-    void updateTopBorder(bool enabled, QColor color=QColor("black"), BorderStyle style=SINGLE, double thickness = 0.75);
-    void updateBottomBorder(bool enabled, QColor color=QColor("black"), BorderStyle style=SINGLE, double thickness = 0.75);
-    void updateLeftBorder(bool enabled, QColor color=QColor("black"), BorderStyle style=SINGLE, double thickness = 0.75);
-    void updateRightBorder(bool enabled, QColor color=QColor("black"), BorderStyle style=SINGLE, double thickness = 0.75);
+    void setBorder(bool enabled, QColor color=QColor("black"), BorderStyle style=BS_SINGLE, double thickness = 0.75);
+    void setTopBorder(bool enabled, QColor color=QColor("black"), BorderStyle style=BS_SINGLE, double thickness = 0.75);
+    void setBottomBorder(bool enabled, QColor color=QColor("black"), BorderStyle style=BS_SINGLE, double thickness = 0.75);
+    void setLeftBorder(bool enabled, QColor color=QColor("black"), BorderStyle style=BS_SINGLE, double thickness = 0.75);
+    void setRightBorder(bool enabled, QColor color=QColor("black"), BorderStyle style=BS_SINGLE, double thickness = 0.75);
+    void updateTopBorder(bool enabled, QColor color=QColor("black"), BorderStyle style=BS_SINGLE, double thickness = 0.75);
+    void updateBottomBorder(bool enabled, QColor color=QColor("black"), BorderStyle style=BS_SINGLE, double thickness = 0.75);
+    void updateLeftBorder(bool enabled, QColor color=QColor("black"), BorderStyle style=BS_SINGLE, double thickness = 0.75);
+    void updateRightBorder(bool enabled, QColor color=QColor("black"), BorderStyle style=BS_SINGLE, double thickness = 0.75);
 
     int xWidth;
 
     Format *q_ptr;
     Q_DECLARE_PUBLIC(Format)
 };
+
+
+}
 
 #endif // FORMATPRIVATE_H

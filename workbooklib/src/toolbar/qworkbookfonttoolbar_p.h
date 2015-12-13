@@ -24,6 +24,10 @@
 #include <QPushButton>
 #include <QFontComboBox>
 
+#include "workbook_global.h"
+
+namespace QWorkbook {
+
 
 class QWorkbookFontToolBar;
 class QWorkbookView;
@@ -41,7 +45,7 @@ public:
     void fontHasChanged(QFont);
     void sizeHasChanged(QString);
 
-    void setWorkbookView(QWorkbookView *);
+    void setView(QObject *);
     void selectionChanged(FormatStatus*);
 
 protected:
@@ -49,11 +53,15 @@ protected:
     QComboBox *pSizeCombo;
     QFontDatabase mFontDatabase;
     QWorkbookFontToolBar *q_ptr;
+    QObject *pView;
 
     void init();
     void setFontSizes(QFont font);
 
 
 };
+
+
+}
 
 #endif // QWORKBOOKFONTTOOLBARPRIVATE_H

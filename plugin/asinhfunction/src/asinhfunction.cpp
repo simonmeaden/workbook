@@ -1,5 +1,7 @@
 #include "asinhfunction.h"
 
+namespace QWorkbook {
+
 AsinhFunction::AsinhFunction(QObject *parent) : QObject(parent) {
 
     setName("ASINH");
@@ -24,4 +26,6 @@ QStringList AsinhFunction::importer() const {
 
 QVariant AsinhFunction::calculate(qreal radians) {
     return asinh(radians);
+}
+
 }

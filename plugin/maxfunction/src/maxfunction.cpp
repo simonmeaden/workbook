@@ -1,5 +1,8 @@
 #include "maxfunction.h"
 
+namespace QWorkbook {
+
+
 MaxFunction::MaxFunction(QObject *parent) :QObject(parent) {
 
     setName("MAX");
@@ -39,4 +42,6 @@ QVariant MaxFunction::calculate(QList<qreal> list) {
     }
 
     return max;
+}
+
 }

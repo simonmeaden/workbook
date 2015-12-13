@@ -1,5 +1,7 @@
 #include "lnfunction.h"
 
+namespace QWorkbook {
+
 LnFunction::LnFunction(QObject *parent) :QObject(parent) {
 
     setName("LN");
@@ -24,4 +26,6 @@ QStringList LnFunction::importer() const {
 
 QVariant LnFunction::calculate(qreal value) {
     return qLn(value);
+}
+
 }

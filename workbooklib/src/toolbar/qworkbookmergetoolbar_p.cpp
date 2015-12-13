@@ -21,10 +21,16 @@
 #include "qworkbookmergetoolbar_p.h"
 #include "qworkbookmergetoolbar.h"
 #include "qworkbookview.h"
+#include "qworksheetview.h"
 #include "types.h"
 
+#include "workbook_global.h"
+
+namespace QWorkbook {
+
 QWorkbookMergeToolbarPrivate::QWorkbookMergeToolbarPrivate(QWorkbookMergeToolbar *q) :
-    q_ptr(q) {
+    q_ptr(q),
+    pView(NULL) {
 
 }
 
@@ -40,16 +46,46 @@ void QWorkbookMergeToolbarPrivate::init() {
 
 }
 
-void QWorkbookMergeToolbarPrivate::setWorkbookView(QWorkbookView *view) {
+void QWorkbookMergeToolbarPrivate::setView(QObject *view) {
 
     Q_Q(QWorkbookMergeToolbar);
-    // view to bar
-    q->connect(view, SIGNAL(selectionChanged(FormatStatus*)),
-               q, SLOT(selectionChanged(FormatStatus*)));
+    QWorkbookView *wb;
+    QWorksheetView *ws;
 
-    // bar to view (sets format in view)
-    q->connect(q, SIGNAL(mergeChanged(bool)),
-                   view, SLOT(setSelectionMerge(bool)));
+    // remove old connections
+    if (pView) {
+        wb = qobject_cast<QWorkbookView*>(pView);
+        ws = qobject_cast<QWorksheetView*>(pView);
+
+        if (wb) {
+            q->disconnect(wb, SIGNAL(selectionChanged(FormatStatus*)),
+                       q, SLOT(selectionChanged(FormatStatus*)));
+            q->disconnect(q, SIGNAL(mergeChanged()),
+                       wb, SLOT(setSelectionMerge()));
+        } else if (ws) {
+            q->disconnect(ws, SIGNAL(selectionChanged(FormatStatus*)),
+                       q, SLOT(selectionChanged(FormatStatus*)));
+            q->disconnect(q, SIGNAL(mergeChanged()),
+                          ws, SLOT(setSelectionMerge()));
+        }
+    }
+
+    // make new ones.
+    wb = qobject_cast<QWorkbookView*>(view);
+    ws = qobject_cast<QWorksheetView*>(view);
+    if (wb) {
+        q->connect(wb, SIGNAL(selectionChanged(FormatStatus*)),
+                   q, SLOT(selectionChanged(FormatStatus*)));
+        q->connect(q, SIGNAL(mergeChanged()),
+                   wb, SLOT(setSelectionMerge()));
+    } else if (ws) {
+        q->connect(ws, SIGNAL(selectionChanged(FormatStatus*)),
+                   q, SLOT(selectionChanged(FormatStatus*)));
+        q->connect(q, SIGNAL(mergeChanged()),
+                   ws, SLOT(setSelectionMerge()));
+    }
+
+    pView = view;
 
 }
 
@@ -64,11 +100,14 @@ void QWorkbookMergeToolbarPrivate::selectionChanged(FormatStatus* status) {
 void QWorkbookMergeToolbarPrivate::merge() {
 
     Q_Q(QWorkbookMergeToolbar);
-    emit q->mergeChanged(true);
+    emit q->mergeChanged();
 
 }
 
-void QWorkbookMergeToolbarPrivate::setMerge(bool merge) {
-    pMergeBtn->setEnabled(merge);
+void QWorkbookMergeToolbarPrivate::setMerge(bool enabled) {
+    pMergeBtn->setEnabled(enabled);
+}
+
+
 }
 

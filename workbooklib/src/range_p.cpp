@@ -23,6 +23,10 @@
 #include "cellreference.h"
 
 
+#include "workbook_global.h"
+
+namespace QWorkbook {
+
 RangePrivate::RangePrivate(Range *parent) :
     q_ptr(parent),
     mTop(0),
@@ -38,6 +42,22 @@ RangePrivate::RangePrivate(int &row1, int &column1, int &row2, int &column2, Ran
     mBottom(row2),
     mLeft(column1),
     mRight(column2) {
+
+    normalise();
+
+}
+
+RangePrivate::RangePrivate(int &row1, int &column1, bool rowStatic1, bool colStatic1,
+                           int &row2, int &column2, bool rowStatic2, bool colStatic2, Range *parent) :
+    q_ptr(parent),
+    mTop(row1),
+    mBottom(row2),
+    mLeft(column1),
+    mRight(column2),
+    bRowStatic1(rowStatic1),
+    bRowStatic2(rowStatic2),
+    bColStatic1(colStatic1),
+    bColStatic2(colStatic2) {
 
     normalise();
 
@@ -63,12 +83,12 @@ void RangePrivate::setRange(int &row1, int &column1, int &row2, int &column2) {
     normalise();
 }
 
-QQuad<int, int, int, int> RangePrivate::range() {
-    QQuad<int, int, int, int> range;
-    range.first = mLeft;
-    range.second = mTop;
-    range.third = mRight - mLeft;
-    range.fourth = mBottom - mTop;
+RangeValue RangePrivate::range() {
+    RangeValue range;
+    range.column = mLeft;
+    range.row = mTop;
+    range.width = mRight - mLeft;
+    range.height = mBottom - mTop;
     return range;
 }
 
@@ -101,11 +121,11 @@ bool RangePrivate::isNull() {
 }
 
 /*!
- * \brief Checks for an intersection of two areas.
- *
- * \param area The \cArea to check against.
- * \return true if there is an overlap between the two \c Area's.
- */
+    \brief Checks for an intersection of two areas.
+
+    \param area The \cArea to check against.
+    \return true if there is an overlap between the two \c Area's.
+*/
 bool RangePrivate::intersects(Range *range) {
     if (range->d_ptr->mBottom < mTop) // area completely  above this
         return false;
@@ -123,20 +143,17 @@ bool RangePrivate::intersects(Range *range) {
 }
 
 /*!
- * \brief Returns the areas of this area which will need to be resaved.
- *
- * The list that is returned are the areas of the existing \c Area which
- * are NOT overlapped by the supplied \c Area. The \c Area that is overlapped
- * by the new area will be discarded.
- *
- * Generally this will be three areas, depending on where the overlap occurs. If
- * the supplied \c Area is a) smaller and b) totally inside the old area then
- * there will be four. If they are the same sixe and the same position then there
- * will not be  any.
- *
- * \param area the new area.
- * \return a list of \c Area objects that will be redone.
- */
+    \brief Returns the areas of this area which will need to be resaved.
+
+    The list that is returned are the areas of the existing \c Range which
+    are NOT overlapped by the supplied \c Range. The \c Area that is overlapped
+    by the new area will be discarded.
+
+    Generally this will be three areas, depending on where the overlap occurs. If
+    the supplied \c Range is a) smaller and b) totally inside the old area then
+    there will be four. If they are the same sixe and the same position then there
+    will not be  any.
+*/
 QList<Range*> RangePrivate::intersections(Range *range) {
     int maxLeft   = qMax<int>(mLeft, range->d_ptr->mLeft);
     //    int minLeft   = qMin<int>(mLeft, area.mLeft);
@@ -155,25 +172,25 @@ QList<Range*> RangePrivate::intersections(Range *range) {
 
     if (range->d_ptr->mTop < mTop) {
         if (mTop != maxTop) {
-            a = new Range(mTop, mLeft, maxTop, mRight);
+            a = new Range(mTop, mLeft, maxTop, mRight, q_ptr->parent());
         }
     }
 
     if (range->d_ptr->mLeft < mLeft) {
         if (mLeft != maxLeft) {
-            b = new Range(mLeft, mTop, mRight, maxLeft);
+            b = new Range(mLeft, mTop, mRight, maxLeft, q_ptr->parent());
         }
     }
 
     if (range->d_ptr->mRight < mRight) {
         if (mRight != minRight) {
-            c = new Range(mTop, minRight, mBottom, mRight);
+            c = new Range(mTop, minRight, mBottom, mRight, q_ptr->parent());
         }
     }
 
     if (range->d_ptr->mBottom < mBottom) {
         if (mBottom != minBottom) {
-            d = new Range(minBottom, mLeft, mBottom, mRight);
+            d = new Range(minBottom, mLeft, mBottom, mRight, q_ptr->parent());
         }
     }
 
@@ -220,26 +237,35 @@ Range* RangePrivate::removeOverlap(Range *range) {
     return range;
 }
 
-QQuad<int, int, int, int> RangePrivate::rangeFromString(QString &rangeRef) {
+SplitRangeName RangePrivate::rangeFromString(const QString value) {
 
-    QQuad<QString, QString, QString, QString> m_quad = init(rangeRef);
-
-    QQuad<int, int, int, int> result;
-    if (!m_quad.first.isEmpty() && !m_quad.second.isEmpty() && !m_quad.third.isEmpty() && !m_quad.fourth.isEmpty()) {
-        result.first = CellReference::columnFromString(m_quad.first);
-        result.second = CellReference::rowFromString(m_quad.second);
-        result.third = CellReference::columnFromString(m_quad.third);
-        result.fourth = CellReference::rowFromString(m_quad.fourth);
-    }
-
-    return result;
+    return Reference::rangeFromString(value);
 
 }
 
 QString RangePrivate::rangeToString(int column, int row, int width, int height) {
-    QString result = CellReference::columnToString(column) + CellReference::rowToString(row);
+    QString result = Reference::columnToString(column) + Reference::rowToString(row);
     result += ":";
-    result += CellReference::columnToString(column + width - 1) + CellReference::rowToString(row + height - 1);
+    result += Reference::columnToString(column + width - 1) + Reference::rowToString(row + height - 1);
     return result;
+}
+
+QString RangePrivate::rangeToString(int &row1, int &column1, bool rowStatic1, bool colStatic1,
+                                    int &row2, int &column2, bool rowStatic2, bool colStatic2) {
+    QString result =
+        (rowStatic1 ? "$" : "") +
+        Reference::columnToString(column1) +
+        (colStatic1 ? "$" : "") +
+        Reference::rowToString(row1) +
+        ":" +
+        (rowStatic2 ? "$" : "") +
+        Reference::columnToString(column2) +
+        (colStatic2 ? "$" : "") +
+        Reference::rowToString(row2);
+
+    return result;
+}
+
+
 }
 

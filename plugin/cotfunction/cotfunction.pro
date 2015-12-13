@@ -2,7 +2,7 @@ QT          += core
 
 TEMPLATE    = lib
 CONFIG      += plugin shared
-INCLUDEPATH  += $$PWD/../include
+
 INCLUDEPATH  += $$PWD/../../include
 
 DEFINES += WORKBOOK_LIBRARY
@@ -26,7 +26,7 @@ CONFIG(release, debug|release) {
 }
 
 HEADERS += \
-    cotfunction.h
+    src/cotfunction.h
 
 SOURCES += \
-    cotfunction.cpp
+    src/cotfunction.cpp

@@ -1,5 +1,7 @@
 #include "sechfunction.h"
 
+namespace QWorkbook {
+
 SechFunction::SechFunction(QObject *parent) : QObject(parent) {
 
     setName("SECH");
@@ -24,4 +26,6 @@ QStringList SechFunction::importer() const {
 
 QVariant SechFunction::calculate(qreal radians) {
     return qPow(cosh(radians), -1);
+}
+
 }
